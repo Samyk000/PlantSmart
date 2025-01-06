@@ -513,8 +513,8 @@ body {
     
 @media (max-width: 768px) {
     .sidebar-content {
-    padding: 5px 5px;
-    height: calc(100vh - 90px); /* Subtract header height */
+    padding: 20px 5px;
+    height: calc(100vh - 100px); /* Subtract header height */
 }
     
     .sidebar-footer .theme-toggle {
