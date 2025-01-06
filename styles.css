@@ -152,6 +152,7 @@ body {
 .search-wrapper {
     position: relative;
     width: 320px;
+    margin-left: 8px;
 }
 
 .search-bar {
@@ -159,6 +160,7 @@ body {
     height: 40px;
     background: var(--surface-1);
     border-radius: 10px;
+    border: 1px solid var(--surface-2);
     display: flex;
     align-items: center;
     padding: 0 16px;
@@ -167,11 +169,14 @@ body {
 
 .search-bar:focus-within {
     background: var(--surface-2);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(91, 107, 255, 0.1);
 }
 
 .search-icon {
     color: var(--text-tertiary);
     font-size: 14px;
+    min-width: 14px; /* Prevent icon from shrinking */
 }
 
 .search-bar input {
@@ -185,6 +190,80 @@ body {
 
 .search-bar input::placeholder {
     color: var(--text-tertiary);
+}
+
+.search-bar input:focus {
+    outline: none;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .search-wrapper {
+        width: 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    .search-wrapper {
+        width: 220px;
+    }
+    
+    .search-bar {
+        height: 36px; /* Slightly smaller height for mobile */
+    }
+    
+    .search-bar input {
+        font-size: 13px; /* Slightly smaller font for mobile */
+    }
+}
+
+@media (max-width: 480px) {
+    .search-wrapper {
+        width: 180px;
+    }
+    
+    .search-bar {
+        padding: 0 12px; /* Reduced padding for smaller screens */
+    }
+    
+    .search-bar input {
+        padding: 0 8px;
+    }
+}
+
+/* Browser-specific fixes */
+/* Firefox */
+@-moz-document url-prefix() {
+    .search-bar {
+        height: 40px; /* Ensure consistent height in Firefox */
+    }
+}
+
+/* Safari */
+@media not all and (min-resolution:.001dpcm) {
+    @supports (-webkit-appearance:none) {
+        .search-bar {
+            height: 40px; /* Ensure consistent height in Safari */
+        }
+    }
+}
+
+/* Edge and Chrome */
+@supports (-webkit-appearance:none) {
+    .search-bar {
+        -webkit-appearance: none;
+    }
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .search-bar {
+    background: var(--surface-2);
+    border-color: var(--surface-3);
+}
+
+[data-theme="dark"] .search-bar:focus-within {
+    background: var(--surface-3);
+    border-color: var(--primary);
 }
 
 /* Theme Toggle */
@@ -553,6 +632,7 @@ body {
         height: calc(100vh - 120px);
     }
 }
+
 .new-category-btn {
     display: flex;
     align-items: center;
@@ -1190,12 +1270,7 @@ body {
     animation: glow 3s infinite alternate;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .search-wrapper {
-        display: none;
-    }
-    
+/* Responsive Design */    
     .sidebar {
         width: 70%;
     }
