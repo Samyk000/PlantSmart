@@ -499,7 +499,7 @@ body {
 .category-item {
     position: relative;
     padding-left: 36px;
-    padding-right: 40px; /* Add space for the more button */
+    padding-right: 1px; /* Add space for the more button */
 }
 
 .category-item::before {
