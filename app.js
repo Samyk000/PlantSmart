@@ -2,12 +2,12 @@
 const AppState = {
     notes: JSON.parse(localStorage.getItem('notes')) || [],
     categories: JSON.parse(localStorage.getItem('categories')) || [
-        { id: 'work', name: 'Work', color: '#4C6FFF', icon: 'fas fa-briefcase', count: 0 },
-        { id: 'personal', name: 'Personal', color: '#FF6B6B', icon: 'fas fa-user', count: 0 },
-        { id: 'study', name: 'Study', color: '#6BCB77', icon: 'fas fa-book', count: 0 },
-        { id: 'goals', name: 'Goals', color: '#9B6BFF', icon: 'fas fa-bullseye', count: 0 }
+        { id: 'work', name: 'Work', color: '#4C6FFF', icon: 'fas fa-briefcase' },
+        { id: 'personal', name: 'Personal', color: '#FF6B6B', icon: 'fas fa-user' },
+        { id: 'study', name: 'Study', color: '#6BCB77', icon: 'fas fa-book' },
+        { id: 'goals', name: 'Goals', color: '#9B6BFF', icon: 'fas fa-bullseye' }
     ],
-    currentView: 'grid',
+    currentView: localStorage.getItem('currentView') || 'grid',
     currentTheme: localStorage.getItem('theme') || 'light',
     isEditMode: false,
     currentNoteId: null,
@@ -50,8 +50,10 @@ const elements = {
 function initializeApp() {
     loadTheme();
     setupEventListeners();
+    renderCategories();
     renderNotes();
     updateCategoryCounts();
+    loadView();
 }
 
 // Theme Management
@@ -66,6 +68,10 @@ function toggleTheme() {
 }
 
 // View Management
+function loadView() {
+    toggleView(AppState.currentView);
+}
+
 function toggleView(viewType) {
     AppState.currentView = viewType;
     localStorage.setItem('currentView', viewType);
@@ -109,9 +115,15 @@ function updateNote(id, data) {
 }
 
 function deleteNote(id) {
-    const index = AppState.notes.findIndex(note => note.id === id);
-    if (index !== -1) {
-        AppState.notes[index].isDeleted = true;
+    const note = AppState.notes.find(note => note.id === id);
+    if (note) {
+        if (note.isDeleted) {
+            // Permanently delete from trash
+            AppState.notes = AppState.notes.filter(n => n.id !== id);
+        } else {
+            // Move to trash
+            note.isDeleted = true;
+        }
         saveNotesToStorage();
         renderNotes();
         updateCategoryCounts();
@@ -125,15 +137,6 @@ function toggleNoteFavorite(id) {
         saveNotesToStorage();
         renderNotes();
         updateCategoryCounts();
-    }
-}
-
-function toggleNotePin(id) {
-    const index = AppState.notes.findIndex(note => note.id === id);
-    if (index !== -1) {
-        AppState.notes[index].isPinned = !AppState.notes[index].isPinned;
-        saveNotesToStorage();
-        renderNotes();
     }
 }
 
@@ -156,13 +159,24 @@ function duplicateNote(id) {
 
 // Filter Notes
 function filterNotes() {
-    let filteredNotes = AppState.notes.filter(note => {
-        if (AppState.activeSection === 'trash') return note.isDeleted;
-        if (AppState.activeSection === 'favorites') return note.isFavorite && !note.isDeleted;
-        if (AppState.activeSection === 'all') return !note.isDeleted;
-        return note.category === AppState.activeSection && !note.isDeleted;
-    });
+    let filteredNotes = [...AppState.notes]; // Create a copy of all notes
 
+    // Filter based on active section
+    if (AppState.activeSection === 'trash') {
+        filteredNotes = filteredNotes.filter(note => note.isDeleted);
+    } else if (AppState.activeSection === 'favorites') {
+        filteredNotes = filteredNotes.filter(note => note.isFavorite && !note.isDeleted);
+    } else if (AppState.activeSection === 'all') {
+        // Show all notes that aren't deleted, including favorites
+        filteredNotes = filteredNotes.filter(note => !note.isDeleted);
+    } else {
+        // Category specific notes
+        filteredNotes = filteredNotes.filter(note => 
+            note.category === AppState.activeSection && !note.isDeleted
+        );
+    }
+
+    // Apply search filter if search term exists
     if (elements.searchInput.value) {
         const searchTerm = elements.searchInput.value.toLowerCase();
         filteredNotes = filteredNotes.filter(note => 
@@ -235,7 +249,7 @@ function renderNoteCard(note) {
                             <div class="action-divider"></div>
                             <button class="action-item delete delete-note" data-note-id="${note.id}">
                                 <i class="fas fa-trash-alt"></i>
-                                Delete
+                                ${note.isDeleted ? 'Delete Permanently' : 'Delete'}
                             </button>
                         </div>
                     </div>
@@ -243,7 +257,7 @@ function renderNoteCard(note) {
             </div>
             <div class="note-body">
                 <h2 class="note-title">${note.title}</h2>
-                <p class="note-preview">${note.content}</p>
+                <div class="note-preview">${note.content}</div>
                 <div class="note-metadata">
                     <span class="date">
                         <i class="far fa-clock"></i>
@@ -259,55 +273,54 @@ function renderNoteCard(note) {
 }
 
 function renderEmptyState() {
+    const message = AppState.activeSection === 'trash' ? 
+        'Trash is empty' : 
+        'No notes found';
+    const description = AppState.activeSection === 'trash' ? 
+        'Deleted notes will appear here' : 
+        'Create a new note or try a different search term';
+
     elements.notesContainer.innerHTML = `
         <div class="empty-state">
             <i class="far fa-sticky-note"></i>
-            <h3>No notes found</h3>
-            <p>Create a new note or try a different search term.</p>
+            <h3>${message}</h3>
+            <p>${description}</p>
         </div>
     `;
 }
 
 // Event Listeners Setup
 function setupEventListeners() {
-    // Theme toggle
     elements.themeToggle.addEventListener('click', toggleTheme);
     
-    // Menu toggle
     elements.menuToggle.addEventListener('click', () => {
         elements.sidebar.classList.toggle('active');
         elements.overlay.classList.toggle('active');
     });
     
-    // User menu
     elements.userMenuTrigger.addEventListener('click', (e) => {
         e.stopPropagation();
         elements.userMenu.classList.toggle('active');
     });
 
-    // Close user menu when clicking outside
     document.addEventListener('click', (e) => {
         if (!elements.userMenu.contains(e.target)) {
             elements.userMenu.classList.remove('active');
         }
     });
 
-    // Create note button
     elements.createNoteBtn.addEventListener('click', () => {
         AppState.isEditMode = false;
         AppState.currentNoteId = null;
         openNoteModal();
     });
     
-    // Note form submission
     elements.noteForm.addEventListener('submit', handleNoteSubmit);
     
-    // View buttons
     elements.viewButtons.forEach(btn => {
         btn.addEventListener('click', () => toggleView(btn.dataset.view));
     });
     
-    // Navigation items
     elements.navItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
@@ -315,50 +328,38 @@ function setupEventListeners() {
         });
     });
     
-    // Search
     elements.searchInput.addEventListener('input', debounce(() => {
         renderNotes();
     }, 300));
     
-    // Format buttons
     elements.formatButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            const command = btn.title.toLowerCase();
-            document.execCommand(command, false, null);
-            btn.classList.toggle('active');
+            const command = btn.dataset.command;
+            const value = btn.dataset.value || null;
+            document.execCommand(command, false, value);
+            if (!['foreColor', 'backColor', 'fontName', 'fontSize'].includes(command)) {
+                btn.classList.toggle('active');
+            }
         });
     });
 
-    // Modal buttons
-    elements.saveNoteBtn.parentElement.parentElement.addEventListener('submit', handleNoteSubmit);
-    elements.cancelNoteBtn.addEventListener('click', closeAllModals);
+    elements.newCategoryBtn.addEventListener('click', openCategoryModal);
     
-    // New category button
-    elements.newCategoryBtn.addEventListener('click', () => {
-        openCategoryModal();
-    });
-    
-    // Category modal buttons
     document.querySelector('.category-modal .btn-primary').addEventListener('click', (e) => {
         e.preventDefault();
         handleCategoryCreate();
     });
     
-    document.querySelector('.category-modal .btn-secondary').addEventListener('click', closeAllModals);
-    
-    // Close buttons
     elements.closeButtons.forEach(btn => {
         btn.addEventListener('click', closeAllModals);
     });
     
-    // Overlay click
     elements.overlay.addEventListener('click', () => {
         closeAllModals();
         elements.sidebar.classList.remove('active');
         elements.overlay.classList.remove('active');
     });
 
-    // Color and icon options
     elements.colorOptions.forEach(option => {
         option.addEventListener('click', () => {
             elements.colorOptions.forEach(opt => opt.classList.remove('active'));
@@ -407,7 +408,12 @@ function setupNoteCardListeners(noteElement, noteId) {
 
     noteElement.querySelector('.delete-note').addEventListener('click', (e) => {
         e.stopPropagation();
-        if (confirm('Are you sure you want to delete this note?')) {
+        const note = AppState.notes.find(n => n.id === noteId);
+        const message = note.isDeleted ? 
+            'Are you sure you want to permanently delete this note?' : 
+            'Are you sure you want to move this note to trash?';
+        
+        if (confirm(message)) {
             deleteNote(noteId);
         }
     });
@@ -450,56 +456,66 @@ function handleCategoryCreate() {
     const colorOption = document.querySelector('.color-option.active');
     const iconOption = document.querySelector('.icon-option.active');
 
-    if (!name) {
-        alert('Please enter a category name');
+    if (!name || !colorOption || !iconOption) {
+        alert('Please fill in all category details');
         return;
     }
 
     const categoryData = {
+        id: name.toLowerCase().replace(/\s+/g, '-'),
         name,
         color: getComputedStyle(colorOption).getPropertyValue('--color').trim(),
         icon: iconOption.querySelector('i').className
     };
 
-    createCategory(categoryData);
+    if (AppState.categories.some(cat => cat.id === categoryData.id)) {
+        alert('A category with this name already exists');
+        return;
+    }
+
+    AppState.categories.push(categoryData);
+    saveCategoriestoStorage();
+    renderCategories();
+    updateCategorySelect();
     closeAllModals();
     resetCategoryForm();
 }
 
 // Category Management
-function createCategory(data) {
-    const category = {
-        id: data.name.toLowerCase().replace(/\s+/g, '-'),
-        name: data.name,
-        color: data.color,
-        icon: data.icon,
-        count: 0
-    };
-
-    if (AppState.categories.some(cat => cat.id === category.id)) {
-        alert('A category with this name already exists');
-        return;
-    }
-
-    AppState.categories.push(category);
-    saveCategoriestoStorage();
-    renderCategories();
-    updateCategoryCounts();
-}
-
 function renderCategories() {
     elements.categoriesList.innerHTML = '';
     AppState.categories.forEach(category => {
         const categoryElement = document.createElement('a');
         categoryElement.className = 'nav-item category-item';
         categoryElement.href = '#';
+        categoryElement.dataset.section = category.id;
         categoryElement.style.setProperty('--category-color', category.color);
+        
         categoryElement.innerHTML = `
             <i class="${category.icon}"></i>
             <span>${category.name}</span>
-            <span class="note-count">${category.count}</span>
+            <span class="note-count">0</span>
         `;
+        
+        categoryElement.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleNavigation(categoryElement);
+        });
+        
         elements.categoriesList.appendChild(categoryElement);
+    });
+    
+    updateCategorySelect();
+}
+
+function updateCategorySelect() {
+    const select = elements.categorySelect;
+    select.innerHTML = '<option value="">Select Category</option>';
+    AppState.categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.name;
+        select.appendChild(option);
     });
 }
 
@@ -562,9 +578,11 @@ function resetForms() {
 // Navigation Handling
 function handleNavigation(navItem) {
     elements.navItems.forEach(item => item.classList.remove('active'));
+    document.querySelectorAll('.category-item').forEach(item => item.classList.remove('active'));
     navItem.classList.add('active');
 
-    const section = navItem.querySelector('span:not(.note-count)').textContent.toLowerCase();
+    const section = navItem.dataset.section || 
+                   navItem.querySelector('span:not(.note-count)').textContent.toLowerCase();
     AppState.activeSection = section;
     
     document.querySelector('.content-header h1').textContent = 
@@ -586,13 +604,15 @@ function updateCategoryCounts() {
         trash: 0
     };
 
+    // Initialize category counts
     AppState.categories.forEach(category => {
         counts[category.id] = 0;
     });
 
+    // Count notes
     AppState.notes.forEach(note => {
         if (!note.isDeleted) {
-            counts.all++;
+            counts.all++; // Count all non-deleted notes
             if (note.isFavorite) counts.favorites++;
             if (note.category) counts[note.category]++;
         } else {
@@ -600,19 +620,13 @@ function updateCategoryCounts() {
         }
     });
 
-    document.querySelectorAll('.nav-item').forEach(item => {
-        const section = item.querySelector('span:not(.note-count)').textContent.toLowerCase();
+    // Update UI counts
+    document.querySelectorAll('.nav-item, .category-item').forEach(item => {
         const countElement = item.querySelector('.note-count');
         if (countElement) {
+            const section = item.dataset.section || 
+                          item.querySelector('span:not(.note-count)').textContent.toLowerCase();
             countElement.textContent = counts[section] || 0;
-        }
-    });
-
-    document.querySelectorAll('.category-item').forEach(item => {
-        const category = item.querySelector('span:not(.note-count)').textContent.toLowerCase();
-        const countElement = item.querySelector('.note-count');
-        if (countElement) {
-            countElement.textContent = counts[category] || 0;
         }
     });
 }
