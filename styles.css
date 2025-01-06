@@ -507,14 +507,19 @@ body {
 
 /* Add this for mobile responsiveness */
 @media (max-width: 768px) {
-    .sidebar-footer {
-        padding: 20px 10px;  /* Slightly smaller padding for mobile */
-    }
+.sidebar-footer {
+    padding: 16px;
+    border-top: 1px solid var(--surface-2);
+    margin-top: auto;  /* This will push the footer to the bottom */
+    display: flex;     /* Add this */
+    justify-content: flex-end;  /* This will push the toggle to the right */
+    align-items: center;  /* This centers items vertically */
+}
     
     .sidebar-footer .theme-toggle {
         /* Toggle size remains the same */
         width: 48px;
-        height: 24px;
+        height: 20px;
     }
 }
 
