@@ -200,14 +200,18 @@ body {
 /* Theme Toggle */
 .theme-toggle {
     position: relative;
-    width: 56px;
-    height: 28px;
-    border-radius: 14px;
+    width: 48px;
+    height: 24px;
+    border-radius: 50px;
     background: var(--surface-2);
     border: none;
     cursor: pointer;
     padding: 2px;
-    transition: var(--transition-normal);
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    background: var(--surface-3);
 }
 
 .theme-toggle-track {
@@ -222,32 +226,74 @@ body {
 
 .sun-icon,
 .moon-icon {
-    font-size: 14px;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.sun-icon {
+    color: #FFB648;
+}
+
+.moon-icon {
     color: var(--text-tertiary);
-    z-index: 1;
 }
 
 .theme-toggle-thumb {
     position: absolute;
     left: 2px;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     background: var(--surface-0);
     border-radius: 50%;
-    box-shadow: var(--shadow-sm);
-    transition: var(--transition-normal);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* Dark Theme Styles */
+[data-theme="dark"] .theme-toggle {
+    background: var(--surface-3);
 }
 
 [data-theme="dark"] .theme-toggle-thumb {
-    left: calc(100% - 26px);
+    left: calc(100% - 22px);
+    background: var(--primary);
 }
 
 [data-theme="dark"] .sun-icon {
     color: var(--text-tertiary);
+    opacity: 0.5;
+    transform: rotate(90deg);
 }
 
 [data-theme="dark"] .moon-icon {
-    color: var(--primary);
+    color: #ffffff;
+    opacity: 1;
+    transform: rotate(0);
+}
+
+/* Light Theme Icon States */
+[data-theme="light"] .sun-icon {
+    opacity: 1;
+    transform: rotate(0);
+}
+
+[data-theme="light"] .moon-icon {
+    opacity: 0.5;
+    transform: rotate(-90deg);
+}
+
+/* Hover Effects */
+.theme-toggle:hover .theme-toggle-thumb {
+    transform: scale(0.95);
+}
+
+.theme-toggle:active .theme-toggle-thumb {
+    transform: scale(0.9);
+}
+
+/* Smooth transition for all elements */
+.theme-toggle * {
+    transition: all 0.3s ease;
 }
 
 /* Dark theme specific adjustments */
