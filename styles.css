@@ -452,6 +452,7 @@ body {
     overflow-y: auto;
 }
 
+/* Add this new style */
 .sidebar.active {
     transform: translateX(0);
     box-shadow: var(--shadow-md);
@@ -459,9 +460,6 @@ body {
 
 .sidebar-content {
     padding: 24px 16px;
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 64px); /* Subtract header height */
 }
 
 .nav-section {
@@ -487,35 +485,36 @@ body {
 .sidebar-footer {
     padding: 16px;
     border-top: 1px solid var(--surface-2);
-    margin-top: auto;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
+    margin-top: auto;  /* This will push the footer to the bottom */
+    display: flex;     /* Add this */
+    justify-content: flex-end;  /* This will push the toggle to the right */
+    align-items: center;  /* This centers items vertically */
 }
 
+.sidebar-content {
+    padding: 5px 5px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 64px); /* Subtract header height */
+}
+
+/* Adjust theme toggle styles for sidebar */
 .sidebar-footer .theme-toggle {
     width: 48px;
     height: 24px;
+    /* Remove margin-left */
 }
 
-/* Mobile Responsiveness */
+/* Add this for mobile responsiveness */
 @media (max-width: 768px) {
-    .sidebar {
-        width: 70%;
-    }
-
-    .sidebar-content {
-        height: calc(100vh - 64px - 60px); /* Subtract header height and extra space for footer */
-        padding: 16px 12px 80px 12px; /* Added bottom padding */
+    .sidebar-footer {
+        padding: 5px 5px;  /* Slightly smaller padding for mobile */
     }
     
-    .sidebar-footer {
-        padding: 12px;
-        position: fixed;
-        bottom: 0;
-        width: 70%; /* Match sidebar width */
-        background: var(--surface-0); /* Match sidebar background */
-        border-right: 1px solid var(--surface-2); /* Match sidebar border */
+    .sidebar-footer .theme-toggle {
+        /* Toggle size remains the same */
+        width: 48px;
+        height: 24px;
     }
 }
 
