@@ -508,7 +508,7 @@ body {
 /* Add this for mobile responsiveness */
 @media (max-width: 768px) {
     .sidebar-footer {
-        padding: 5px 5px;  /* Slightly smaller padding for mobile */
+        padding: 20px 10px;  /* Slightly smaller padding for mobile */
     }
     
     .sidebar-footer .theme-toggle {
