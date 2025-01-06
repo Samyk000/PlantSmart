@@ -483,12 +483,12 @@ body {
 }
 
 .sidebar-footer {
-    padding: 16px;
+    padding: 5px;
     border-top: 1px solid var(--surface-2);
-    margin-top: auto;  /* This will push the footer to the bottom */
-    display: flex;     /* Add this */
-    justify-content: flex-end;  /* This will push the toggle to the right */
-    align-items: center;  /* This centers items vertically */
+    margin-top: 200px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
 }
 
 .sidebar-content {
