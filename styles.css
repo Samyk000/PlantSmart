@@ -495,7 +495,7 @@ body {
     padding: 5px 5px;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 64px); /* Subtract header height */
+    height: calc(100vh - 80px); /* Subtract header height */
 }
 
 /* Adjust theme toggle styles for sidebar */
@@ -509,11 +509,6 @@ body {
 @media (max-width: 768px) {
 .sidebar-footer {
     padding: 16px;
-    border-top: 1px solid var(--surface-2);
-    margin-top: auto;  /* This will push the footer to the bottom */
-    display: flex;     /* Add this */
-    justify-content: flex-end;  /* This will push the toggle to the right */
-    align-items: center;  /* This centers items vertically */
 }
     
     .sidebar-footer .theme-toggle {
