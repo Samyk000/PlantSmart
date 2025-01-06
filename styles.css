@@ -452,7 +452,6 @@ body {
     overflow-y: auto;
 }
 
-/* Add this new style */
 .sidebar.active {
     transform: translateX(0);
     box-shadow: var(--shadow-md);
@@ -460,6 +459,10 @@ body {
 
 .sidebar-content {
     padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 64px);
+    min-height: 400px;
 }
 
 .nav-section {
@@ -485,36 +488,57 @@ body {
 .sidebar-footer {
     padding: 16px;
     border-top: 1px solid var(--surface-2);
-    margin-top: auto;  /* This will push the footer to the bottom */
-    display: flex;     /* Add this */
-    justify-content: flex-end;  /* This will push the toggle to the right */
-    align-items: center;  /* This centers items vertically */
-}
-
-.sidebar-content {
-    padding: 5px 5px;
+    margin-top: auto;
     display: flex;
-    flex-direction: column;
-    height: calc(100vh - 64px); /* Subtract header height */
+    justify-content: flex-end;
+    align-items: center;
 }
 
-/* Adjust theme toggle styles for sidebar */
 .sidebar-footer .theme-toggle {
     width: 48px;
     height: 24px;
-    /* Remove margin-left */
 }
 
-/* Add this for mobile responsiveness */
+/* Mobile Responsiveness */
 @media (max-width: 768px) {
-    .sidebar-footer {
-        padding: 5px;  /* Slightly smaller padding for mobile */
+    .sidebar {
+        width: 70%;
     }
-    
-    .sidebar-footer .theme-toggle {
-        /* Toggle size remains the same */
-        width: 48px;
-        height: 24px;
+
+    .sidebar-content {
+        height: auto;
+        min-height: unset;
+        padding: 16px 12px;
+    }
+
+    .nav-section {
+        margin-bottom: 16px;
+    }
+
+    .sidebar-footer {
+        position: relative;
+        margin-top: 16px;
+        padding: 12px;
+        border-top: 1px solid var(--surface-2);
+    }
+
+    .menu-divider.with-margin {
+        margin: 8px 0;
+    }
+}
+
+/* Small Mobile Screens */
+@media (max-width: 480px) {
+    .sidebar {
+        width: 85%;
+    }
+
+    .sidebar-content {
+        padding: 12px 8px;
+    }
+
+    .nav-section {
+        margin-bottom: 12px;
     }
 }
 
