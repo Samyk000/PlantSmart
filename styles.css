@@ -505,24 +505,6 @@ body {
     /* Remove margin-left */
 }
 
-/* Add this for mobile responsiveness */
-@media (max-width: 768px) {
-    .sidebar-footer {
-        padding: 16px;}
-    }
-    
-@media (max-width: 768px) {
-    .sidebar-content {
-    padding: 20px 5px;
-    height: calc(100vh - 100px); /* Subtract header height */
-}
-    
-    .sidebar-footer .theme-toggle {
-        /* Toggle size remains the same */
-        width: 48px;
-        height: 20px;
-    }
-}
 
 .new-category-btn {
     display: flex;
