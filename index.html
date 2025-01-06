@@ -1,402 +1,551 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Notely - Modern Note Taking</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body class="light-theme">
+        <div class="overlay" id="overlay"></div>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notely - Modern Note Taking</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body class="light-theme">
-    <div class="overlay" id="overlay"></div>
-
-    <header class="app-header">
-        <div class="header-left">
-            <button id="menuToggle" class="icon-btn menu-toggle" aria-label="Toggle Menu">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="search-wrapper">
-                <div class="search-bar">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" placeholder="Search notes..." aria-label="Search notes">
+        <header class="app-header">
+            <div class="header-left">
+                <button id="menuToggle" class="icon-btn menu-toggle" aria-label="Toggle Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-wrapper">
+                    <div class="search-bar">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" placeholder="Search notes..." aria-label="Search notes">
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="header-right">
-            <button id="themeToggle" class="theme-toggle" aria-label="Toggle Theme">
-                <div class="theme-toggle-track">
-                    <i class="fas fa-sun sun-icon"></i>
-                    <i class="fas fa-moon moon-icon"></i>
-                    <div class="theme-toggle-thumb"></div>
-                </div>
-            </button>
-            <div class="user-menu">
-                <button class="user-menu-trigger" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-user-circle user-icon"></i>
-                    <span class="user-name">John Doe</span>
-                    <i class="fas fa-chevron-down"></i>
+            <div class="header-right">
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle Theme">
+                    <div class="theme-toggle-track">
+                        <i class="fas fa-sun sun-icon"></i>
+                        <i class="fas fa-moon moon-icon"></i>
+                        <div class="theme-toggle-thumb"></div>
+                    </div>
                 </button>
-                <div class="user-menu-dropdown">
-                    <div class="user-info">
-                        <i class="fas fa-user-circle user-icon-large"></i>
-                        <div class="user-details">
-                            <span class="user-fullname">John Doe</span>
-                            <span class="user-email">john.doe@example.com</span>
+                <div class="user-menu">
+                    <button class="user-menu-trigger" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-user-circle user-icon"></i>
+                        <span class="user-name">John Doe</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="user-menu-dropdown">
+                        <div class="user-info">
+                            <i class="fas fa-user-circle user-icon-large"></i>
+                            <div class="user-details">
+                                <span class="user-fullname">John Doe</span>
+                                <span class="user-email">john.doe@example.com</span>
+                            </div>
+                        </div>
+                        <div class="menu-items">
+                            <a href="#" class="menu-item" id="profileMenuBtn">
+                                <i class="fas fa-user"></i>
+                                <span>My Profile</span>
+                            </a>
+                            <a href="#" class="menu-item" id="settingsMenuBtn">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                            <div class="menu-divider"></div>
+                            <a href="#" class="menu-item sign-out" id="signOutBtn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Sign Out</span>
+                            </a>
                         </div>
                     </div>
-                    <div class="menu-items">
-                        <a href="#" class="menu-item">
-                            <i class="fas fa-user"></i>
-                            <span>My Profile</span>
-                        </a>
-                        <a href="#" class="menu-item">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
-                        </a>
-                        <div class="menu-divider"></div>
-                        <a href="#" class="menu-item sign-out">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Sign Out</span>
-                        </a>
-                    </div>
                 </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <nav class="sidebar" id="sidebar">
-        <div class="sidebar-content">
-            <div class="nav-section primary-nav">
-                <a href="#" class="nav-item" data-section="all">
-                    <i class="fas fa-file-alt"></i>
-                    <span>All Notes</span>
-                    <span class="note-count">24</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-star"></i>
-                    <span>Favorites</span>
-                    <span class="note-count">8</span>
-                </a>
-                <a href="#" class="nav-item">
-                    <i class="fas fa-trash-alt"></i>
-                    <span>Trash</span>
-                    <span class="note-count">3</span>
-                </a>
-            </div>
-
-            <div class="menu-divider with-margin"></div>
-
-            <div class="nav-section categories-section">
-                <div class="section-header">
-                    <h3>Categories</h3>
-                    <button class="new-category-btn" id="newCategoryBtn">
-                        <i class="fas fa-plus"></i>
-                        <span>New Category</span>
-                    </button>
-                </div>
-                <div class="categories-list">
-                    <a href="#" class="nav-item category-item" style="--category-color: var(--category-work)">
-                        <i class="fas fa-briefcase"></i>
-                        <span>Work</span>
-                        <span class="note-count">12</span>
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-content">
+                <div class="nav-section primary-nav">
+                    <a href="#" class="nav-item" data-section="all">
+                        <i class="fas fa-file-alt"></i>
+                        <span>All Notes</span>
+                        <span class="note-count">24</span>
                     </a>
-                    <a href="#" class="nav-item category-item" style="--category-color: var(--category-personal)">
-                        <i class="fas fa-user"></i>
-                        <span>Personal</span>
+                    <a href="#" class="nav-item">
+                        <i class="fas fa-star"></i>
+                        <span>Favorites</span>
                         <span class="note-count">8</span>
                     </a>
-                    <a href="#" class="nav-item category-item" style="--category-color: var(--category-study)">
-                        <i class="fas fa-book"></i>
-                        <span>Study</span>
-                        <span class="note-count">5</span>
-                    </a>
-                    <a href="#" class="nav-item category-item" style="--category-color: var(--category-goals)">
-                        <i class="fas fa-bullseye"></i>
-                        <span>Goals</span>
+                    <a href="#" class="nav-item">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Trash</span>
                         <span class="note-count">3</span>
                     </a>
                 </div>
+
+                <div class="menu-divider with-margin"></div>
+
+                <div class="nav-section categories-section">
+                    <div class="section-header">
+                        <h3>Categories</h3>
+                        <button class="new-category-btn" id="newCategoryBtn">
+                            <i class="fas fa-plus"></i>
+                            <span>New Category</span>
+                        </button>
+                    </div>
+                    <div class="categories-list">
+                        <a href="#" class="nav-item category-item" style="--category-color: var(--category-work)">
+                            <i class="fas fa-briefcase"></i>
+                            <span>Work</span>
+                            <span class="note-count">12</span>
+                            <button class="category-actions-btn">
+                                <i class="fas fa-ellipsis-v"></i>
+                                <div class="category-actions-dropdown">
+                                    <button class="action-item edit-category">
+                                        <i class="fas fa-pen"></i>
+                                        Edit
+                                    </button>
+                                    <button class="action-item delete-category">
+                                        <i class="fas fa-trash-alt"></i>
+                                        Delete
+                                    </button>
+                                </div>
+                            </button>
+                        </a>
+                        <!-- Other categories follow the same pattern -->
+                    </div>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
 
     <main class="main-content">
-        <div class="content-header">
-            <h1>All Notes</h1>
-            <div class="view-options">
-                <button class="view-btn active" data-view="grid">
-                    <i class="fas fa-th-large"></i>
-                </button>
-                <button class="view-btn" data-view="list">
-                    <i class="fas fa-list"></i>
-                </button>
+            <div class="content-header">
+                <h1>All Notes</h1>
+                <div class="view-options">
+                    <button class="view-btn active" data-view="grid">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button class="view-btn" data-view="list">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="notes-grid">
+                <article class="note-card pinned">
+                    <div class="note-card-content">
+                        <div class="note-header">
+                            <div class="note-badges">
+                                <span class="badge pinned">
+                                    <i class="fas fa-thumbtack"></i>
+                                    Pinned
+                                </span>
+                                <span class="badge category work">
+                                    <i class="fas fa-briefcase"></i>
+                                    Work
+                                </span>
+                            </div>
+                            <div class="note-actions">
+                                <div class="more-actions">
+                                    <button class="icon-btn more-btn">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <div class="actions-dropdown">
+                                        <button class="action-item pin-note">
+                                            <i class="fas fa-thumbtack"></i>
+                                            Pin
+                                        </button>
+                                        <button class="action-item star-note">
+                                            <i class="fas fa-star"></i>
+                                            Favorite
+                                        </button>
+                                        <div class="action-divider"></div>
+                                        <button class="action-item delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="note-body">
+                            <h2 class="note-title">Project Roadmap 2025</h2>
+                            <p class="note-preview">Key milestones and deliverables for Q1 implementation. Team collaboration guidelines and sprint planning details included.</p>
+                            <div class="note-metadata">
+                                <span class="date">
+                                    <i class="far fa-clock"></i>
+                                    Updated Jan 4, 2025
+                                </span>
+                                <span class="attachments">
+                                    <i class="fas fa-paperclip"></i>
+                                    2 files
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Trash Note Card Template -->
+                <article class="note-card trash">
+                    <div class="note-card-content">
+                        <div class="note-header">
+                            <div class="note-badges">
+                                <span class="badge category personal">
+                                    <i class="fas fa-user"></i>
+                                    Personal
+                                </span>
+                            </div>
+                            <div class="note-actions">
+                                <div class="more-actions">
+                                    <button class="icon-btn more-btn">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <div class="actions-dropdown">
+                                        <button class="action-item restore-note">
+                                            <i class="fas fa-undo"></i>
+                                            Restore
+                                        </button>
+                                        <div class="action-divider"></div>
+                                        <button class="action-item delete permanent">
+                                            <i class="fas fa-trash-alt"></i>
+                                            Delete Permanently
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="note-body">
+                            <h2 class="note-title">Deleted Note Example</h2>
+                            <p class="note-preview">This is an example of how a deleted note appears in the trash.</p>
+                            <div class="note-metadata">
+                                <span class="date">
+                                    <i class="far fa-clock"></i>
+                                    Deleted Jan 3, 2025
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </main>
+
+        <!-- Create/Edit Note Modal -->
+        <div class="modal note-modal" id="noteModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <i class="fas fa-edit"></i>
+                        <h2>Create New Note</h2>
+                    </div>
+                    <button class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="noteForm">
+                    <div class="modal-body">
+                        <div class="formatting-toolbar">
+                            <div class="toolbar-group">
+                                <button type="button" class="format-btn" title="Bold">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" class="format-btn" title="Italic">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                                <button type="button" class="format-btn" title="Underline">
+                                    <i class="fas fa-underline"></i>
+                                </button>
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <button type="button" class="format-btn" title="Heading">
+                                    <i class="fas fa-heading"></i>
+                                </button>
+                                <button type="button" class="format-btn" title="Bullet List">
+                                    <i class="fas fa-list-ul"></i>
+                                </button>
+                                <button type="button" class="format-btn" title="Numbered List">
+                                    <i class="fas fa-list-ol"></i>
+                                </button>
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <button type="button" class="format-btn" title="Add Link">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                                <button type="button" class="format-btn" title="Add Image">
+                                    <i class="fas fa-image"></i>
+                                </button>
+                                <button type="button" class="format-btn" title="Add File">
+                                    <i class="fas fa-paperclip"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="note-title-input" placeholder="Note Title">
+                        </div>
+                        <div class="form-group">
+                            <div class="category-select">
+                                <i class="fas fa-tag"></i>
+                                <select>
+                                    <option value="">Select Category</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="rich-editor" contenteditable="true" placeholder="Start typing your note..."></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Note</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
 
-        <div class="notes-grid">
-            <article class="note-card pinned">
-                <div class="note-card-content">
-                    <div class="note-header">
-                        <div class="note-badges">
-                            <span class="badge pinned">
-                                <i class="fas fa-thumbtack"></i>
-                                Pinned
-                            </span>
-                            <span class="badge category work">
-                                <i class="fas fa-briefcase"></i>
-                                Work
-                            </span>
+        <!-- Category Modal -->
+        <div class="modal category-modal" id="categoryModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <i class="fas fa-folder-plus"></i>
+                        <h2>Create New Category</h2>
+                    </div>
+                    <button class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="categoryName">Category Name</label>
+                        <input type="text" id="categoryName" placeholder="Enter category name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Category Color</label>
+                        <div class="color-options">
+                            <button class="color-option active" style="--color: #4C6FFF">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="color-option" style="--color: #FF6B6B">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="color-option" style="--color: #6BCB77">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="color-option" style="--color: #9B6BFF">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="color-option" style="--color: #FFB648">
+                                <i class="fas fa-check"></i>
+                            </button>
                         </div>
-                        <div class="note-actions">
-                            <button class="icon-btn star-btn active">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Category Icon</label>
+                        <div class="icon-options">
+                            <button class="icon-option active">
+                                <i class="fas fa-briefcase"></i>
+                            </button>
+                            <button class="icon-option">
+                                <i class="fas fa-book"></i>
+                            </button>
+                            <button class="icon-option">
+                                <i class="fas fa-user"></i>
+                            </button>
+                            <button class="icon-option">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                            <button class="icon-option">
                                 <i class="fas fa-star"></i>
                             </button>
-                            <div class="more-actions">
-                                <button class="icon-btn more-btn">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <div class="actions-dropdown">
-                                    <button class="action-item">
-                                        <i class="fas fa-pen"></i>
-                                        Edit
-                                    </button>
-                                    <button class="action-item">
-                                        <i class="fas fa-copy"></i>
-                                        Duplicate
-                                    </button>
-                                    <div class="action-divider"></div>
-                                    <button class="action-item delete">
-                                        <i class="fas fa-trash-alt"></i>
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
                         </div>
-                    </div>
-                    <div class="note-body">
-                        <h2 class="note-title">Project Roadmap 2025</h2>
-                        <p class="note-preview">Key milestones and deliverables for Q1 implementation. Team collaboration guidelines and sprint planning details included.</p>
-<div class="note-metadata">
-    <span class="date">
-        <i class="far fa-clock"></i>
-        Updated Jan 4, 2025
-    </span>
-    <span class="attachments">
-        <i class="fas fa-paperclip"></i>
-        2 files
-    </span>
-</div>
-                    </div>
-                </div>
-            </article>
-
-            <!-- Regular Note Card -->
-            <article class="note-card">
-                <div class="note-card-content">
-                    <div class="note-header">
-                        <div class="note-badges">
-                            <span class="badge category personal">
-                                <i class="fas fa-user"></i>
-                                Personal
-                            </span>
-                        </div>
-                        <div class="note-actions">
-                            <button class="icon-btn star-btn">
-                                <i class="far fa-star"></i>
-                            </button>
-                            <div class="more-actions">
-                                <button class="icon-btn more-btn">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <div class="actions-dropdown">
-                                    <button class="action-item">
-                                        <i class="fas fa-pen"></i>
-                                        Edit
-                                    </button>
-                                    <button class="action-item">
-                                        <i class="fas fa-copy"></i>
-                                        Duplicate
-                                    </button>
-                                    <div class="action-divider"></div>
-                                    <button class="action-item delete">
-                                        <i class="fas fa-trash-alt"></i>
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="note-body">
-                        <h2 class="note-title">Fitness Goals 2025</h2>
-                        <p class="note-preview">30 minutes cardio daily, strength training 3x week. Track progress weekly and adjust nutrition plan accordingly.</p>
-                        <div class="note-metadata">
-                            <span class="date">
-                                <i class="far fa-clock"></i>
-                                Updated Jan 3
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </article>
-        </div>
-    </main>
-
-    <!-- Create/Edit Note Modal -->
-    <div class="modal note-modal" id="noteModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <i class="fas fa-edit"></i>
-                    <h2>Create New Note</h2>
-                </div>
-                <button class="close-btn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="noteForm">
-                <div class="modal-body">
-                    <div class="formatting-toolbar">
-                        <div class="toolbar-group">
-                            <button type="button" class="format-btn" title="Bold">
-                                <i class="fas fa-bold"></i>
-                            </button>
-                            <button type="button" class="format-btn" title="Italic">
-                                <i class="fas fa-italic"></i>
-                            </button>
-                            <button type="button" class="format-btn" title="Underline">
-                                <i class="fas fa-underline"></i>
-                            </button>
-                        </div>
-                        <div class="toolbar-divider"></div>
-                        <div class="toolbar-group">
-                            <button type="button" class="format-btn" title="Heading">
-                                <i class="fas fa-heading"></i>
-                            </button>
-                            <button type="button" class="format-btn" title="Bullet List">
-                                <i class="fas fa-list-ul"></i>
-                            </button>
-                            <button type="button" class="format-btn" title="Numbered List">
-                                <i class="fas fa-list-ol"></i>
-                            </button>
-                        </div>
-                        <div class="toolbar-divider"></div>
-                        <div class="toolbar-group">
-                            <button type="button" class="format-btn" title="Add Link">
-                                <i class="fas fa-link"></i>
-                            </button>
-                            <button type="button" class="format-btn" title="Add Image">
-                                <i class="fas fa-image"></i>
-                            </button>
-                            <button type="button" class="format-btn" title="Add File">
-                                <i class="fas fa-paperclip"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" class="note-title-input" placeholder="Note Title">
-                    </div>
-                    <div class="form-group">
-                        <div class="category-select">
-                            <i class="fas fa-tag"></i>
-                            <select>
-                                <option value="">Select Category</option>
-                                <option value="work">Work</option>
-                                <option value="personal">Personal</option>
-                                <option value="study">Study</option>
-                                <option value="goals">Goals</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="rich-editor" contenteditable="true" placeholder="Start typing your note..."></div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Note</button>
-                    </div>
+                    <button class="btn btn-secondary">Cancel</button>
+                    <button class="btn btn-primary">Create Category</button>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- New Category Modal -->
-    <div class="modal category-modal" id="categoryModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <i class="fas fa-folder-plus"></i>
-                    <h2>Create New Category</h2>
-                </div>
-                <button class="close-btn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="categoryName">Category Name</label>
-                    <input type="text" id="categoryName" placeholder="Enter category name">
-                </div>
-                
-                <div class="form-group">
-                    <label>Category Color</label>
-                    <div class="color-options">
-                        <button class="color-option active" style="--color: #4C6FFF">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button class="color-option" style="--color: #FF6B6B">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button class="color-option" style="--color: #6BCB77">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button class="color-option" style="--color: #9B6BFF">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button class="color-option" style="--color: #FFB648">
-                            <i class="fas fa-check"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Category Icon</label>
-                    <div class="icon-options">
-                        <button class="icon-option active">
-                            <i class="fas fa-briefcase"></i>
-                        </button>
-                        <button class="icon-option">
-                            <i class="fas fa-book"></i>
-                        </button>
-                        <button class="icon-option">
-                            <i class="fas fa-user"></i>
-                        </button>
-                        <button class="icon-option">
-                            <i class="fas fa-heart"></i>
-                        </button>
-                        <button class="icon-option">
-                            <i class="fas fa-star"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary">Cancel</button>
-                <button class="btn btn-primary">Create Category</button>
             </div>
         </div>
-    </div>
 
-    <!-- Floating Action Button -->
-    <button class="fab" id="createNote" aria-label="Create new note">
-        <i class="fas fa-plus"></i>
-    </button>
+        <!-- Profile Modal -->
+        <div class="modal profile-modal" id="profileModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <i class="fas fa-user"></i>
+                        <h2>My Profile</h2>
+                    </div>
+                    <button class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="profile-avatar-section">
+                        <div class="avatar-wrapper">
+                            <img src="default-avatar.png" alt="Profile Picture" class="profile-avatar">
+                            <button class="change-avatar-btn">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <form id="profileForm">
+                        <div class="form-group">
+                            <label for="fullName">Full Name</label>
+                            <input type="text" id="fullName" value="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" value="john.doe@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="bio">Bio</label>
+                            <textarea id="bio" rows="3" placeholder="Write something about yourself..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary">Cancel</button>
+                    <button class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
 
-    <script src="app.js"></script>
-</body>
-</html>
+        <!-- Settings Modal -->
+        <div class="modal settings-modal" id="settingsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <i class="fas fa-cog"></i>
+                        <h2>Settings</h2>
+                    </div>
+                    <button class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-section">
+                        <h3>Appearance</h3>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <span>Theme</span>
+                                <span class="setting-description">Choose your preferred theme</span>
+                            </div>
+                            <div class="theme-selector">
+                                <button class="theme-option light active">
+                                    <i class="fas fa-sun"></i>
+                                    Light
+                                </button>
+                                <button class="theme-option dark">
+                                    <i class="fas fa-moon"></i>
+                                    Dark
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Note Preferences</h3>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <span>Default View</span>
+                                <span class="setting-description">Choose default notes view</span>
+                            </div>
+                            <div class="view-selector">
+                                <button class="view-option grid active">
+                                    <i class="fas fa-th-large"></i>
+                                    Grid
+                                </button>
+                                <button class="view-option list">
+                                    <i class="fas fa-list"></i>
+                                    List
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Security</h3>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <span>Change Password</span>
+                                <span class="setting-description">Update your account password</span>
+                            </div>
+                            <button class="btn btn-secondary change-password-btn">
+                                Change Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary">Cancel</button>
+                    <button class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Change Password Modal -->
+        <div class="modal password-modal" id="passwordModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <i class="fas fa-lock"></i>
+                        <h2>Change Password</h2>
+                    </div>
+                    <button class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="passwordForm">
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="currentPassword">
+                                <button type="button" class="toggle-password">
+                                    <i class="far fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">New Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="newPassword">
+                                <button type="button" class="toggle-password">
+                                    <i class="far fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm New Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="confirmPassword">
+                                <button type="button" class="toggle-password">
+                                    <i class="far fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary">Cancel</button>
+                    <button class="btn btn-primary">Update Password</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Action Button -->
+        <button class="fab" id="createNote" aria-label="Create new note">
+            <i class="fas fa-plus"></i>
+        </button>
+
+        <script src="app.js"></script>
+    </body>
+    </html>
+
