@@ -442,8 +442,8 @@ body {
     border: none;
     background: none;
     color: var(--primary);
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
     border-radius: 6px;
     transition: var(--transition-fast);
@@ -456,13 +456,15 @@ body {
 .nav-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
+    gap: 10px;
+    padding: 10px 10px;
     color: var(--text-secondary);
     text-decoration: none;
     border-radius: 8px;
     transition: var(--transition-fast);
     margin-bottom: 4px;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .nav-item:hover {
