@@ -485,7 +485,7 @@ body {
 .sidebar-footer {
     padding: 5px;
     border-top: 1px solid var(--surface-2);
-    margin-top: 200px;
+    margin-top: auto;
     display: flex;
     justify-content: flex-end;
     align-items: center;
@@ -505,6 +505,11 @@ body {
     /* Remove margin-left */
 }
 
+/* Add this for mobile responsiveness */
+@media (max-width: 768px) {
+.sidebar-footer {
+    margin-top: auto;
+}}
 
 .new-category-btn {
     display: flex;
