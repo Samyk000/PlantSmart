@@ -507,8 +507,14 @@ body {
 
 /* Add this for mobile responsiveness */
 @media (max-width: 768px) {
-.sidebar-footer {
-    padding: 16px;
+    .sidebar-footer {
+        padding: 16px;}
+    }
+    
+@media (max-width: 768px) {
+    .sidebar-content {
+    padding: 5px 5px;
+    height: calc(100vh - 90px); /* Subtract header height */
 }
     
     .sidebar-footer .theme-toggle {
