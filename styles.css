@@ -229,7 +229,7 @@ body {
 }
 
 .sun-icon {
-    color: #FFB648;
+    color: #ba7a1a;
     margin-left: -1px; /* Adjust sun icon position */
 }
 
@@ -482,6 +482,42 @@ body {
     letter-spacing: 0.5px;
 }
 
+.sidebar-footer {
+    padding: 16px;
+    border-top: 1px solid var(--surface-2);
+    margin-top: auto;  /* This will push the footer to the bottom */
+    display: flex;     /* Add this */
+    justify-content: flex-end;  /* This will push the toggle to the right */
+    align-items: center;  /* This centers items vertically */
+}
+
+.sidebar-content {
+    padding: 5px 5px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 64px); /* Subtract header height */
+}
+
+/* Adjust theme toggle styles for sidebar */
+.sidebar-footer .theme-toggle {
+    width: 48px;
+    height: 24px;
+    /* Remove margin-left */
+}
+
+/* Add this for mobile responsiveness */
+@media (max-width: 768px) {
+    .sidebar-footer {
+        padding: 12px;  /* Slightly smaller padding for mobile */
+    }
+    
+    .sidebar-footer .theme-toggle {
+        /* Toggle size remains the same */
+        width: 48px;
+        height: 24px;
+    }
+}
+
 .new-category-btn {
     display: flex;
     align-items: center;
@@ -547,7 +583,7 @@ body {
 .category-item {
     position: relative;
     padding-left: 36px;
-    padding-right: 1px; /* Add space for the more button */
+    padding-right: 40px; /* Add space for the more button */
 }
 
 .category-item::before {
@@ -1148,9 +1184,9 @@ body {
     .fab {
         right: 30px;
         bottom: 30px;
-        width: 70px;
-        height: 68px;
-        font-size: 22px;
+        width: 60px;
+        height: 58px;
+        font-size: 18px;
     }
 }
 
