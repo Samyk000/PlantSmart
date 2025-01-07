@@ -33,6 +33,56 @@ const AppState = {
     }
 };
 
+const PerformanceMonitor = {
+    measures: new Map(),
+    start(label) {
+        this.measures.set(label, performance.now());
+    },
+    end(label) {
+        const start = this.measures.get(label);
+        if (start) {
+            const duration = performance.now() - start;
+            console.log(`${label}: ${duration}ms`);
+            this.measures.delete(label);
+        }
+    }
+};
+
+// Add this Error Recovery system
+const ErrorRecovery = {
+    backupState: null,
+    maxBackups: 5,
+    backups: [],
+
+    saveState() {
+        try {
+            const currentState = JSON.stringify(AppState);
+            this.backups.unshift(currentState);
+            
+            // Keep only the last 5 backups
+            if (this.backups.length > this.maxBackups) {
+                this.backups.pop();
+            }
+        } catch (error) {
+            handleError(error, 'ErrorRecovery.saveState');
+        }
+    },
+
+    recover() {
+        try {
+            if (this.backups.length > 0) {
+                const lastValidState = this.backups[0];
+                Object.assign(AppState, JSON.parse(lastValidState));
+                renderNotes();
+                showNotification('Successfully recovered to last known good state', 'success');
+            }
+        } catch (error) {
+            handleError(error, 'ErrorRecovery.recover');
+            showNotification('Failed to recover state', 'error');
+        }
+    }
+};
+
 const elements = {
     body: document.body,
     overlay: document.getElementById('overlay'),
@@ -52,6 +102,7 @@ const elements = {
     notesContainer: document.getElementById('notesGrid'),
     navItems: document.querySelectorAll('.nav-item'),
     categoriesList: document.getElementById('categoriesList'),
+    saveCategoryBtn: document.getElementById('saveCategoryBtn'),
     newCategoryBtn: document.getElementById('newCategoryBtn'),
     searchInput: document.getElementById('searchInput'),
     viewButtons: document.querySelectorAll('.view-btn'),
@@ -59,7 +110,6 @@ const elements = {
     noteTitleInput: document.getElementById('noteTitleInput'),
     noteContent: document.getElementById('noteContent'),
     categorySelect: document.getElementById('categorySelect'),
-    formatButtons: document.querySelectorAll('.format-btn'),
     saveNoteBtn: document.getElementById('saveNoteBtn'),
     cancelNoteBtn: document.getElementById('cancelNoteBtn'),
     categoryName: document.getElementById('categoryName'),
@@ -80,7 +130,24 @@ const elements = {
     configureRemindersBtn: document.getElementById('configureRemindersBtn'),
     storageProgress: document.querySelector('.storage-progress'),
     storageUsed: document.querySelector('.storage-used'),
-    storageTotal: document.querySelector('.storage-total')
+    storageTotal: document.querySelector('.storage-total'),
+    showFilters: document.getElementById('showFilters'),
+    filterDropdown: document.getElementById('filterDropdown'),
+    sortBySelect: document.getElementById('sortBySelect'),
+    sortButtons: document.querySelectorAll('.sort-btn'),
+    dateFrom: document.getElementById('dateFrom'),
+    dateTo: document.getElementById('dateTo'),
+    pinnedOnly: document.getElementById('pinnedOnly'),
+    favoritesOnly: document.getElementById('favoritesOnly'),
+    resetFilters: document.getElementById('resetFilters'),
+    applyFilters: document.getElementById('applyFilters'),
+    formatButtons: document.querySelectorAll('.format-btn'),
+    colorPickers: document.querySelectorAll('.color-picker'),
+    fontSizeSelect: document.querySelector('.font-size-select'),
+    moreOptionsBtn: document.querySelector('.more-options-btn'),
+    moreOptionsDropdown: document.querySelector('.more-options-dropdown'),
+    themeOptions: document.querySelectorAll('.theme-option'),
+    richEditor: document.getElementById('noteContent'),
 };
 
 function initializeProfile() {
@@ -97,6 +164,407 @@ function initializeProfile() {
     }
 }
 
+
+
+function closeAllDropdowns() {
+    document.querySelectorAll('.more-options-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+}
+
+// Update the closeAllModals function
+function closeAllModals() {
+    closeAllDropdowns();
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.remove('active');
+    });
+    elements.overlay.classList.remove('active');
+    resetForms();
+    
+    if (elements.profileModal && elements.profileModal.classList.contains('active')) {
+        initializeProfile();
+    }
+    if (elements.settingsModal && elements.settingsModal.classList.contains('active')) {
+        initializeSettings();
+    }
+}
+
+const FormattingTools = {
+    // Track active states
+    activeStates: {
+        bold: false,
+        italic: false,
+        underline: false,
+        strikethrough: false,
+    },
+
+    // Add cleanup management system
+    cleanup: {
+        listeners: new Set(),
+        add(element, type, handler) {
+            if (element && type && handler) {
+                element.addEventListener(type, handler);
+                this.listeners.add({ element, type, handler });
+            }
+        },
+        removeAll() {
+            this.listeners.forEach(({ element, type, handler }) => {
+                if (element && type && handler) {
+                    element.removeEventListener(type, handler);
+                }
+            });
+            this.listeners.clear();
+        }
+    },
+
+    init() {
+        try {
+            this.setupFormatButtons();
+            this.setupColorPickers();
+            this.setupFontSizeControls();
+            this.setupMoreOptions();
+            this.setupThemeOptions();
+            this.setupEditorListeners();
+            this.setupKeyboardNavigation();
+            
+            // Return cleanup function
+            return () => {
+                this.cleanup.removeAll();
+            };
+        } catch (error) {
+            handleError(error, 'FormattingTools initialization');
+            showNotification('Error initializing formatting tools', 'error');
+        }
+    },
+
+    setupMoreOptions() {
+        const btn = elements.moreOptionsBtn;
+        const dropdown = elements.moreOptionsDropdown;
+        
+        if (!btn || !dropdown) return;
+
+        const handleClick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const isActive = btn.classList.contains('active');
+            this.closeAllDropdowns();
+            
+            if (!isActive) {
+                btn.classList.add('active');
+                document.addEventListener('click', handleOutsideClick);
+            }
+        };
+
+        const handleOutsideClick = (e) => {
+            if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+                this.closeDropdown();
+            }
+        };
+
+        // Use cleanup management
+        this.cleanup.add(btn, 'click', handleClick);
+        
+        // Handle dropdown items
+        const dropdownItems = dropdown.querySelectorAll('[data-command]');
+        dropdownItems.forEach(item => {
+            this.cleanup.add(item, 'click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const command = item.dataset.command;
+                this.executeCommand(command);
+                this.closeDropdown();
+            });
+        });
+    },
+
+    closeDropdown() {
+        const btn = elements.moreOptionsBtn;
+        if (btn) {
+            btn.classList.remove('active');
+        }
+        document.removeEventListener('click', this.handleOutsideClick);
+    },
+
+    setupKeyboardNavigation() {
+        const editor = elements.richEditor;
+        if (!editor) return;
+
+        const handleKeyboard = (e) => {
+            // Handle keyboard shortcuts
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key.toLowerCase()) {
+                    case 'b':
+                        e.preventDefault();
+                        this.executeCommand('bold');
+                        break;
+                    case 'i':
+                        e.preventDefault();
+                        this.executeCommand('italic');
+                        break;
+                    case 'u':
+                        e.preventDefault();
+                        this.executeCommand('underline');
+                        break;
+                }
+            }
+        };
+
+        this.cleanup.add(editor, 'keydown', handleKeyboard);
+    },
+
+    setupMoreOptions() {
+        const { moreOptionsBtn, moreOptionsDropdown } = elements.formattingTools;
+        
+        if (!moreOptionsBtn || !moreOptionsDropdown) return;
+
+        // Close dropdown handler
+        const closeDropdown = () => {
+            moreOptionsBtn.classList.remove('active');
+            document.removeEventListener('click', outsideClickHandler);
+        };
+
+        // Outside click handler
+        const outsideClickHandler = (e) => {
+            if (!moreOptionsBtn.contains(e.target) && !moreOptionsDropdown.contains(e.target)) {
+                closeDropdown();
+            }
+        };
+
+        // Click handler for the more options button
+        moreOptionsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const isActive = moreOptionsBtn.classList.contains('active');
+
+            // Close all other dropdowns first
+            this.closeAllDropdowns();
+
+            if (!isActive) {
+                moreOptionsBtn.classList.add('active');
+                document.addEventListener('click', outsideClickHandler);
+            }
+        });
+
+        const cleanup = {
+            formatToolsCleanup() {
+                const { moreOptionsBtn } = elements.formattingTools;
+                if (moreOptionsBtn) {
+                    moreOptionsBtn.classList.remove('active');
+                    document.removeEventListener('click', this.outsideClickHandler);
+                }
+            }
+        };
+
+        // Handle dropdown item clicks
+        moreOptionsDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            const dropdownItem = e.target.closest('[data-command]');
+            if (dropdownItem) {
+                const command = dropdownItem.dataset.command;
+                this.executeCommand(command);
+                closeDropdown();
+            }
+        });
+    },
+
+    closeAllDropdowns() {
+        const { moreOptionsBtn } = elements.formattingTools;
+        document.querySelectorAll('.more-options-btn').forEach(btn => {
+            if (btn !== moreOptionsBtn) {
+                btn.classList.remove('active');
+            }
+        });
+    },
+
+    
+    
+
+    // Initialize formatting tools
+    init() {
+        this.setupFormatButtons();
+        this.setupColorPickers();
+        this.setupFontSizeControls();
+        this.setupMoreOptions();
+        this.setupThemeOptions();
+        this.setupEditorListeners();
+    },
+
+    // Setup format buttons
+    setupFormatButtons() {
+        elements.formatButtons.forEach(btn => {
+            if (btn.dataset.command) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.executeCommand(btn.dataset.command);
+                    this.updateButtonStates();
+                });
+            }
+        });
+    },
+
+    // Setup color pickers
+    setupColorPickers() {
+        elements.colorPickers.forEach(picker => {
+            picker.addEventListener('input', (e) => {
+                this.executeCommand(picker.dataset.type, e.target.value);
+            });
+
+            picker.addEventListener('change', (e) => {
+                // Reset color picker button state
+                const btn = picker.closest('.color-picker-btn');
+                btn.classList.remove('active');
+            });
+        });
+    },
+
+    // Setup font size controls
+    setupFontSizeControls() {
+        if (elements.fontSizeSelect) {
+            elements.fontSizeSelect.addEventListener('change', (e) => {
+                this.executeCommand('fontSize', e.target.value);
+            });
+        }
+
+        // Font size increase/decrease buttons
+        document.querySelectorAll('[data-command="increaseFontSize"], [data-command="decreaseFontSize"]')
+            .forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const currentSize = parseInt(elements.fontSizeSelect.value);
+                    const newSize = btn.dataset.command === 'increaseFontSize' 
+                        ? Math.min(currentSize + 1, 7)
+                        : Math.max(currentSize - 1, 1);
+                    
+                    elements.fontSizeSelect.value = newSize;
+                    this.executeCommand('fontSize', newSize);
+                });
+            });
+    },
+
+    // Setup more options dropdown
+    setupMoreOptions() {
+        if (elements.moreOptionsBtn) {
+            // Store references to elements
+            const btn = elements.moreOptionsBtn;
+            const dropdown = elements.moreOptionsDropdown;
+    
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Close all other dropdowns first
+                document.querySelectorAll('.more-options-btn').forEach(otherBtn => {
+                    if (otherBtn !== btn) {
+                        otherBtn.classList.remove('active');
+                    }
+                });
+    
+                // Toggle current dropdown
+                btn.classList.toggle('active');
+            });
+    
+            // Close when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+                    btn.classList.remove('active');
+                }
+            });
+    
+            // Prevent dropdown from closing when clicking inside it
+            dropdown.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+    },
+
+    
+
+    // Setup theme options
+    setupThemeOptions() {
+        elements.themeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                elements.themeOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+                
+                const theme = option.dataset.theme;
+                elements.richEditor.setAttribute('data-theme', theme);
+                
+                // Save theme preference
+                if (AppState.currentNoteId) {
+                    const note = AppState.notes.find(n => n.id === AppState.currentNoteId);
+                    if (note) {
+                        note.theme = theme;
+                        saveNotesToStorage();
+                    }
+                }
+            });
+        });
+    },
+
+    // Setup editor listeners
+    setupEditorListeners() {
+        elements.richEditor.addEventListener('keydown', (e) => {
+            // Handle tab key
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                this.executeCommand('insertHTML', '&emsp;');
+            }
+        });
+
+        // Update formatting button states on selection change
+        elements.richEditor.addEventListener('mouseup', () => this.updateButtonStates());
+        elements.richEditor.addEventListener('keyup', () => this.updateButtonStates());
+    },
+
+    // Execute formatting command
+    executeCommand(command, value = null) {
+        document.execCommand(command, false, value);
+        
+        // Update active states
+        if (command in this.activeStates) {
+            this.activeStates[command] = !this.activeStates[command];
+        }
+        
+        // Update UI
+        this.updateButtonStates();
+    },
+
+    // Update button states based on current selection
+    updateButtonStates() {
+        elements.formatButtons.forEach(btn => {
+            const command = btn.dataset.command;
+            if (command && document.queryCommandState(command)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    },
+
+    // Get formatted content
+    getFormattedContent() {
+        return elements.richEditor.innerHTML;
+    },
+
+    // Set formatted content
+    setFormattedContent(content) {
+        elements.richEditor.innerHTML = content;
+    },
+
+    // Reset editor
+    reset() {
+        elements.richEditor.innerHTML = '';
+        this.updateButtonStates();
+        elements.themeOptions.forEach(opt => {
+            opt.classList.toggle('active', opt.dataset.theme === 'default');
+        });
+        elements.richEditor.setAttribute('data-theme', 'default');
+    }
+};
+
 function handleProfileSubmit(e) {
     e.preventDefault();
     AppState.userProfile.name = elements.profileName.value;
@@ -110,6 +578,8 @@ function handleProfileSubmit(e) {
     
     closeAllModals();
 }
+
+
 
 function initializeSettings() {
     if (elements.archiveInterval) elements.archiveInterval.value = AppState.settings.archiveInterval;
@@ -194,6 +664,7 @@ function setupModalCloseButtons() {
     });
 }
 
+
 function setupMenuButtons() {
     const profileBtn = document.getElementById('profileMenuBtn');
     const settingsBtn = document.getElementById('settingsMenuBtn');
@@ -217,19 +688,139 @@ function setupMenuButtons() {
     }
 }
 
+// Setup Filter Listeners
+function setupFilterListeners() {
+    // Toggle filter dropdown
+    elements.showFilters.addEventListener('click', (e) => {
+        e.stopPropagation();
+        elements.filterDropdown.classList.toggle('active');
+    });
+
+    // Close filter dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-filters')) {
+            elements.filterDropdown.classList.remove('active');
+        }
+    });
+
+    // Sort buttons
+    elements.sortButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            elements.sortButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            SearchOptions.sortOrder = btn.dataset.order;
+            renderNotes();
+        });
+    });
+
+    // Sort by select
+    elements.sortBySelect.addEventListener('change', () => {
+        SearchOptions.sortBy = elements.sortBySelect.value;
+        renderNotes();
+    });
+
+    // Date range inputs
+    elements.dateFrom.addEventListener('change', updateDateRange);
+    elements.dateTo.addEventListener('change', updateDateRange);
+
+    // Checkbox filters
+    elements.pinnedOnly.addEventListener('change', () => {
+        SearchOptions.onlyPinned = elements.pinnedOnly.checked;
+        renderNotes();
+    });
+
+    elements.favoritesOnly.addEventListener('change', () => {
+        SearchOptions.onlyFavorites = elements.favoritesOnly.checked;
+        renderNotes();
+    });
+
+    // Reset filters
+    elements.resetFilters.addEventListener('click', () => {
+        resetSearchFilters();
+        renderNotes();
+    });
+
+    // Apply filters
+    elements.applyFilters.addEventListener('click', () => {
+        elements.filterDropdown.classList.remove('active');
+        renderNotes();
+    });
+}
+
+function updateDateRange() {
+    const fromDate = elements.dateFrom.value;
+    const toDate = elements.dateTo.value;
+
+    if (fromDate && toDate) {
+        SearchOptions.dateRange = {
+            start: new Date(fromDate),
+            end: new Date(toDate)
+        };
+    } else {
+        SearchOptions.dateRange = null;
+    }
+    renderNotes();
+}
+
+
+// Reset Search Filters
+function resetSearchFilters() {
+    // Reset SearchOptions
+    SearchOptions.dateRange = null;
+    SearchOptions.sortBy = 'updatedAt';
+    SearchOptions.sortOrder = 'desc';
+    SearchOptions.onlyPinned = false;
+    SearchOptions.onlyFavorites = false;
+
+    // Reset UI elements
+    elements.sortBySelect.value = 'updatedAt';
+    elements.sortButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.order === 'desc');
+    });
+    elements.dateFrom.value = '';
+    elements.dateTo.value = '';
+    elements.pinnedOnly.checked = false;
+    elements.favoritesOnly.checked = false;
+}
+
 // Initialize App
 function initializeApp() {
-    loadTheme();
-    setupEventListeners();
-    setupModalCloseButtons();
-    setupMenuButtons();
-    setupProfileAndSettingsListeners();
-    renderCategories();
-    renderNotes();
-    updateCategoryCounts();
-    loadView();
-    initializeProfile();
-    initializeSettings(); 
+    try {
+        PerformanceMonitor.start('app-initialization');
+        
+        // Create initial state backup
+        ErrorRecovery.saveState();
+        
+        // Initialize core features
+        loadTheme();
+        setupEventListeners();
+        setupModalCloseButtons();
+        setupMenuButtons();
+        setupProfileAndSettingsListeners();
+        setupFilterListeners();
+        
+        // Initialize UI components
+        PerformanceMonitor.start('render-initial-ui');
+        renderCategories();
+        renderNotes();
+        FormattingTools.init();
+        updateCategoryCounts();
+        loadView();
+        PerformanceMonitor.end('render-initial-ui');
+        
+        // Initialize user data
+        initializeProfile();
+        initializeSettings();
+        
+        PerformanceMonitor.end('app-initialization');
+        
+        // Show success message
+        showNotification('Application initialized successfully', 'success');
+    } catch (error) {
+        handleError(error, 'initializeApp');
+        showNotification('Error initializing application. Attempting recovery...', 'error');
+        ErrorRecovery.recover();
+    }
 }
 
 // Load Theme
@@ -289,6 +880,7 @@ function setupEventListeners() {
             elements.userMenu.classList.remove('active');
         }
     });
+
 
     elements.createNoteBtn.addEventListener('click', () => {
         AppState.isEditMode = false;
@@ -385,6 +977,13 @@ function setupEventListeners() {
             option.classList.add('active');
         });
     });
+
+    if (elements.saveCategoryBtn) {
+        elements.saveCategoryBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleCategorySubmit(e);
+        });
+    }
 
     elements.iconOptions.forEach(option => {
         option.addEventListener('click', () => {
@@ -610,12 +1209,18 @@ function updateCategorySelect() {
 function handleNoteSubmit(e) {
     e.preventDefault();
     const title = elements.noteTitleInput.value.trim();
-    const content = elements.noteContent.innerHTML.trim();
+    const content = FormattingTools.getFormattedContent().trim();
     const category = elements.categorySelect.value;
+    const theme = elements.richEditor.getAttribute('data-theme') || 'default';
 
     if (!title) return;
 
-    const noteData = { title, content, category };
+    const noteData = {
+        title,
+        content,
+        category,
+        theme
+    };
 
     if (AppState.isEditMode && AppState.currentNoteId) {
         updateNote(AppState.currentNoteId, noteData);
@@ -629,21 +1234,58 @@ function handleNoteSubmit(e) {
 
 // Create Note
 function createNote(data) {
-    const note = {
-        id: Date.now(),
-        title: data.title,
-        content: data.content,
-        category: data.category,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isFavorite: false,
-        isDeleted: false,
-        isPinned: false
-    };
-    AppState.notes.unshift(note);
-    saveNotesToStorage();
-    renderNotes();
-    updateCategoryCounts();
+    try {
+        // Validate note data
+        const validationErrors = validateData(data, ValidationSchemas.note);
+        if (validationErrors.length > 0) {
+            throw new Error(validationErrors.map(err => err.message).join('. '));
+        }
+
+        // Sanitize content
+        const sanitizedContent = sanitizeHTML(data.content);
+
+        const note = {
+            id: Date.now(),
+            title: data.title.trim(),
+            content: sanitizedContent,
+            category: data.category,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            isFavorite: false,
+            isDeleted: false,
+            isPinned: false,
+            version: 1,
+            lastModifiedBy: AppState.userProfile.name
+        };
+
+        // Check storage limit before saving
+        const noteSize = new Blob([JSON.stringify(note)]).size;
+        const currentStorage = AppState.userProfile.storage.used * 1024 * 1024; // Convert GB to bytes
+        const newStorage = currentStorage + noteSize;
+        const totalStorage = AppState.userProfile.storage.total * 1024 * 1024 * 1024; // Convert GB to bytes
+
+        if (newStorage > totalStorage) {
+            throw new Error('Storage limit exceeded. Please upgrade your plan or delete some notes.');
+        }
+
+        AppState.notes.unshift(note);
+        saveNotesToStorage();
+        renderNotes();
+        updateCategoryCounts();
+        
+        showNotification('Note created successfully', 'success');
+        return note;
+    } catch (error) {
+        handleError(error, 'createNote');
+        throw error; // Re-throw to handle in UI
+    }
+}
+
+// HTML Sanitizer
+function sanitizeHTML(html) {
+    const temp = document.createElement('div');
+    temp.textContent = html;
+    return temp.innerHTML;
 }
 
 function duplicateNote(noteId) {
@@ -705,31 +1347,154 @@ function toggleNoteFavorite(id) {
     }
 }
 
-// Filter Notes
+// Search and Filter Configuration
+const SearchConfig = {
+    debounceTime: 300,
+    minSearchLength: 2,
+    maxResults: 100,
+    searchFields: ['title', 'content', 'category']
+};
+
+// Advanced Search Options
+const SearchOptions = {
+    dateRange: null,
+    categories: [],
+    sortBy: 'updatedAt',
+    sortOrder: 'desc',
+    onlyPinned: false,
+    onlyFavorites: false
+};
+
+// Filter Notes with Advanced Options
 function filterNotes() {
-    let filteredNotes = [...AppState.notes];
+    try {
+        let filteredNotes = [...AppState.notes];
 
-    if (AppState.activeSection === 'trash') {
-        filteredNotes = filteredNotes.filter(note => note.isDeleted);
-    } else if (AppState.activeSection === 'favorites') {
-        filteredNotes = filteredNotes.filter(note => note.isFavorite && !note.isDeleted);
-    } else if (AppState.activeSection === 'all') {
-        filteredNotes = filteredNotes.filter(note => !note.isDeleted);
-    } else {
-        filteredNotes = filteredNotes.filter(note =>
-            note.category === AppState.activeSection && !note.isDeleted
-        );
+        // Base section filtering
+        filteredNotes = filterBySection(filteredNotes);
+        
+        // Search term filtering
+        if (elements.searchInput.value.length >= SearchConfig.minSearchLength) {
+            filteredNotes = searchNotes(filteredNotes, elements.searchInput.value);
+        }
+
+        // Apply advanced filters
+        filteredNotes = applyAdvancedFilters(filteredNotes);
+
+        // Sort results
+        filteredNotes = sortNotes(filteredNotes);
+
+        // Limit results for performance
+        if (filteredNotes.length > SearchConfig.maxResults) {
+            showNotification(`Showing top ${SearchConfig.maxResults} results`, 'info');
+            filteredNotes = filteredNotes.slice(0, SearchConfig.maxResults);
+        }
+
+        return filteredNotes;
+    } catch (error) {
+        handleError(error, 'filterNotes');
+        return [];
     }
+}
 
-    if (elements.searchInput.value) {
-        const searchTerm = elements.searchInput.value.toLowerCase();
-        filteredNotes = filteredNotes.filter(note =>
-            note.title.toLowerCase().includes(searchTerm) ||
-            note.content.toLowerCase().includes(searchTerm)
-        );
+// Filter by Section
+function filterBySection(notes) {
+    switch (AppState.activeSection) {
+        case 'trash':
+            return notes.filter(note => note.isDeleted);
+        case 'favorites':
+            return notes.filter(note => note.isFavorite && !note.isDeleted);
+        case 'all':
+            return notes.filter(note => !note.isDeleted);
+        default:
+            return notes.filter(note => 
+                note.category === AppState.activeSection && !note.isDeleted
+            );
     }
+}
 
-    return filteredNotes;
+// Search Notes
+function searchNotes(notes, searchTerm) {
+    const terms = searchTerm.toLowerCase().split(' ').filter(term => term.length >= SearchConfig.minSearchLength);
+    
+    if (terms.length === 0) return notes;
+
+    return notes.filter(note => {
+        const searchableText = SearchConfig.searchFields.map(field => {
+            if (field === 'category') {
+                const category = AppState.categories.find(cat => cat.id === note.category);
+                return category ? category.name.toLowerCase() : '';
+            }
+            return note[field] ? note[field].toLowerCase() : '';
+        }).join(' ');
+
+        return terms.every(term => searchableText.includes(term));
+    });
+}
+
+// Apply Advanced Filters
+function applyAdvancedFilters(notes) {
+    return notes.filter(note => {
+        // Date range filter
+        if (SearchOptions.dateRange) {
+            const noteDate = new Date(note.updatedAt);
+            if (noteDate < SearchOptions.dateRange.start || noteDate > SearchOptions.dateRange.end) {
+                return false;
+            }
+        }
+
+        // Category filter
+        if (SearchOptions.categories.length > 0) {
+            if (!SearchOptions.categories.includes(note.category)) {
+                return false;
+            }
+        }
+
+        // Pinned notes filter
+        if (SearchOptions.onlyPinned && !note.isPinned) {
+            return false;
+        }
+
+        // Favorites filter
+        if (SearchOptions.onlyFavorites && !note.isFavorite) {
+            return false;
+        }
+
+        return true;
+    });
+}
+
+// Sort Notes
+function sortNotes(notes) {
+    return notes.sort((a, b) => {
+        let compareValue = 0;
+        
+        // Primary sort: Pinned
+        if (a.isPinned !== b.isPinned) {
+            return b.isPinned ? 1 : -1;
+        }
+
+        // Secondary sort: Selected field
+        switch (SearchOptions.sortBy) {
+            case 'title':
+                compareValue = a.title.localeCompare(b.title);
+                break;
+            case 'createdAt':
+                compareValue = new Date(b.createdAt) - new Date(a.createdAt);
+                break;
+            case 'updatedAt':
+            default:
+                compareValue = new Date(b.updatedAt) - new Date(a.updatedAt);
+        }
+
+        return SearchOptions.sortOrder === 'asc' ? -compareValue : compareValue;
+    });
+}
+
+// Update Search Options
+function updateSearchOptions(options) {
+    Object.assign(SearchOptions, options);
+    renderNotes();
 }
 
 // Render Notes
@@ -948,9 +1713,198 @@ function formatDate(date) {
     return new Date(date).toLocaleDateString('en-US', options);
 }
 
-// Save Notes to Storage
+// Data Validation Schemas
+const ValidationSchemas = {
+    note: {
+        title: (value) => ({
+            isValid: typeof value === 'string' && value.length > 0 && value.length <= 100,
+            message: 'Title must be between 1 and 100 characters'
+        }),
+        content: (value) => ({
+            isValid: typeof value === 'string',
+            message: 'Content must be a valid string'
+        }),
+        category: (value) => ({
+            isValid: !value || AppState.categories.some(cat => cat.id === value),
+            message: 'Invalid category selected'
+        })
+    },
+    category: {
+        name: (value) => ({
+            isValid: typeof value === 'string' && value.length > 0 && value.length <= 50,
+            message: 'Category name must be between 1 and 50 characters'
+        }),
+        color: (value) => ({
+            isValid: /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value),
+            message: 'Invalid color format'
+        }),
+        icon: (value) => ({
+            isValid: typeof value === 'string' && value.startsWith('fas fa-'),
+            message: 'Invalid icon format'
+        })
+    }
+};
+
+const StateValidator = {
+    validateNote(note) {
+        const requiredFields = ['id', 'title', 'content', 'createdAt', 'updatedAt'];
+        return requiredFields.every(field => note.hasOwnProperty(field));
+    },
+    
+    validateCategory(category) {
+        const requiredFields = ['id', 'name', 'color', 'icon'];
+        return requiredFields.every(field => category.hasOwnProperty(field));
+    },
+    
+    validateAppState() {
+        try {
+            // Validate notes
+            if (!Array.isArray(AppState.notes)) return false;
+            if (!AppState.notes.every(this.validateNote)) return false;
+            
+            // Validate categories
+            if (!Array.isArray(AppState.categories)) return false;
+            if (!AppState.categories.every(this.validateCategory)) return false;
+            
+            return true;
+        } catch (error) {
+            handleError(error, 'StateValidator.validateAppState');
+            return false;
+        }
+    }
+};
+
+// Validation Function
+function validateData(data, schema) {
+    const errors = [];
+    Object.keys(schema).forEach(key => {
+        if (data[key] !== undefined) {
+            const validation = schema[key](data[key]);
+            if (!validation.isValid) {
+                errors.push({ field: key, message: validation.message });
+            }
+        }
+    });
+    return errors;
+}
+
+// Error Handler
+function handleError(error, context = '') {
+    console.error(`Error in ${context}:`, error);
+    
+    // Log error details
+    const errorDetails = {
+        message: error.message,
+        context: context,
+        timestamp: new Date().toISOString(),
+        stack: error.stack
+    };
+    
+    // Store error in localStorage for debugging
+    const errors = JSON.parse(localStorage.getItem('errorLog') || '[]');
+    errors.unshift(errorDetails);
+    localStorage.setItem('errorLog', JSON.stringify(errors.slice(0, 10))); // Keep last 10 errors
+    
+    // Show error to user
+    const errorMessage = error.message || 'An unexpected error occurred';
+    showNotification(errorMessage, 'error');
+    
+    // Attempt recovery if it's a critical error
+    if (context.includes('critical')) {
+        ErrorRecovery.recover();
+    }
+}
+
+// Notification System
+function showNotification(message, type = 'info') {
+    // Check if notification container exists
+    let notificationContainer = document.querySelector('.notification-container');
+    if (!notificationContainer) {
+        notificationContainer = document.createElement('div');
+        notificationContainer.className = 'notification-container';
+        document.body.appendChild(notificationContainer);
+    }
+
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+    `;
+
+    notificationContainer.appendChild(notification);
+
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => notification.remove(), 300);
+    }, 5000);
+}
+
+// Safe Storage Operations
 function saveNotesToStorage() {
-    localStorage.setItem('notes', JSON.stringify(AppState.notes));
+    try {
+        PerformanceMonitor.start('save-notes');
+        
+        // Validate state before saving
+        if (!StateValidator.validateAppState()) {
+            throw new Error('Invalid application state detected');
+        }
+        
+        // Create backup before saving
+        ErrorRecovery.saveState();
+        
+        const serializedNotes = JSON.stringify(AppState.notes);
+        localStorage.setItem('notes', serializedNotes);
+        
+        // Track storage usage
+        const storageUsed = new Blob([serializedNotes]).size;
+        trackStorageUsage(storageUsed);
+        
+        PerformanceMonitor.end('save-notes');
+    } catch (error) {
+        handleError(error, 'saveNotesToStorage');
+        showNotification('Failed to save notes. Attempting recovery...', 'error');
+        ErrorRecovery.recover();
+    }
+}
+
+function saveCategoriesToStorage() {
+    try {
+        localStorage.setItem('categories', JSON.stringify(AppState.categories));
+    } catch (error) {
+        handleError(error, 'saveCategoriesToStorage');
+        showNotification('Failed to save categories. Please try again.', 'error');
+    }
+}
+
+// Storage Usage Tracking
+function trackStorageUsage(bytes) {
+    const kb = bytes / 1024;
+    const mb = kb / 1024;
+    
+    AppState.userProfile.storage.used = Number(mb.toFixed(2));
+    
+    // Update storage display
+    updateStorageDisplay();
+    
+    // Check storage limits
+    if (AppState.userProfile.storage.used > AppState.userProfile.storage.total * 0.9) {
+        showNotification('You are approaching your storage limit!', 'warning');
+    }
+}
+
+function updateStorageDisplay() {
+    const storageProgress = document.querySelector('.storage-progress');
+    const storageUsed = document.querySelector('.storage-used');
+    const storageTotal = document.querySelector('.storage-total');
+    
+    if (storageProgress && storageUsed && storageTotal) {
+        const percentage = (AppState.userProfile.storage.used / AppState.userProfile.storage.total) * 100;
+        storageProgress.style.width = `${percentage}%`;
+        storageUsed.textContent = `${AppState.userProfile.storage.used} GB`;
+        storageTotal.textContent = `${AppState.userProfile.storage.total} GB`;
+    }
 }
 
 // Open Note Modal
@@ -965,8 +1919,16 @@ function openNoteModal(noteId = null) {
             AppState.currentNoteId = noteId;
             elements.modalTitle.textContent = 'Edit Note';
             elements.noteTitleInput.value = note.title;
-            elements.noteContent.innerHTML = note.content;
+            FormattingTools.setFormattedContent(note.content);
             elements.categorySelect.value = note.category;
+            
+            // Set theme if exists
+            if (note.theme) {
+                elements.richEditor.setAttribute('data-theme', note.theme);
+                elements.themeOptions.forEach(opt => {
+                    opt.classList.toggle('active', opt.dataset.theme === note.theme);
+                });
+            }
         }
     } else {
         elements.modalTitle.textContent = 'Create New Note';
@@ -996,7 +1958,7 @@ function resetNoteForm() {
     AppState.isEditMode = false;
     AppState.currentNoteId = null;
     elements.noteTitleInput.value = '';
-    elements.noteContent.innerHTML = '';
+    FormattingTools.reset();
     elements.categorySelect.value = '';
 }
 
