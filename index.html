@@ -271,119 +271,249 @@
         </div>
     </div>
 
-<!-- Profile Modal -->
-<div class="modal profile-modal" id="profileModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title">
-                <i class="fas fa-user"></i>
-                <h2>My Profile</h2>
-            </div>
-            <button class="close-btn">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="profile-avatar-section">
-                <div class="avatar-wrapper">
-                    <img src="https://via.placeholder.com/120" alt="Profile Picture" class="profile-avatar">
-                    <button class="change-avatar-btn">
-                        <i class="fas fa-camera"></i>
-                    </button>
-                </div>
-            </div>
-            <form id="profileForm">
-                <div class="form-group">
-                    <label for="fullName">Full Name</label>
-                    <input type="text" id="fullName" value="John Doe">
-                </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" value="john.doe@example.com" disabled>
-                </div>
-                <div class="form-group">
-                    <label for="bio">Bio</label>
-                    <textarea id="bio" rows="3" placeholder="Write something about yourself..."></textarea>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" id="cancelProfileBtn">Cancel</button>
-            <button class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
-        </div>
-    </div>
-</div>
 
-<!-- Settings Modal -->
-<div class="modal settings-modal" id="settingsModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title">
-                <i class="fas fa-cog"></i>
-                <h2>Settings</h2>
+    <!-- Profile Modal -->
+    <div class="modal profile-modal" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-user"></i>
+                    <h2>My Profile</h2>
+                </div>
+                <button class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <button class="close-btn">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="settings-section">
-                <h3>Appearance</h3>
-                <div class="setting-item">
-                    <div class="setting-label">
-                        <span>Theme</span>
-                        <span class="setting-description">Choose your preferred theme</span>
+            <div class="modal-body">
+                <!-- Personal Info Section -->
+                <div class="profile-section">
+                    <h3>Personal Info</h3>
+                    <div class="profile-avatar-section">
+                        <div class="avatar-wrapper">
+                            <img src="https://via.placeholder.com/120" alt="Profile Picture" class="profile-avatar">
+                            <button class="change-avatar-btn">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="theme-selector">
-                        <button class="theme-option light active">
-                            <i class="fas fa-sun"></i>
-                            Light
-                        </button>
-                        <button class="theme-option dark">
-                            <i class="fas fa-moon"></i>
-                            Dark
-                        </button>
+                    <form id="profileForm">
+                        <div class="form-group">
+                            <label for="fullName">Name</label>
+                            <input type="text" id="fullName" value="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" value="john.doe@example.com" disabled>
+                        </div>
+                        <div class="account-status">
+                            <div class="status-info">
+                                <span class="status-label">Account Status:</span>
+                                <span class="status-badge">Basic</span>
+                            </div>
+                            <button class="btn btn-upgrade">
+                                <i class="fas fa-crown"></i>
+                                Upgrade to Pro
+                            </button>
+                        </div>
+                    </form>
+                </div>
+    
+                <!-- Usage Overview Section -->
+                <div class="profile-section">
+                    <h3>Usage Overview</h3>
+                    <div class="usage-stats">
+                        <div class="storage-meter">
+                            <div class="storage-info">
+                                <span class="storage-label">Storage Used</span>
+                                <div class="storage-text">
+                                    <span class="storage-used">2.5 GB</span>
+                                    <span class="storage-separator">/</span>
+                                    <span class="storage-total">5 GB</span>
+                                </div>
+                            </div>
+                            <div class="storage-bar">
+                                <div class="storage-progress" style="width: 50%"></div>
+                            </div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <i class="fas fa-file-alt"></i>
+                                <div class="stat-details">
+                                    <span class="stat-value">24</span>
+                                    <span class="stat-label">Total Notes</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-folder"></i>
+                                <div class="stat-details">
+                                    <span class="stat-value">8</span>
+                                    <span class="stat-label">Total Categories</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="settings-section">
-                <h3>Note Preferences</h3>
-                <div class="setting-item">
-                    <div class="setting-label">
-                        <span>Default View</span>
-                        <span class="setting-description">Choose default notes view</span>
-                    </div>
-                    <div class="view-selector">
-                        <button class="view-option grid active">
-                            <i class="fas fa-th-large"></i>
-                            Grid
-                        </button>
-                        <button class="view-option list">
-                            <i class="fas fa-list"></i>
-                            List
-                        </button>
-                    </div>
-                </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelProfileBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
             </div>
-            <div class="settings-section">
-                <h3>Security</h3>
-                <div class="setting-item">
-                    <div class="setting-label">
-                        <span>Change Password</span>
-                        <span class="setting-description">Update your account password</span>
-                    </div>
-                    <button class="btn btn-secondary change-password-btn">
-                        Change Password
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
-            <button class="btn btn-primary" id="saveSettingsBtn">Save Changes</button>
         </div>
     </div>
-</div>
+    
+    <!-- Settings Modal -->
+    <div class="modal settings-modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-cog"></i>
+                    <h2>Settings</h2>
+                </div>
+                <button class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Organization Section -->
+                <div class="settings-section">
+                    <h3>Organization</h3>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Archive Old Notes</span>
+                            <span class="setting-description">Automatically archive notes older than</span>
+                        </div>
+                        <select class="setting-select" id="archiveInterval">
+                            <option value="30">30 days</option>
+                            <option value="60">60 days</option>
+                            <option value="90">90 days</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Keep Deleted Notes</span>
+                            <span class="setting-description">Store deleted notes for recovery</span>
+                        </div>
+                        <select class="setting-select" id="deleteRetention">
+                            <option value="7">7 days</option>
+                            <option value="15">15 days</option>
+                            <option value="30">30 days</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Category Colors</span>
+                            <span class="setting-description">Manage category color scheme</span>
+                        </div>
+                        <button class="btn btn-secondary" id="manageCategoryColors">
+                            Customize Colors
+                        </button>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Quick Filters</span>
+                            <span class="setting-description">Configure quick filter options</span>
+                        </div>
+                        <button class="btn btn-secondary" id="manageQuickFilters">
+                            Configure Filters
+                        </button>
+                    </div>
+                </div>
+    
+                <!-- Privacy & Security Section -->
+                <div class="settings-section">
+                    <h3>Privacy & Security</h3>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Change Password</span>
+                            <span class="setting-description">Update your account password</span>
+                        </div>
+                        <button class="btn btn-secondary" id="changePasswordBtn">
+                            Change Password
+                        </button>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Export Notes</span>
+                            <span class="setting-description">Download all your notes</span>
+                        </div>
+                        <button class="btn btn-secondary" id="exportNotesBtn">
+                            Export Notes
+                        </button>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Import Notes</span>
+                            <span class="setting-description">Import notes from backup</span>
+                        </div>
+                        <button class="btn btn-secondary" id="importNotesBtn">
+                            Import Notes
+                        </button>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Private Notes</span>
+                            <span class="setting-description">Enable password protection for notes</span>
+                        </div>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="privateNotesToggle">
+                            <label for="privateNotesToggle"></label>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Backup & Updates Section -->
+                <div class="settings-section">
+                    <h3>Backup & Updates</h3>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Auto Backup</span>
+                            <span class="setting-description">Configure automatic backup settings</span>
+                        </div>
+                        <button class="btn btn-secondary" id="configureBackupBtn">
+                            Configure
+                        </button>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>System Updates</span>
+                            <span class="setting-description">Current version: 1.0.0</span>
+                        </div>
+                        <button class="btn btn-secondary" id="checkUpdatesBtn">
+                            Check Updates
+                        </button>
+                    </div>
+                </div>
+    
+                <!-- Notifications Section -->
+                <div class="settings-section">
+                    <h3>Notifications</h3>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Reminders</span>
+                            <span class="setting-description">Configure note reminders</span>
+                        </div>
+                        <button class="btn btn-secondary" id="configureRemindersBtn">
+                            Configure
+                        </button>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <span>Enable Reminders</span>
+                            <span class="setting-description">Turn all reminders on/off</span>
+                        </div>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="reminderToggle">
+                            <label for="reminderToggle"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelSettingsBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveSettingsBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>   
 
 <!-- Change Password Modal -->
 <div class="modal password-modal" id="passwordModal">
