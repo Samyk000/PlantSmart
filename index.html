@@ -9,9 +9,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <meta name="theme-color" content="#5B6BFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 </head>
 <body class="light-theme">
+    <body class="light-theme" data-theme="light">
     <div class="overlay" id="overlay"></div>
+    
 
     <!-- Header -->
     <header class="app-header">
@@ -23,6 +32,54 @@
                 <div class="search-bar">
                     <i class="fas fa-search search-icon"></i>
                     <input type="text" id="searchInput" placeholder="Search notes..." aria-label="Search notes">
+                    <div class="search-filters">
+                        <button class="filter-btn" id="showFilters">
+                            <i class="fas fa-filter"></i>
+                            <span>Filters</span>
+                        </button>
+                        <div class="filter-dropdown" id="filterDropdown">
+                            <div class="filter-section">
+                                <h4>Sort By</h4>
+                                <select id="sortBySelect">
+                                    <option value="updatedAt">Last Updated</option>
+                                    <option value="createdAt">Created Date</option>
+                                    <option value="title">Title</option>
+                                </select>
+                                <div class="sort-order">
+                                    <button class="sort-btn active" data-order="desc">
+                                        <i class="fas fa-sort-amount-down"></i>
+                                    </button>
+                                    <button class="sort-btn" data-order="asc">
+                                        <i class="fas fa-sort-amount-up"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="filter-section">
+                                <h4>Date Range</h4>
+                                <div class="date-range">
+                                    <input type="date" id="dateFrom" placeholder="From">
+                                    <input type="date" id="dateTo" placeholder="To">
+                                </div>
+                            </div>
+                            <div class="filter-section">
+                                <h4>Show Only</h4>
+                                <div class="filter-options">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="pinnedOnly">
+                                        <span>Pinned Notes</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="favoritesOnly">
+                                        <span>Favorites</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="filter-actions">
+                                <button class="btn btn-secondary" id="resetFilters">Reset Filters</button>
+                                <button class="btn btn-primary" id="applyFilters">Apply Filters</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -128,81 +185,181 @@
         </div>
     </main>
 
-    <!-- Create/Edit Note Modal -->
-    <div class="modal note-modal" id="noteModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <i class="fas fa-edit"></i>
-                    <h2>Create New Note</h2>
-                </div>
-                <button class="close-btn">
-                    <i class="fas fa-times"></i>
-                </button>
+<!-- Create/Edit Note Modal -->
+<div class="modal note-modal" id="noteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">
+                <i class="fas fa-edit"></i>
+                <h2>Create New Note</h2>
             </div>
-            <form id="noteForm">
-                <div class="modal-body">
-                    <div class="formatting-toolbar">
-                        <div class="toolbar-group">
-                            <button type="button" class="format-btn" title="Bold">
-                                <i class="fas fa-bold"></i>
-                            </button>
-                            <button type="button" class="format-btn" title="Italic">
-                                <i class="fas fa-italic"></i>
-                            </button>
-                            <button type="button" class="format-btn" title="Underline">
-                                <i class="fas fa-underline"></i>
-                            </button>
-                        </div>
-                        <div class="toolbar-divider"></div>
-                        <div class="toolbar-group">
-                            <button type="button" class="format-btn" title="Heading">
-                                <i class="fas fa-heading"></i>
-                            </button>
-                            <button type="button" class="format-btn" title="Bullet List">
-                                <i class="fas fa-list-ul"></i>
-                            </button>
-                            <button type="button" class="format-btn" title="Numbered List">
-                                <i class="fas fa-list-ol"></i>
-                            </button>
-                        </div>
-                        <div class="toolbar-divider"></div>
-                        <div class="toolbar-group">
-                            <button type="button" class="format-btn" title="Add Link">
-                                <i class="fas fa-link"></i>
-                            </button>
-                            <button type="button" class="format-btn" title="Add Image">
-                                <i class="fas fa-image"></i>
-                            </button>
-                            <button type="button" class="format-btn" title="Add File">
-                                <i class="fas fa-paperclip"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" class="note-title-input" id="noteTitleInput" placeholder="Note Title">
-                    </div>
-                    <div class="form-group">
-                        <div class="category-select">
-                            <i class="fas fa-tag"></i>
-                            <select id="categorySelect">
-                                <option value="">Select Category</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="rich-editor" id="noteContent" contenteditable="true" placeholder="Start typing your note..."></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary" id="cancelNoteBtn">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="saveNoteBtn">Save Note</button>
-                    </div>
-                </div>
-            </form>
+            <button class="close-btn">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
+        <form id="noteForm">
+            <div class="modal-body">
+                <div class="formatting-toolbar">
+                    <!-- Primary Tools -->
+                    <div class="toolbar-group">
+                        <button type="button" class="format-btn" data-command="bold" title="Bold">
+                            <i class="fas fa-bold"></i>
+                        </button>
+                        <button type="button" class="format-btn" data-command="italic" title="Italic">
+                            <i class="fas fa-italic"></i>
+                        </button>
+                        <button type="button" class="format-btn" data-command="underline" title="Underline">
+                            <i class="fas fa-underline"></i>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <!-- Lists -->
+                    <div class="toolbar-group">
+                        <button type="button" class="format-btn" data-command="insertUnorderedList" title="Bullet List">
+                            <i class="fas fa-list-ul"></i>
+                        </button>
+                        <button type="button" class="format-btn" data-command="insertOrderedList" title="Numbered List">
+                            <i class="fas fa-list-ol"></i>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <!-- Quick Access Color -->
+                    <div class="toolbar-group">
+                        <button type="button" class="format-btn color-picker-btn" title="Text Color">
+                            <i class="fas fa-palette"></i>
+                            <input type="color" class="color-picker" data-type="foreColor">
+                        </button>
+                    </div>
+
+                    <div class="toolbar-divider"></div>
+
+                    <!-- More Options Dropdown -->
+                    <div class="toolbar-group">
+                        <button type="button" class="format-btn more-options-btn" title="More Options">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                        <div class="more-options-dropdown">
+                            <!-- Formatting Section -->
+                            <div class="dropdown-section">
+                                <h4>Text Formatting</h4>
+                                <div class="dropdown-tools">
+                                    <button type="button" class="format-btn" data-command="strikethrough" title="Strikethrough">
+                                        <i class="fas fa-strikethrough"></i>
+                                    </button>
+                                    <button type="button" class="format-btn" data-command="heading" title="Heading">
+                                        <i class="fas fa-heading"></i>
+                                    </button>
+                                    <div class="font-size-control">
+                                        <select class="format-select font-size-select">
+                                            <option value="3">Normal</option>
+                                            <option value="1">Small</option>
+                                            <option value="4">Large</option>
+                                            <option value="5">Larger</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Alignment Section -->
+                            <div class="dropdown-section">
+                                <h4>Alignment</h4>
+                                <div class="dropdown-tools">
+                                    <button type="button" class="format-btn" data-command="justifyLeft" title="Align Left">
+                                        <i class="fas fa-align-left"></i>
+                                    </button>
+                                    <button type="button" class="format-btn" data-command="justifyCenter" title="Align Center">
+                                        <i class="fas fa-align-center"></i>
+                                    </button>
+                                    <button type="button" class="format-btn" data-command="justifyRight" title="Align Right">
+                                        <i class="fas fa-align-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Colors Section -->
+                            <div class="dropdown-section">
+                                <h4>Colors</h4>
+                                <div class="dropdown-tools">
+                                    <button type="button" class="format-btn color-picker-btn" title="Highlight Color">
+                                        <i class="fas fa-highlighter"></i>
+                                        <input type="color" class="color-picker" data-type="backColor">
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Insert Section -->
+                            <div class="dropdown-section">
+                                <h4>Insert</h4>
+                                <div class="dropdown-tools">
+                                    <button type="button" class="format-btn" data-command="createLink" title="Add Link">
+                                        <i class="fas fa-link"></i>
+                                    </button>
+                                    <button type="button" class="format-btn" data-command="insertImage" title="Add Image">
+                                        <i class="fas fa-image"></i>
+                                    </button>
+                                    <button type="button" class="format-btn" title="Add File">
+                                        <i class="fas fa-paperclip"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Theme Section -->
+                            <div class="dropdown-section">
+                                <h4>Note Theme</h4>
+                                <div class="theme-options">
+                                    <button class="theme-option active" data-theme="default">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="theme-option" data-theme="blue">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="theme-option" data-theme="green">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="theme-option" data-theme="purple">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="theme-option" data-theme="pink">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="theme-option" data-theme="yellow">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rest of the form remains the same -->
+                <div class="form-group">
+                    <input type="text" class="note-title-input" id="noteTitleInput" placeholder="Note Title">
+                </div>
+                <div class="form-group">
+                    <div class="category-select">
+                        <i class="fas fa-tag"></i>
+                        <select id="categorySelect">
+                            <option value="">Select Category</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="rich-editor" id="noteContent" contenteditable="true" placeholder="Start typing your note..."></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelNoteBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveNoteBtn">Save Note</button>
+                </div>
+            </div>
+        </form>
     </div>
+</div>
 
     <!-- Category Modal -->
     <div class="modal category-modal" id="categoryModal">
