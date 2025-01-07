@@ -12,7 +12,25 @@ const AppState = {
     isEditMode: false,
     currentNoteId: null,
     activeSection: 'all',
-    editingCategoryId: null
+    editingCategoryId: null,
+    // ADD NEW PROPERTIES HERE
+    userProfile: JSON.parse(localStorage.getItem('userProfile')) || {
+        name: 'John Doe',
+        email: 'john.doe@example.com',
+        avatar: 'https://via.placeholder.com/120',
+        accountType: 'Basic',
+        storage: {
+            used: 2.5,
+            total: 5
+        }
+    },
+    settings: JSON.parse(localStorage.getItem('settings')) || {
+        archiveInterval: 30,
+        deleteRetention: 7,
+        autoBackup: false,
+        privateNotes: false,
+        reminders: true
+    }
 };
 
 const elements = {
@@ -46,8 +64,125 @@ const elements = {
     cancelNoteBtn: document.getElementById('cancelNoteBtn'),
     categoryName: document.getElementById('categoryName'),
     colorOptions: document.querySelectorAll('.color-option'),
-    iconOptions: document.querySelectorAll('.icon-option')
+    iconOptions: document.querySelectorAll('.icon-option'),
+    profileForm: document.getElementById('profileForm'),
+    profileAvatar: document.querySelector('.profile-avatar'),
+    profileName: document.getElementById('fullName'),
+    profileEmail: document.getElementById('email'),
+    changeAvatarBtn: document.querySelector('.change-avatar-btn'),
+    upgradeBtn: document.querySelector('.btn-upgrade'),
+    archiveInterval: document.getElementById('archiveInterval'),
+    deleteRetention: document.getElementById('deleteRetention'),
+    privateNotesToggle: document.getElementById('privateNotesToggle'),
+    reminderToggle: document.getElementById('reminderToggle'),
+    configureBackupBtn: document.getElementById('configureBackupBtn'),
+    checkUpdatesBtn: document.getElementById('checkUpdatesBtn'),
+    configureRemindersBtn: document.getElementById('configureRemindersBtn'),
+    storageProgress: document.querySelector('.storage-progress'),
+    storageUsed: document.querySelector('.storage-used'),
+    storageTotal: document.querySelector('.storage-total')
 };
+
+function initializeProfile() {
+    if (elements.profileName) elements.profileName.value = AppState.userProfile.name;
+    if (elements.profileEmail) elements.profileEmail.value = AppState.userProfile.email;
+    if (elements.profileAvatar) elements.profileAvatar.src = AppState.userProfile.avatar;
+    
+    // Update storage meter
+    if (elements.storageProgress && elements.storageUsed && elements.storageTotal) {
+        const percentage = (AppState.userProfile.storage.used / AppState.userProfile.storage.total) * 100;
+        elements.storageProgress.style.width = `${percentage}%`;
+        elements.storageUsed.textContent = `${AppState.userProfile.storage.used} GB`;
+        elements.storageTotal.textContent = `${AppState.userProfile.storage.total} GB`;
+    }
+}
+
+function handleProfileSubmit(e) {
+    e.preventDefault();
+    AppState.userProfile.name = elements.profileName.value;
+    localStorage.setItem('userProfile', JSON.stringify(AppState.userProfile));
+    
+    // Update user name in header
+    const userNameElement = document.querySelector('.user-name');
+    if (userNameElement) {
+        userNameElement.textContent = AppState.userProfile.name;
+    }
+    
+    closeAllModals();
+}
+
+function initializeSettings() {
+    if (elements.archiveInterval) elements.archiveInterval.value = AppState.settings.archiveInterval;
+    if (elements.deleteRetention) elements.deleteRetention.value = AppState.settings.deleteRetention;
+    if (elements.privateNotesToggle) elements.privateNotesToggle.checked = AppState.settings.privateNotes;
+    if (elements.reminderToggle) elements.reminderToggle.checked = AppState.settings.reminders;
+}
+
+function handleSettingsSubmit(e) {
+    e.preventDefault();
+    AppState.settings = {
+        ...AppState.settings,
+        archiveInterval: parseInt(elements.archiveInterval.value),
+        deleteRetention: parseInt(elements.deleteRetention.value),
+        privateNotes: elements.privateNotesToggle.checked,
+        reminders: elements.reminderToggle.checked
+    };
+    localStorage.setItem('settings', JSON.stringify(AppState.settings));
+    closeAllModals();
+}
+
+function setupProfileAndSettingsListeners() {
+    // Profile Modal Listeners
+    if (elements.profileForm) {
+        elements.profileForm.addEventListener('submit', handleProfileSubmit);
+    }
+    
+    if (elements.changeAvatarBtn) {
+        elements.changeAvatarBtn.addEventListener('click', () => {
+            alert('Avatar change functionality to be implemented');
+        });
+    }
+    
+    if (elements.upgradeBtn) {
+        elements.upgradeBtn.addEventListener('click', () => {
+            alert('Upgrade to Pro functionality to be implemented');
+        });
+    }
+
+    // Settings Modal Listeners
+    if (elements.configureBackupBtn) {
+        elements.configureBackupBtn.addEventListener('click', () => {
+            alert('Backup configuration to be implemented');
+        });
+    }
+
+    if (elements.checkUpdatesBtn) {
+        elements.checkUpdatesBtn.addEventListener('click', () => {
+            alert('Checking for updates...');
+        });
+    }
+
+    if (elements.configureRemindersBtn) {
+        elements.configureRemindersBtn.addEventListener('click', () => {
+            alert('Reminder configuration to be implemented');
+        });
+    }
+
+    // Toggle switches
+    if (elements.privateNotesToggle) {
+        elements.privateNotesToggle.addEventListener('change', (e) => {
+            AppState.settings.privateNotes = e.target.checked;
+            localStorage.setItem('settings', JSON.stringify(AppState.settings));
+        });
+    }
+
+    if (elements.reminderToggle) {
+        elements.reminderToggle.addEventListener('change', (e) => {
+            AppState.settings.reminders = e.target.checked;
+            localStorage.setItem('settings', JSON.stringify(AppState.settings));
+        });
+    }
+}
 
 function setupModalCloseButtons() {
     document.querySelectorAll('.close-btn').forEach(btn => {
@@ -88,10 +223,13 @@ function initializeApp() {
     setupEventListeners();
     setupModalCloseButtons();
     setupMenuButtons();
+    setupProfileAndSettingsListeners();
     renderCategories();
     renderNotes();
     updateCategoryCounts();
     loadView();
+    initializeProfile();
+    initializeSettings(); 
 }
 
 // Load Theme
@@ -443,56 +581,6 @@ function updateCategorySelect() {
 }
 
 // Setup Event Listeners
-function setupEventListeners() {
-    elements.themeToggle.addEventListener('click', toggleTheme);
-
-    elements.menuToggle.addEventListener('click', () => {
-        elements.sidebar.classList.toggle('active');
-        elements.overlay.classList.toggle('active');
-    });
-
-    elements.userMenuTrigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        elements.userMenu.classList.toggle('active');
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!elements.userMenu.contains(e.target)) {
-            elements.userMenu.classList.remove('active');
-        }
-    });
-
-    elements.createNoteBtn.addEventListener('click', () => {
-        AppState.isEditMode = false;
-        AppState.currentNoteId = null;
-        openNoteModal();
-    });
-
-    elements.noteForm.addEventListener('submit', handleNoteSubmit);
-
-    elements.viewButtons.forEach(btn => {
-        btn.addEventListener('click', () => toggleView(btn.dataset.view));
-    });
-
-    elements.navItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            handleNavigation(item);
-        });
-    });
-
-    elements.searchInput.addEventListener('input', debounce(() => {
-        renderNotes();
-    }, 300));
-
-    elements.formatButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const command = btn.title.toLowerCase();
-            document.execCommand(command, false, null);
-        });
-    });
-
-    elements.newCategoryBtn.addEventListener('click', () => openCategoryModal());
 
     elements.closeButtons.forEach(btn => {
         btn.addEventListener('click', closeAllModals);
@@ -517,7 +605,6 @@ function setupEventListeners() {
             option.classList.add('active');
         });
     });
-}
 
 // Handle Note Submit
 function handleNoteSubmit(e) {
@@ -557,6 +644,24 @@ function createNote(data) {
     saveNotesToStorage();
     renderNotes();
     updateCategoryCounts();
+}
+
+function duplicateNote(noteId) {
+    const originalNote = AppState.notes.find(note => note.id === noteId);
+    if (originalNote) {
+        const duplicatedNote = {
+            ...originalNote,
+            id: Date.now(),
+            title: `${originalNote.title} (Copy)`,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            isPinned: false
+        };
+        AppState.notes.unshift(duplicatedNote);
+        saveNotesToStorage();
+        renderNotes();
+        updateCategoryCounts();
+    }
 }
 
 // Update Note
@@ -876,6 +981,14 @@ function closeAllModals() {
     });
     elements.overlay.classList.remove('active');
     resetForms();
+    
+    // Reinitialize forms when opening modals
+    if (elements.profileModal && elements.profileModal.classList.contains('active')) {
+        initializeProfile();
+    }
+    if (elements.settingsModal && elements.settingsModal.classList.contains('active')) {
+        initializeSettings();
+    }
 }
 
 // Reset Note Form
