@@ -444,10 +444,23 @@ body {
     margin: 8px 0;
 }
 
-
 /* Profile Modal Styles */
 .profile-modal .modal-content {
     max-width: 560px;
+}
+
+.profile-section {
+    margin-bottom: 32px;
+    padding: 24px;
+    background: var(--surface-1);
+    border-radius: 12px;
+}
+
+.profile-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
 }
 
 .profile-avatar-section {
@@ -489,6 +502,150 @@ body {
 .change-avatar-btn:hover {
     background: var(--primary-dark);
     transform: scale(1.05);
+}
+
+.account-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--surface-2);
+    border-radius: 12px;
+}
+
+.status-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    background: var(--surface-3);
+    color: var(--text-secondary);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.btn-upgrade {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.btn-upgrade:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-upgrade i {
+    color: #FFD700;
+}
+
+/* Usage Stats Styles */
+.usage-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.storage-meter {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.storage-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.storage-label {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.storage-text {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+}
+
+.storage-used {
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.storage-separator {
+    color: var(--text-tertiary);
+}
+
+.storage-total {
+    color: var(--text-secondary);
+}
+
+.storage-bar {
+    height: 8px;
+    background: var(--surface-2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.storage-progress {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--surface-2);
+    border-radius: 12px;
+}
+
+.stat-item i {
+    font-size: 24px;
+    color: var(--primary);
+}
+
+.stat-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--text-secondary);
 }
 
 /* Settings Modal Styles */
@@ -541,42 +698,62 @@ body {
     color: var(--text-tertiary);
 }
 
-/* Theme and View Selectors */
-.theme-selector,
-.view-selector {
-    display: flex;
-    gap: 8px;
+.setting-select {
+    padding: 8px 12px;
+    border: 1px solid var(--surface-2);
+    border-radius: 8px;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-size: 14px;
+    min-width: 120px;
 }
 
-.theme-option,
-.view-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: 1px solid var(--surface-2);
-    background: var(--surface-0);
-    color: var(--text-secondary);
-    font-size: 14px;
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-switch label {
+    position: absolute;
     cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--surface-2);
+    border-radius: 12px;
     transition: var(--transition-fast);
 }
 
-.theme-option:hover,
-.view-option:hover {
-    border-color: var(--primary-light);
-    background: var(--surface-1);
+.toggle-switch label:before {
+    content: '';
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background: white;
+    border-radius: 50%;
+    transition: var(--transition-fast);
 }
 
-.theme-option.active,
-.view-option.active {
-    background: var(--primary-light);
-    border-color: var(--primary);
-    color: var(--primary-dark);
+.toggle-switch input:checked + label {
+    background: var(--primary);
 }
 
-/* Form Inputs for Profile */
+.toggle-switch input:checked + label:before {
+    transform: translateX(20px);
+}
+
+/* Form Inputs */
 .profile-modal input,
 .profile-modal textarea {
     width: 100%;
@@ -589,11 +766,6 @@ body {
     transition: var(--transition-fast);
 }
 
-.profile-modal textarea {
-    resize: vertical;
-    min-height: 100px;
-}
-
 .profile-modal input:focus,
 .profile-modal textarea:focus {
     border-color: var(--primary);
@@ -601,11 +773,6 @@ body {
 }
 
 /* Password Change Section */
-.change-password-btn {
-    padding: 8px 16px;
-    font-size: 14px;
-}
-
 .password-input-wrapper {
     position: relative;
 }
@@ -628,21 +795,32 @@ body {
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
+    .profile-section {
+        padding: 16px;
+    }
+
+    .account-status {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+
+    .status-info {
+        justify-content: center;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
     .setting-item {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
+        gap: 12px;
     }
 
-    .theme-selector,
-    .view-selector {
+    .setting-select,
+    .btn-secondary {
         width: 100%;
-    }
-
-    .theme-option,
-    .view-option {
-        flex: 1;
-        justify-content: center;
     }
 
     .profile-avatar {
@@ -656,10 +834,8 @@ body {
     background: var(--surface-2);
 }
 
-[data-theme="dark"] .theme-option,
-[data-theme="dark"] .view-option {
-    background: var(--surface-1);
-    border-color: var(--surface-3);
+[data-theme="dark"] .toggle-switch label:before {
+    background: var(--surface-0);
 }
 
 [data-theme="dark"] .profile-avatar {
