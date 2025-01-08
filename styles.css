@@ -1,735 +1,2953 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notely - Modern Note Taking</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
-    <meta name="theme-color" content="#5B6BFF">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="format-detection" content="telephone=no">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-</head>
-<body class="light-theme">
-    <body class="light-theme" data-theme="light">
-    <div class="overlay" id="overlay"></div>
+:root {
+    /* Core Colors */
+    --primary: #5B6BFF;
+    --primary-light: #8B95FF;
+    --primary-dark: #4957DB;
+    --secondary: #FF6B9C;
     
-
-    <!-- Header -->
-    <header class="app-header">
-        <div class="header-left">
-            <button id="menuToggle" class="icon-btn menu-toggle" aria-label="Toggle Menu">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="search-wrapper">
-                <div class="search-bar">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchInput" placeholder="Search notes..." aria-label="Search notes">
-                    <div class="search-filters">
-                        <button class="filter-btn" id="showFilters">
-                            <i class="fas fa-filter"></i>
-                            <span>Filters</span>
-                        </button>
-                        <div class="filter-dropdown" id="filterDropdown">
-                            <div class="filter-section">
-                                <h4>Sort By</h4>
-                                <select id="sortBySelect">
-                                    <option value="updatedAt">Last Updated</option>
-                                    <option value="createdAt">Created Date</option>
-                                    <option value="title">Title</option>
-                                </select>
-                                <div class="sort-order">
-                                    <button class="sort-btn active" data-order="desc">
-                                        <i class="fas fa-sort-amount-down"></i>
-                                    </button>
-                                    <button class="sort-btn" data-order="asc">
-                                        <i class="fas fa-sort-amount-up"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="filter-section">
-                                <h4>Date Range</h4>
-                                <div class="date-range">
-                                    <input type="date" id="dateFrom" placeholder="From">
-                                    <input type="date" id="dateTo" placeholder="To">
-                                </div>
-                            </div>
-                            <div class="filter-section">
-                                <h4>Show Only</h4>
-                                <div class="filter-options">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="pinnedOnly">
-                                        <span>Pinned Notes</span>
-                                    </label>
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="favoritesOnly">
-                                        <span>Favorites</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="filter-actions">
-                                <button class="btn btn-secondary" id="resetFilters">Reset Filters</button>
-                                <button class="btn btn-primary" id="applyFilters">Apply Filters</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="header-right">
-            <div class="user-menu">
-                <button class="user-menu-trigger" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-user-circle user-icon"></i>
-                    <span class="user-name">John Doe</span>
-                    <i class="fas fa-chevron-down"></i>
-                </button>
-                <div class="user-menu-dropdown">
-                    <div class="user-info">
-                        <i class="fas fa-user-circle user-icon-large"></i>
-                        <div class="user-details">
-                            <span class="user-fullname">John Doe</span>
-                            <span class="user-email">john.doe@example.com</span>
-                        </div>
-                    </div>
-                    <div class="menu-items">
-                        <a href="#" class="menu-item" id="profileMenuBtn">
-                            <i class="fas fa-user"></i>
-                            <span>My Profile</span>
-                        </a>
-                        <a href="#" class="menu-item" id="settingsMenuBtn">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
-                        </a>
-                        <div class="menu-divider"></div>
-                        <a href="#" class="menu-item sign-out" id="signOutBtn">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Sign Out</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Sidebar -->
-    <nav class="sidebar" id="sidebar">
-        <div class="sidebar-content">
-            <div class="nav-section primary-nav">
-                <a href="#" class="nav-item" data-section="all">
-                    <i class="fas fa-file-alt"></i>
-                    <span>All Notes</span>
-                    <span class="note-count">24</span>
-                </a>
-                <a href="#" class="nav-item" data-section="favorites">
-                    <i class="fas fa-star"></i>
-                    <span>Favorites</span>
-                    <span class="note-count">8</span>
-                </a>
-                <a href="#" class="nav-item" data-section="trash">
-                    <i class="fas fa-trash-alt"></i>
-                    <span>Trash</span>
-                    <span class="note-count">3</span>
-                </a>
-            </div>
-
-            <div class="menu-divider with-margin"></div>
-
-            <div class="nav-section categories-section">
-                <div class="section-header">
-                    <h3>Categories</h3>
-                    <button class="new-category-btn" id="newCategoryBtn">
-                        <i class="fas fa-plus"></i>
-                        <span>New Category</span>
-                    </button>
-                </div>
-                <div class="categories-list" id="categoriesList">
-                    <!-- Categories will be dynamically added here -->
-                </div>
-                
-                <div class="sidebar-footer">
-                    <button id="themeToggle" class="theme-toggle" aria-label="Toggle Theme">
-                        <div class="theme-toggle-track">
-                            <i class="fas fa-sun sun-icon"></i>
-                            <i class="fas fa-moon moon-icon"></i>
-                            <div class="theme-toggle-thumb"></div>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="content-header">
-            <h1>All Notes</h1>
-            <div class="view-options">
-                <button class="view-btn active" data-view="grid">
-                    <i class="fas fa-th-large"></i>
-                </button>
-                <button class="view-btn" data-view="list">
-                    <i class="fas fa-list"></i>
-                </button>
-            </div>
-        </div>
-
-        <div class="notes-grid" id="notesGrid">
-            <!-- Notes will be dynamically added here -->
-        </div>
-    </main>
-
-<!-- Create/Edit Note Modal -->
-<div class="modal note-modal" id="noteModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title">
-                <i class="fas fa-edit"></i>
-                <h2>Create New Note</h2>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-icon" id="cancelNoteBtn">
-                    <i class="fas fa-times"></i>
-                </button>
-                <button type="submit" class="btn btn-icon btn-primary" id="saveNoteBtn" form="noteForm">
-                    <i class="fas fa-check"></i>
-                </button>
-            </div>
-        </div>
-        <form id="noteForm" onsubmit="handleNoteSubmit(event)">
-            <div class="modal-body">
-                <div class="formatting-toolbar">
-                    <!-- Primary Tools -->
-                    <div class="toolbar-group">
-                        <button type="button" class="format-btn" data-command="bold" title="Bold">
-                            <i class="fas fa-bold"></i>
-                        </button>
-                        <button type="button" class="format-btn" data-command="italic" title="Italic">
-                            <i class="fas fa-italic"></i>
-                        </button>
-                        <button type="button" class="format-btn" data-command="underline" title="Underline">
-                            <i class="fas fa-underline"></i>
-                        </button>
-                    </div>
-
-                    <div class="toolbar-divider"></div>
-
-                    <!-- Lists -->
-                    <div class="toolbar-group">
-                        <button type="button" class="format-btn" data-command="insertUnorderedList" title="Bullet List">
-                            <i class="fas fa-list-ul"></i>
-                        </button>
-                        <button type="button" class="format-btn" data-command="insertOrderedList" title="Numbered List">
-                            <i class="fas fa-list-ol"></i>
-                        </button>
-                    </div>
-
-                    <div class="toolbar-divider"></div>
-
-                    <!-- Quick Access Color -->
-                    <div class="toolbar-group">
-                        <button type="button" class="format-btn color-picker-btn" title="Text Color">
-                            <i class="fas fa-palette"></i>
-                            <input type="color" class="color-picker" data-type="foreColor">
-                        </button>
-                    </div>
-
-                    <div class="toolbar-divider"></div>
-
-                    <!-- More Options Dropdown -->
-                    <div class="toolbar-group">
-                        <button type="button" class="format-btn more-options-btn" title="More Options">
-                            <i class="fas fa-ellipsis-h"></i>
-                        </button>
-                        <div class="more-options-dropdown">
-                            <!-- Formatting Section -->
-                            <div class="dropdown-section">
-                                <h4>Text Formatting</h4>
-                                <div class="dropdown-tools">
-                                    <button type="button" class="format-btn" data-command="strikethrough" title="Strikethrough">
-                                        <i class="fas fa-strikethrough"></i>
-                                    </button>
-                                    <button type="button" class="format-btn" data-command="heading" title="Heading">
-                                        <i class="fas fa-heading"></i>
-                                    </button>
-                                    <div class="font-size-control">
-                                        <select class="format-select font-size-select">
-                                            <option value="3">Normal</option>
-                                            <option value="1">Small</option>
-                                            <option value="4">Large</option>
-                                            <option value="5">Larger</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Alignment Section -->
-                            <div class="dropdown-section">
-                                <h4>Alignment</h4>
-                                <div class="dropdown-tools">
-                                    <button type="button" class="format-btn" data-command="justifyLeft" title="Align Left">
-                                        <i class="fas fa-align-left"></i>
-                                    </button>
-                                    <button type="button" class="format-btn" data-command="justifyCenter" title="Align Center">
-                                        <i class="fas fa-align-center"></i>
-                                    </button>
-                                    <button type="button" class="format-btn" data-command="justifyRight" title="Align Right">
-                                        <i class="fas fa-align-right"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Colors Section -->
-                            <div class="dropdown-section">
-                                <h4>Colors</h4>
-                                <div class="dropdown-tools">
-                                    <button type="button" class="format-btn color-picker-btn" title="Highlight Color">
-                                        <i class="fas fa-highlighter"></i>
-                                        <input type="color" class="color-picker" data-type="backColor">
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Insert Section -->
-                            <div class="dropdown-section">
-                                <h4>Insert</h4>
-                                <div class="dropdown-tools">
-                                    <button type="button" class="format-btn" data-command="createLink" title="Add Link">
-                                        <i class="fas fa-link"></i>
-                                    </button>
-                                    <button type="button" class="format-btn" data-command="insertImage" title="Add Image">
-                                        <i class="fas fa-image"></i>
-                                    </button>
-                                    <button type="button" class="format-btn" title="Add File">
-                                        <i class="fas fa-paperclip"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Theme Section -->
-                            <div class="dropdown-section">
-                                <h4>Note Theme</h4>
-                                <div class="theme-options">
-                                    <button class="theme-option active" data-theme="default">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="theme-option" data-theme="blue">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="theme-option" data-theme="green">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="theme-option" data-theme="purple">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="theme-option" data-theme="pink">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="theme-option" data-theme="yellow">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Rest of the form remains the same -->
-                <div class="form-group">
-                    <input type="text" class="note-title-input" id="noteTitleInput" placeholder="Note Title">
-                </div>
-                <div class="form-group">
-                    <div class="category-select">
-                        <i class="fas fa-tag"></i>
-                        <select id="categorySelect">
-                            <option value="">Select Category</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="rich-editor" id="noteContent" contenteditable="true" placeholder="Start typing your note..."></div>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-    <!-- Category Modal -->
-    <div class="modal category-modal" id="categoryModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <i class="fas fa-folder-plus"></i>
-                    <h2>Create New Category</h2>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn btn-icon" id="cancelCategoryBtn">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <button class="btn btn-icon btn-primary" id="saveCategoryBtn">
-                        <i class="fas fa-check"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="categoryName">Category Name</label>
-                    <input type="text" id="categoryName" placeholder="Enter category name">
-                </div>
-                
-                <div class="form-group">
-                    <label>Category Color</label>
-                    <div class="color-options">
-                        <button class="color-option active" style="--color: #4C6FFF">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button class="color-option" style="--color: #FF6B6B">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button class="color-option" style="--color: #6BCB77">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button class="color-option" style="--color: #9B6BFF">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button class="color-option" style="--color: #FFB648">
-                            <i class="fas fa-check"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Category Icon</label>
-                    <div class="icon-options">
-                        <button class="icon-option active">
-                            <i class="fas fa-briefcase"></i>
-                        </button>
-                        <button class="icon-option">
-                            <i class="fas fa-book"></i>
-                        </button>
-                        <button class="icon-option">
-                            <i class="fas fa-user"></i>
-                        </button>
-                        <button class="icon-option">
-                            <i class="fas fa-heart"></i>
-                        </button>
-                        <button class="icon-option">
-                            <i class="fas fa-star"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Profile Modal -->
-    <div class="modal profile-modal" id="profileModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <i class="fas fa-user"></i>
-                    <h2>My Profile</h2>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn btn-icon" id="cancelProfileBtn">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <button class="btn btn-icon btn-primary" id="saveProfileBtn">
-                        <i class="fas fa-check"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="modal-body">
-                <!-- Personal Info Section -->
-                <div class="profile-section">
-                    <h3>Personal Info</h3>
-                    <div class="profile-avatar-section">
-                        <div class="avatar-wrapper">
-                            <img src="https://via.placeholder.com/120" alt="Profile Picture" class="profile-avatar">
-                            <button class="change-avatar-btn">
-                                <i class="fas fa-camera"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <form id="profileForm">
-                        <div class="form-group">
-                            <label for="fullName">Name</label>
-                            <input type="text" id="fullName" value="John Doe">
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" value="john.doe@example.com" disabled>
-                        </div>
-                        <div class="account-status">
-                            <div class="status-info">
-                                <span class="status-label">Account Status:</span>
-                                <span class="status-badge">Basic</span>
-                            </div>
-                            <button class="btn btn-upgrade">
-                                <i class="fas fa-crown"></i>
-                                Upgrade to Pro
-                            </button>
-                        </div>
-                    </form>
-                </div>
+    /* Surface Colors */
+    --surface-0: #FFFFFF;
+    --surface-1: #F8F9FF;
+    --surface-2: #F1F3FF;
+    --surface-3: #E8EBFF;
     
-                <!-- Usage Overview Section -->
-                <div class="profile-section">
-                    <h3>Usage Overview</h3>
-                    <div class="usage-stats">
-                        <div class="storage-meter">
-                            <div class="storage-info">
-                                <span class="storage-label">Storage Used</span>
-                                <div class="storage-text">
-                                    <span class="storage-used">2.5 GB</span>
-                                    <span class="storage-separator">/</span>
-                                    <span class="storage-total">5 GB</span>
-                                </div>
-                            </div>
-                            <div class="storage-bar">
-                                <div class="storage-progress" style="width: 50%"></div>
-                            </div>
-                        </div>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <i class="fas fa-file-alt"></i>
-                                <div class="stat-details">
-                                    <span class="stat-value">24</span>
-                                    <span class="stat-label">Total Notes</span>
-                                </div>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-folder"></i>
-                                <div class="stat-details">
-                                    <span class="stat-value">8</span>
-                                    <span class="stat-label">Total Categories</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    /* Text Colors */
+    --text-primary: #1A1F36;
+    --text-secondary: #4E5D78;
+    --text-tertiary: #8A94A6;
     
-    <!-- Settings Modal -->
-    <div class="modal settings-modal" id="settingsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">
-                    <i class="fas fa-cog"></i>
-                    <h2>Settings</h2>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn btn-icon" id="cancelSettingsBtn">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <button class="btn btn-icon btn-primary" id="saveSettingsBtn">
-                        <i class="fas fa-check"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="modal-body">
-                <!-- Organization Section -->
-                <div class="settings-section">
-                    <h3>Organization</h3>
-                    <div class="setting-item">
-                        <div class="setting-label">
-                            <span>Archive Old Notes</span>
-                            <span class="setting-description">Automatically archive notes older than</span>
-                        </div>
-                        <select class="setting-select" id="archiveInterval">
-                            <option value="30">30 days</option>
-                            <option value="60">60 days</option>
-                            <option value="90">90 days</option>
-                        </select>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-label">
-                            <span>Keep Deleted Notes</span>
-                            <span class="setting-description">Store deleted notes for recovery</span>
-                        </div>
-                        <select class="setting-select" id="deleteRetention">
-                            <option value="7">7 days</option>
-                            <option value="15">15 days</option>
-                            <option value="30">30 days</option>
-                        </select>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-label">
-                            <span>Category Colors</span>
-                            <span class="setting-description">Manage category color scheme</span>
-                        </div>
-                        <button class="btn btn-secondary" id="manageCategoryColors">
-                            Customize Colors
-                        </button>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-label">
-                            <span>Quick Filters</span>
-                            <span class="setting-description">Configure quick filter options</span>
-                        </div>
-                        <button class="btn btn-secondary" id="manageQuickFilters">
-                            Configure Filters
-                        </button>
-                    </div>
-                </div>
+    /* Category Colors */
+    --category-work: #4C6FFF;
+    --category-personal: #FF6B6B;
+    --category-study: #6BCB77;
+    --category-goals: #9B6BFF;
     
-                <!-- Privacy & Security Section -->
-                <div class="settings-section">
-                    <h3>Privacy & Security</h3>
-                    <div class="setting-item">
-                        <div class="setting-label">
-                            <span>Change Password</span>
-                            <span class="setting-description">Update your account password</span>
-                        </div>
-                        <button class="btn btn-secondary" id="changePasswordBtn">
-                            Change Password
-                        </button>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-label">
-                            <span>Export Notes</span>
-                            <span class="setting-description">Download all your notes</span>
-                        </div>
-                        <button class="btn btn-secondary" id="exportNotesBtn">
-                            Export Notes
-                        </button>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-label">
-                            <span>Import Notes</span>
-                            <span class="setting-description">Import notes from backup</span>
-                        </div>
-                        <button class="btn btn-secondary" id="importNotesBtn">
-                            Import Notes
-                        </button>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-label">
-                            <span>Private Notes</span>
-                            <span class="setting-description">Enable password protection for notes</span>
-                        </div>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="privateNotesToggle">
-                            <label for="privateNotesToggle"></label>
-                        </div>
-                    </div>
-                </div>
+    /* Status Colors */
+    --success: #00D8A7;
+    --warning: #FFB648;
+    --error: #FF4E4E;
     
-                <!-- Backup & Updates Section -->
-                <div class="settings-section">
-                    <h3>Backup & Updates</h3>
-                    <div class="setting-item">
-                        <div class="setting-label">
-                            <span>Auto Backup</span>
-                            <span class="setting-description">Configure automatic backup settings</span>
-                        </div>
-                        <button class="btn btn-secondary" id="configureBackupBtn">
-                            Configure
-                        </button>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-label">
-                            <span>System Updates</span>
-                            <span class="setting-description">Current version: 1.0.0</span>
-                        </div>
-                        <button class="btn btn-secondary" id="checkUpdatesBtn">
-                            Check Updates
-                        </button>
-                    </div>
-                </div>
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(26, 31, 54, 0.06);
+    --shadow-md: 0 8px 24px rgba(26, 31, 54, 0.12);
+    --shadow-lg: 0 16px 34px rgba(26, 31, 54, 0.16);
     
-                <!-- Notifications Section -->
-                <div class="settings-section">
-                    <h3>Notifications</h3>
-                    <div class="setting-item">
-                        <div class="setting-label">
-                            <span>Reminders</span>
-                            <span class="setting-description">Configure note reminders</span>
-                        </div>
-                        <button class="btn btn-secondary" id="configureRemindersBtn">
-                            Configure
-                        </button>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-label">
-                            <span>Enable Reminders</span>
-                            <span class="setting-description">Turn all reminders on/off</span>
-                        </div>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="reminderToggle">
-                            <label for="reminderToggle"></label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>   
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-<!-- Change Password Modal -->
-<div class="modal password-modal" id="passwordModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title">
-                <i class="fas fa-lock"></i>
-                <h2>Change Password</h2>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-icon" id="cancelPasswordBtn">
-                    <i class="fas fa-times"></i>
-                </button>
-                <button class="btn btn-icon btn-primary" id="savePasswordBtn">
-                    <i class="fas fa-check"></i>
-                </button>
-            </div>
-        </div>
-        <div class="modal-body">
-            <form id="passwordForm">
-                <div class="form-group">
-                    <label for="currentPassword">Current Password</label>
-                    <div class="password-input-wrapper">
-                        <input type="password" id="currentPassword">
-                        <button type="button" class="toggle-password">
-                            <i class="far fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="newPassword">New Password</label>
-                    <div class="password-input-wrapper">
-                        <input type="password" id="newPassword">
-                        <button type="button" class="toggle-password">
-                            <i class="far fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="confirmPassword">Confirm New Password</label>
-                    <div class="password-input-wrapper">
-                        <input type="password" id="confirmPassword">
-                        <button type="button" class="toggle-password">
-                            <i class="far fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+     /* New variables */
+     --primary-rgb: 91, 107, 255;
+     --modal-overlay: rgba(26, 31, 54, 0.8);
+     --focus-ring: rgba(91, 107, 255, 0.2);
+     --border-radius-sm: 6px;
+     --border-radius-md: 8px;
+     --border-radius-lg: 12px;
+     --header-height: 64px;
+     --mobile-header-height: 56px;
+     
+     /* Add z-index hierarchy */
+     --z-dropdown: 100;
+     --z-sticky: 101;
+     --z-modal: 999;
+     --z-tooltip: 1000;
+     --z-notification: 1001;
 
-    <!-- Floating Action Button -->
-    <button class="fab" id="createNote" aria-label="Create new note">
-        <i class="fas fa-plus"></i>
-    </button>
+     /* Animation Timing */
+    --animation-slow: 400ms;
+    --animation-normal: 300ms;
+    --animation-fast: 200ms;
+    
+    /* Animation Curves */
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+}
 
-    <script src="app.js"></script>
-</body>
-</html>
+/* Dark Theme Colors */
+[data-theme="dark"] {
+    /* Core Colors */
+    --primary: #6B7AFF;
+    --primary-light: #8B95FF;
+    --primary-dark: #4957DB;
+    
+    /* Surface Colors */
+    --surface-0: #1A1F36;
+    --surface-1: #242B42;
+    --surface-2: #2E364D;
+    --surface-3: #384264;
+    
+    /* Text Colors */
+    --text-primary: #FFFFFF;
+    --text-secondary: #B4C0D3;
+    --text-tertiary: #8A94A6;
+    
+    /* Category Colors - Adjusted for dark theme */
+    --category-work: #5C7FFF;
+    --category-personal: #FF7B7B;
+    --category-study: #7BDB87;
+    --category-goals: #AB7BFF;
+    
+    /* Status Colors - Adjusted for dark theme */
+    --success: #00E8B7;
+    --warning: #FFB648;
+    --error: #FF5E5E;
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 16px 34px rgba(0, 0, 0, 0.4);
+}
+
+/* Reset & Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background: var(--surface-1);
+}
+
+/* Overlay */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 31, 54, 0.8);
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition-normal);
+    z-index: 995;
+    backdrop-filter: blur(4px);
+}
+
+.overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Header */
+.app-header {
+    height: 64px;
+    background: var(--surface-0);
+    border-bottom: 1px solid var(--surface-2);
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 997;
+}
+
+.header-left,
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Menu Toggle Button */
+.menu-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+}
+
+.menu-toggle:hover {
+    background: var(--surface-2);
+}
+
+/* Search Bar */
+.search-wrapper {
+    position: relative;
+    width: 320px;
+    margin-left: 8px;
+}
+
+.search-bar {
+    width: 100%;
+    height: 40px;
+    background: var(--surface-1);
+    border-radius: 10px;
+    border: 1px solid var(--surface-2);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    transition: var(--transition-normal);
+}
+
+.search-bar:focus-within {
+    background: var(--surface-2);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(91, 107, 255, 0.1);
+}
+
+.search-icon {
+    color: var(--text-tertiary);
+    font-size: 14px;
+    min-width: 14px;
+}
+
+.search-bar input {
+    border: none;
+    background: none;
+    padding: 0 12px;
+    width: 100%;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.search-bar input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.search-bar input:focus {
+    outline: none;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .search-wrapper {
+        width: 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    .search-wrapper {
+        width: 220px;
+    }
+    
+    .search-bar {
+        height: 36px;
+    }
+    
+    .search-bar input {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-wrapper {
+        width: 180px;
+    }
+    
+    .search-bar {
+        padding: 0 12px;
+    }
+    
+    .search-bar input {
+        padding: 0 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .app-header {
+        padding: 0 12px;
+        height: 56px;
+    }
+
+    .formatting-toolbar {
+        padding: 8px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+    }
+
+    .formatting-toolbar::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+
+    .more-options-dropdown {
+        position: fixed;
+        inset: auto 0 0 0;
+        width: 100%;
+        border-radius: 16px 16px 0 0;
+        max-height: 75vh;
+        transform: translateY(100%);
+    }
+
+    .toolbar-group {
+        flex-shrink: 0;
+    }
+}
+
+
+/* Search Filters Styles */
+.search-filters {
+    position: relative;
+    margin-left: 8px;
+    z-index: 100;
+}
+
+.filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--surface-1);
+    border: 1px solid var(--surface-2);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.filter-btn:hover {
+    background: var(--surface-2);
+    color: var(--text-primary);
+}
+
+.filter-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: -18px;
+    width: auto;
+    background: var(--surface-0);
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    padding: 5px;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: var(--transition-normal);
+}
+
+.filter-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.filter-section {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--surface-1);
+    border-radius: 8px;
+}
+
+.filter-section:last-child {
+    margin-bottom: 0;
+}
+
+.filter-section h4 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+/* Sort By Section */
+.filter-section select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--surface-2);
+    border-radius: 6px;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.sort-order {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.sort-btn {
+    flex: 1;
+    padding: 8px;
+    background: var(--surface-0);
+    border: 1px solid var(--surface-2);
+    border-radius: 6px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.sort-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* Date Range Section */
+.date-range {
+    display: flex;
+    gap: 8px;
+}
+
+.date-range input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--surface-2);
+    border-radius: 6px;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+/* Show Only Section */
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.checkbox-label {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--surface-0);
+    border: 1px solid var(--surface-2);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.checkbox-label:hover {
+    background: var(--surface-2);
+}
+
+.checkbox-label input[type="checkbox"] {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    margin-right: 12px;
+    border: 2px solid var(--surface-3);
+    border-radius: 4px;
+    background: var(--surface-0);
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    transition: var(--transition-fast);
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.checkbox-label input[type="checkbox"]:checked::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 11px;
+}
+
+.checkbox-label span {
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+/* Filter Actions */
+.filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--surface-2);
+}
+
+.filter-actions button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: var(--transition-fast);
+}
+
+.filter-actions .btn-secondary {
+    background: var(--surface-2);
+    color: var(--text-primary);
+}
+
+.filter-actions .btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.filter-actions .btn-secondary:hover {
+    background: var(--surface-3);
+}
+
+.filter-actions .btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .filter-dropdown {
+        width: auto;
+        right: -100px;
+    }
+
+    .checkbox-label {
+        padding: 10px;
+    }
+
+    .filter-actions button {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+/* Theme Toggle */
+.theme-toggle {
+    position: relative;
+    width: 48px;
+    height: 24px;
+    border-radius: 50px;
+    background: var(--surface-2);
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.theme-toggle:hover {
+    background: var(--surface-3);
+}
+
+.theme-toggle-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+}
+
+.sun-icon,
+.moon-icon {
+    font-size: 12px;
+    transition: all 0.3s ease;
+    z-index: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    height: 12px;
+}
+
+.sun-icon {
+    color: #ba7a1a;
+    margin-left: -1px;
+}
+
+.moon-icon {
+    color: var(--text-tertiary);
+    margin-right: -1px;
+}
+
+.theme-toggle-thumb {
+    position: absolute;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: var(--surface-0);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+/* Dark Theme Styles */
+[data-theme="dark"] .theme-toggle {
+    background: var(--surface-3);
+}
+
+[data-theme="dark"] .theme-toggle-thumb {
+    left: calc(100% - 22px);
+    background: var(--primary);
+}
+
+[data-theme="dark"] .sun-icon {
+    color: var(--text-tertiary);
+    opacity: 0.5;
+    transform: rotate(90deg);
+}
+
+[data-theme="dark"] .moon-icon {
+    color: #ffffff;
+    opacity: 1;
+    transform: rotate(0);
+}
+
+/* Light Theme Icon States */
+[data-theme="light"] .sun-icon {
+    opacity: 1;
+    transform: rotate(0);
+}
+
+[data-theme="light"] .moon-icon {
+    opacity: 0.5;
+    transform: rotate(-90deg);
+}
+
+/* Hover Effects */
+.theme-toggle:hover .theme-toggle-thumb {
+    transform: scale(0.95);
+}
+
+.theme-toggle:active .theme-toggle-thumb {
+    transform: scale(0.9);
+}
+
+/* Smooth transition for all elements */
+.theme-toggle * {
+    transition: all 0.3s ease;
+}
+
+
+/* Notification Styles */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: var(--z-notification);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.notification {
+    background: var(--surface-0);
+    border-left: 4px solid var(--primary);
+    padding: 12px 20px;
+    border-radius: 4px;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 300px;
+    max-width: 400px;
+    animation: slideIn 0.3s ease-out;
+}
+
+.notification.error {
+    border-left-color: var(--error);
+}
+
+.notification.warning {
+    border-left-color: var(--warning);
+}
+
+.notification i {
+    font-size: 18px;
+}
+
+.notification.error i {
+    color: var(--error);
+}
+
+.notification.warning i {
+    color: var(--warning);
+}
+
+.notification.fade-out {
+    animation: fadeOut 0.3s ease-out forwards;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* User Menu */
+.user-menu {
+    position: relative;
+}
+
+.user-menu-trigger {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 1px;
+    border: none;
+    background: none;
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: var(--transition-fast);
+}
+
+.user-menu-trigger:hover {
+    background: var(--surface-2);
+}
+
+.user-icon {
+    font-size: 24px;
+    color: var(--text-secondary);
+}
+
+.user-icon-large {
+    font-size: 48px;
+}
+
+.user-menu-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 280px;
+    background: var(--surface-0);
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: var(--transition-normal);
+    z-index: 999;
+}
+
+.user-menu.active .user-menu-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.user-info {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--surface-2);
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-fullname {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.user-email {
+    font-size: 13px;
+    color: var(--text-tertiary);
+}
+
+.menu-items {
+    padding: 8px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: var(--transition-fast);
+}
+
+.menu-item:hover {
+    background: var(--surface-2);
+}
+
+.menu-item.sign-out {
+    color: var(--error);
+}
+
+.menu-divider {
+    height: 1px;
+    background: var(--surface-2);
+    margin: 8px 0;
+}
+
+/* Profile Modal Styles */
+.profile-modal .modal-content {
+    max-width: 560px;
+}
+
+.profile-section {
+    margin-bottom: 32px;
+    padding: 24px;
+    background: var(--surface-1);
+    border-radius: 12px;
+}
+
+.profile-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.profile-avatar-section {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.avatar-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 60px;
+    object-fit: cover;
+    border: 4px solid var(--surface-0);
+    box-shadow: var(--shadow-md);
+}
+
+.change-avatar-btn {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    border: 3px solid var(--surface-0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.change-avatar-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+.account-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--surface-2);
+    border-radius: 12px;
+}
+
+.status-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    background: var(--surface-3);
+    color: var(--text-secondary);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.btn-upgrade {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.btn-upgrade:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-upgrade i {
+    color: #FFD700;
+}
+
+/* Usage Stats Styles */
+.usage-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.storage-meter {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.storage-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.storage-label {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.storage-text {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+}
+
+.storage-used {
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.storage-separator {
+    color: var(--text-tertiary);
+}
+
+.storage-total {
+    color: var(--text-secondary);
+}
+
+.storage-bar {
+    height: 8px;
+    background: var(--surface-2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.storage-progress {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--surface-2);
+    border-radius: 12px;
+}
+
+.stat-item i {
+    font-size: 24px;
+    color: var(--primary);
+}
+
+.stat-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* Settings Modal Styles */
+.settings-modal .modal-content {
+    max-width: 640px;
+}
+
+.settings-section {
+    margin-bottom: 32px;
+}
+
+.settings-section:last-child {
+    margin-bottom: 0;
+}
+
+.settings-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: var(--surface-1);
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.setting-item:last-child {
+    margin-bottom: 0;
+}
+
+.setting-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.setting-label span:first-child {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.setting-description {
+    font-size: 13px;
+    color: var(--text-tertiary);
+}
+
+.setting-select {
+    padding: 8px 12px;
+    border: 1px solid var(--surface-2);
+    border-radius: 8px;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-size: 14px;
+    min-width: 120px;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-switch label {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--surface-2);
+    border-radius: 12px;
+    transition: var(--transition-fast);
+}
+
+.toggle-switch label:before {
+    content: '';
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background: white;
+    border-radius: 50%;
+    transition: var(--transition-fast);
+}
+
+.toggle-switch input:checked + label {
+    background: var(--primary);
+}
+
+.toggle-switch input:checked + label:before {
+    transform: translateX(20px);
+}
+
+/* Form Inputs */
+.profile-modal input,
+.profile-modal textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--surface-2);
+    border-radius: 8px;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: var(--transition-fast);
+}
+
+.profile-modal input:focus,
+.profile-modal textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(91, 107, 255, 0.1);
+}
+
+/* Password Change Section */
+.password-input-wrapper {
+    position: relative;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 4px;
+}
+
+.toggle-password:hover {
+    color: var(--text-secondary);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .profile-section {
+        padding: 16px;
+    }
+
+    .account-status {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+
+    .status-info {
+        justify-content: center;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .setting-item {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .setting-select,
+    .btn-secondary {
+        width: 100%;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+/* Dark Theme Adjustments */
+[data-theme="dark"] .setting-item {
+    background: var(--surface-2);
+}
+
+[data-theme="dark"] .toggle-switch label:before {
+    background: var(--surface-0);
+}
+
+[data-theme="dark"] .profile-avatar {
+    border-color: var(--surface-2);
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 64px;
+    bottom: 0;
+    width: 280px;
+    background: var(--surface-0);
+    border-right: 1px solid var(--surface-2);
+    transform: translateX(-100%);
+    transition: var(--transition-normal);
+    z-index: 996;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar.active {
+    transform: translateX(0);
+    box-shadow: var(--shadow-md);
+}
+
+.sidebar-content {
+    flex: 1;
+    padding: 24px 16px;
+    overflow-y: auto;
+    height: calc(100% - 56px);
+    position: relative;
+}
+
+.nav-section {
+    margin-bottom: 15px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 0 8px;
+}
+
+.section-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 56px;
+    padding: 16px;
+    border-top: 1px solid var(--surface-2);
+    background: var(--surface-0);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    z-index: 1;
+}
+
+/* Adjust theme toggle styles for sidebar */
+.sidebar-footer .theme-toggle {
+    width: 48px;
+    height: 24px;
+}
+
+/* Add padding to the last nav-section to prevent content from hiding behind footer */
+.nav-section:last-child {
+    margin-bottom: 56px;
+}
+
+/* Media Queries for consistent behavior */
+@media (max-width: 768px) {
+    .sidebar {
+        top: 56px;
+    }
+    
+    .sidebar-content {
+        padding: 16px 12px;
+        height: calc(100% - 56px);
+    }
+    
+    .sidebar-footer {
+        height: 56px;
+        padding: 12px;
+    }
+}
+
+@media (prefers-reduced-data: reduce) {
+    .rich-editor img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .profile-avatar {
+        max-width: 80px;
+    }
+}
+
+@media print {
+    /* Existing print styles */
+    
+    @page {
+        margin: 2cm;
+    }
+    
+    .rich-editor {
+        page-break-inside: avoid;
+    }
+    
+    a[href]::after {
+        content: " (" attr(href) ")";
+    }
+}
+
+@media (forced-colors: active) {
+    .note-card {
+        border: 1px solid CanvasText;
+    }
+    
+    .btn-primary {
+        border: 1px solid ButtonText;
+    }
+    
+    .format-btn {
+        forced-color-adjust: none;
+    }
+}
+
+@container (max-width: 400px) {
+    .note-card-content {
+        padding: 16px;
+    }
+    
+    .note-title {
+        font-size: 16px;
+    }
+    
+    .note-preview {
+        -webkit-line-clamp: 2;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    .sidebar-content {
+        scroll-behavior: smooth;
+    }
+}
+
+
+@media (hover: none) and (pointer: coarse) {
+    .format-btn,
+    .action-item,
+    .menu-item {
+        padding: 12px;
+        min-height: 48px;
+    }
+    
+    .note-card {
+        margin-bottom: 16px;
+    }
+    
+    .modal-content {
+        touch-action: pan-y pinch-zoom;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    img {
+        filter: brightness(.8) contrast(1.2);
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        /* Use dark theme variables */
+        color-scheme: dark;
+    }
+}
+
+/* Fix for Safari and iOS */
+@supports (-webkit-touch-callout: none) {
+    .sidebar {
+        height: -webkit-fill-available;
+    }
+    
+    .sidebar-content {
+        height: calc(100vh - 120px);
+    }
+}
+
+/* Fix for Firefox */
+@-moz-document url-prefix() {
+    .sidebar-content {
+        height: calc(100vh - 120px);
+    }
+}
+
+/* Fix for Microsoft Edge */
+@supports (-ms-ime-align: auto) {
+    .sidebar-content {
+        height: calc(100vh - 120px);
+    }
+}
+
+.new-category-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border: none;
+    background: none;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: var(--transition-fast);
+}
+
+.new-category-btn:hover {
+    background: var(--surface-2);
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: var(--transition-fast);
+    margin-bottom: 4px;
+}
+
+.nav-item:hover {
+    background: var(--surface-2);
+    color: var(--text-primary);
+}
+
+.nav-item.active {
+    background: var(--surface-2);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.nav-item i {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+}
+
+.note-count {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--text-tertiary);
+    background: var(--surface-2);
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.nav-item.active .note-count {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.category-item {
+    position: relative;
+    padding-left: 36px;
+    padding-right: 1px;
+}
+
+.category-item::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    background: var(--category-color);
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 0;
+    margin-top: 64px;
+    padding: 24px;
+    transition: var(--transition-normal);
+}
+
+.sidebar.active + .main-content {
+    margin-left: 280px;
+}
+
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.content-header h1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.view-options {
+    display: flex;
+    gap: 8px;
+}
+
+.view-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: none;
+    background: var(--surface-0);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.view-btn:hover {
+    background: var(--surface-2);
+    color: var(--text-secondary);
+}
+
+.view-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+/* Notes Grid */
+.notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.note-card {
+    background: var(--surface-0);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: var(--transition-fast);
+    border: 1px solid var(--surface-3);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+}
+
+.note-card-content {
+    position: relative;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 200px;
+}
+
+
+.note-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.note-badges {
+    display: flex;
+    gap: 8px;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge.category {
+    background: var(--surface-2);
+    color: var(--text-secondary);
+}
+
+.badge.pinned {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.note-actions {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    gap: 8px;
+}
+
+.icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    background: var(--surface-1);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+}
+
+.icon-btn:hover {
+    background: var(--surface-2);
+    color: var(--text-primary);
+}
+
+.icon-btn.active {
+    color: var(--primary);
+}
+
+.more-actions {
+    position: relative;
+}
+
+.actions-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    background: var(--surface-0);
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    padding: 4px;
+    min-width: 160px;
+    z-index: 10;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: var(--transition-fast);
+}
+
+.more-actions.active .actions-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    .more-actions.active .actions-dropdown {
+        transform: translateY(4px);
+    }
+}
+
+.action-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    color: var(--text-primary);
+    font-size: 14px;
+    text-align: left;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.action-item:hover {
+    background: var(--surface-2);
+}
+
+.action-item.delete {
+    color: var(--error);
+}
+
+.action-divider {
+    height: 1px;
+    background: var(--surface-2);
+    margin: 4px 0;
+}
+
+.note-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 12px 0;
+    padding-right: 40px; /* Make room for actions */
+}
+
+.note-preview {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    flex-grow: 1;
+    max-height: 150px;
+    overflow-y: auto;
+    padding-right: 12px; /* Increased padding for scrollbar space */
+    
+    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface-3) transparent;
+    
+    /* Hide scrollbar when not in use for all browsers */
+    &:not(:hover)::-webkit-scrollbar-thumb {
+        opacity: 0;
+    }
+    
+    /* MS Edge and IE */
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    
+    /* Ensure smooth scrolling */
+    scroll-behavior: smooth;
+    
+    /* Remove default line clamping */
+    -webkit-line-clamp: unset;
+    -webkit-box-orient: unset;
+    display: block;
+}
+
+/* Webkit scrollbar styles (Chrome, Safari, newer Edge) */
+.note-preview::-webkit-scrollbar {
+    width: 2px; /* Thinner scrollbar */
+    height: 4px;
+}
+
+.note-preview::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 2px;
+}
+
+.note-preview::-webkit-scrollbar-thumb {
+    background-color: rgba(var(--text-tertiary-rgb, 138, 148, 166), 0.3);
+    border-radius: 2px;
+    transition: all 0.2s ease;
+    
+    /* Hide scrollbar when not in use */
+    opacity: 0;
+}
+
+/* Show scrollbar on hover */
+.note-preview:hover::-webkit-scrollbar-thumb {
+    opacity: 1;
+}
+
+/* Scrollbar hover state */
+.note-preview::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(var(--text-tertiary-rgb, 138, 148, 166), 0.5);
+}
+
+/* Active scrolling state */
+.note-preview::-webkit-scrollbar-thumb:active {
+    background-color: rgba(var(--text-tertiary-rgb, 138, 148, 166), 0.7);
+}
+
+/* Add this to your :root CSS variables */
+:root {
+    --text-tertiary-rgb: 138, 148, 166; /* Add this RGB value */
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] {
+    --text-tertiary-rgb: 138, 148, 166; /* Adjust this RGB value for dark theme if needed */
+}
+
+/* Fade effect at bottom */
+.note-preview::after {
+    content: '';
+    position: absolute;
+    bottom: 52px; /* Adjust based on your footer height */
+    left: 20px; /* Match padding of note-card-content */
+    right: 20px;
+    height: 20px;
+    background: linear-gradient(
+        to bottom,
+        transparent,
+        var(--surface-0)
+    );
+    pointer-events: none;
+}
+
+/* Ensure content container has proper positioning */
+.note-card-content {
+    position: relative;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+    .note-preview {
+        padding-right: 8px;
+    }
+    
+    .note-preview::-webkit-scrollbar {
+        width: 3px; /* Even thinner on mobile */
+    }
+}
+
+/* Touch device optimization */
+@media (hover: none) {
+    .note-preview::-webkit-scrollbar-thumb {
+        opacity: 1; /* Always show scrollbar on touch devices */
+        background-color: rgba(var(--text-tertiary-rgb, 138, 148, 166), 0.2);
+    }
+}
+
+/* High contrast mode support */
+@media (forced-colors: active) {
+    .note-preview::-webkit-scrollbar-thumb {
+        background-color: SelectedItem;
+    }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .note-preview {
+        scroll-behavior: auto;
+    }
+}
+
+.note-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: auto;
+}
+
+.note-metadata {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+.date {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.date i {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.time-text {
+    font-weight: 500;
+}
+
+/* Add subtle animation for time updates */
+.time-text {
+    transition: opacity 0.2s ease;
+}
+
+.time-text.updating {
+    opacity: 0.5;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 31, 54, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition-normal);
+    z-index: var(--z-modal);
+    backdrop-filter: blur(4px);
+}
+
+.modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 720px;
+    max-height: 90vh;
+    background: var(--surface-0);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: var(--transition-normal);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--surface-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.modal.active .modal-content {
+    transform: scale(1);
+}
+
+.modal-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-primary);
+}
+
+.modal-title h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+    /* Adjust max-height since we removed footer */
+    max-height: calc(90vh - 70px);
+}
+
+/* Form Elements */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.note-title-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--surface-2);
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+    color: var(--text-primary);
+    background: var(--surface-0);
+    transition: var(--transition-fast);
+}
+
+.note-title-input:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.category-select {
+    position: relative;
+    width: 100%;
+}
+
+.category-select i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+}
+
+.category-select select {
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    border: 1px solid var(--surface-2);
+    border-radius: 8px;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-size: 14px;
+    appearance: none;
+    cursor: pointer;
+}
+
+.rich-editor {
+    min-height: 200px;
+    padding: 16px;
+    border: 1px solid var(--surface-2);
+    border-radius: 8px;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.rich-editor:empty::before {
+    content: attr(placeholder);
+    color: var(--text-tertiary);
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn-secondary {
+    background: var(--surface-2);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--surface-3);
+}
+
+.btn-icon {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    background: var(--surface-2);
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-icon:hover {
+    background: var(--surface-3);
+    transform: translateY(-1px);
+}
+
+.btn-icon:active {
+    transform: translateY(0);
+}
+
+.btn-icon i {
+    font-size: 14px;
+    transition: transform 0.2s ease;
+}
+
+.btn-icon:hover i {
+    transform: scale(1.1);
+}
+
+.btn-icon.btn-primary {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 4px rgba(var(--primary-rgb), 0.1);
+}
+
+.btn-icon.btn-primary:hover {
+    background: var(--primary-dark);
+    box-shadow: 0 4px 8px rgba(var(--primary-rgb), 0.2);
+}
+
+.btn-icon.btn-primary:active {
+    box-shadow: 0 1px 2px rgba(var(--primary-rgb), 0.1);
+}
+
+/* Ripple Effect */
+.btn-icon::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(var(--primary-rgb), 0.1);
+    border-radius: 8px;
+    opacity: 0;
+    transform: scale(2);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+.btn-icon:active::after {
+    opacity: 1;
+    transform: scale(1);
+    transition: 0s;
+}
+
+/* Modal Actions Container */
+.modal-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .btn-icon i {
+        font-size: 13px;
+    }
+}
+
+/* High Contrast Mode */
+@media (forced-colors: active) {
+    .btn-icon {
+        border: 1px solid currentColor;
+    }
+    
+    .btn-icon.btn-primary {
+        border: 1px solid white;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .btn-icon {
+        transition: none;
+    }
+    
+    .btn-icon i {
+        transform: none;
+    }
+    
+    .btn-icon:hover {
+        transform: none;
+    }
+}
+
+/* Category Modal Specifics */
+.color-options,
+.icon-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.color-option {
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+    border: 2px solid transparent;
+    background: var(--color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    transition: var(--transition-fast);
+}
+
+.color-option i {
+    opacity: 0;
+    transform: scale(0.5);
+    transition: var(--transition-fast);
+}
+
+.color-option.active {
+    border-color: var(--surface-0);
+    box-shadow: 0 0 0 2px var(--color);
+}
+
+.color-option.active i {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.icon-option {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    border: 2px solid var(--surface-2);
+    background: var(--surface-0);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: var(--transition-fast);
+}
+
+.icon-option:hover {
+    border-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.icon-option.active {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--surface-1);
+}
+
+/* Floating Action Button */
+.fab {
+    position: fixed;
+    right: 40px;
+    bottom: 40px;
+    width: 70px;
+    height: 68px;
+    border-radius: 50px;
+    background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    z-index: 990;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.2),
+                0 8px 30px rgba(var(--primary-rgb), 0.15);
+}
+
+/* Hover Animation */
+.fab:hover {
+    transform: translateY(-5px);
+    background: linear-gradient(145deg, var(--primary-light), var(--primary));
+    box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.3),
+                0 10px 40px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Click Effect */
+.fab:active {
+    transform: translateY(0) scale(0.95);
+}
+
+/* Icon Animation */
+.fab i {
+    transition: all 0.4s ease;
+}
+
+.fab:hover i {
+    transform: rotate(180deg) scale(1.2);
+}
+
+/* Ripple Effect */
+.fab::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.3) 10%, transparent 10.01%);
+    background-repeat: no-repeat;
+    background-position: 50%;
+    transform: scale(10, 10);
+    opacity: 0;
+    transition: transform .5s, opacity 0.5s;
+}
+
+.fab:active::after {
+    transform: scale(0, 0);
+    opacity: 0.3;
+    transition: 0s;
+}
+
+/* Floating Animation */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+.fab:not(:hover) {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Glow Effect */
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.2),
+                   0 8px 30px rgba(var(--primary-rgb), 0.15);
+    }
+    50% {
+        box-shadow: 0 4px 25px rgba(var(--primary-rgb), 0.3),
+                   0 8px 40px rgba(var(--primary-rgb), 0.2);
+    }
+}
+
+.fab {
+    animation: glow 3s infinite alternate;
+}
+
+/* Responsive Design */    
+@media (max-width: 768px) {
+    .sidebar {
+        width: 70%;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+        padding: 16px;
+    }
+    
+    .notes-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-content {
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    
+    .fab {
+        right: 30px;
+        bottom: 30px;
+        width: 60px;
+        height: 58px;
+        font-size: 18px;
+    }
+}
+
+/* Optional: Add shine effect */
+@keyframes shine {
+    from {
+        background-position: 200% center;
+    }
+}
+
+.fab:hover {
+    background: linear-gradient(
+        270deg,
+        var(--primary-light),
+        var(--primary),
+        var(--primary),
+        var(--primary-light)
+    );
+    background-size: 200% auto;
+    animation: shine 2s linear infinite;
+}
+
+/* Formatting Toolbar Enhanced Styles */
+.formatting-toolbar {
+    padding: 12px;
+    border-bottom: 1px solid var(--surface-2);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: var(--surface-1);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    isolation: isolate; /* Creates stacking context */
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.format-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: var(--surface-0);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.format-btn:hover {
+    background: var(--surface-2);
+    color: var(--text-primary);
+}
+
+.format-btn.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* Color Picker Styles */
+.color-picker-btn {
+    overflow: hidden;
+}
+
+.color-picker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Font Size Select */
+.format-select {
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid var(--surface-2);
+    border-radius: 6px;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.format-select:hover {
+    border-color: var(--primary);
+}
+
+/* Theme Picker */
+.theme-picker-btn {
+    position: relative;
+}
+
+.theme-picker-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: var(--surface-0);
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    padding: 8px;
+    display: none;
+    z-index: 100;
+}
+
+.theme-picker-btn.active .theme-picker-dropdown {
+    display: block;
+}
+
+.theme-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.theme-option {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    background: var(--theme-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    transition: var(--transition-fast);
+}
+
+.theme-option i {
+    opacity: 0;
+    transform: scale(0.5);
+    transition: var(--transition-fast);
+}
+
+.theme-option.active {
+    border-color: var(--primary);
+}
+
+.theme-option.active i {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.more-options-btn {
+    position: relative;
+    z-index: 102;
+}
+
+.more-options-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 280px;
+    background: var(--surface-0);
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: var(--transition-normal);
+    z-index: var(--z-dropdown);
+    isolation: isolate;
+}
+
+/* Ensure dropdown appears above other content */
+.more-options-btn.active .more-options-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    z-index: 1001; /* Higher than parent */
+}
+
+.dropdown-section {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--surface-2);
+}
+
+.dropdown-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.dropdown-section h4 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dropdown-tools {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Font Size Control in Dropdown */
+.font-size-control {
+    flex: 1;
+    min-width: 100px;
+}
+
+.font-size-control .format-select {
+    width: 100%;
+}
+
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .more-options-dropdown {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        width: 100%;
+        transform: translateY(100%);
+        border-radius: 12px 12px 0 0;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+}
+
+/* Note Themes */
+.rich-editor[data-theme="blue"] {
+    background: #E8F1FF;
+}
+
+.rich-editor[data-theme="green"] {
+    background: #E8FFF1;
+}
+
+.rich-editor[data-theme="purple"] {
+    background: #F1E8FF;
+}
+
+.rich-editor[data-theme="pink"] {
+    background: #FFE8F1;
+}
+
+.rich-editor[data-theme="yellow"] {
+    background: #FFF8E8;
+}
+
+/* Dark Theme Adjustments */
+[data-theme="dark"] .rich-editor[data-theme="blue"] {
+    background: #1a2942;
+}
+
+[data-theme="dark"] .rich-editor[data-theme="green"] {
+    background: #1a422d;
+}
+
+[data-theme="dark"] .rich-editor[data-theme="purple"] {
+    background: #2a1a42;
+}
+
+[data-theme="dark"] .rich-editor[data-theme="pink"] {
+    background: #421a2d;
+}
+
+[data-theme="dark"] .rich-editor[data-theme="yellow"] {
+    background: #423d1a;
+}
+
+/* Utility Classes */
+.with-animation {
+    animation: slideIn 0.3s ease-out;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.scale-in {
+    animation: scaleIn 0.3s ease-out;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--surface-3);
+    border-radius: 3px;
+    transition: var(--transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary);
+}
+
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Focus Styles */
+:focus {
+    outline: none;
+}
+
+:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Enhanced Focus Styles */
+.format-btn:focus-visible,
+.more-options-btn:focus-visible,
+.theme-option:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(91, 107, 255, 0.2);
+}
+
+/* High Contrast Mode Support */
+@media (forced-colors: active) {
+    .format-btn.active,
+    .theme-option.active {
+        border: 2px solid CanvasText;
+    }
+    
+    .more-options-dropdown {
+        border: 1px solid CanvasText;
+    }
+}
+
+/* Keyboard Navigation Indicators */
+[data-focus-visible-added] {
+    outline: 2px solid var(--primary) !important;
+    outline-offset: 2px !important;
+}
+
+/* List View Styles */
+.notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.notes-list .note-card {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    margin: 0;
+    transform: none;
+}
+
+.notes-list .note-card:hover {
+    transform: translateX(8px);
+}
+
+.notes-list .note-card-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+}
+
+.notes-list .note-preview {
+    margin: 0;
+    flex: 1;
+    margin-left: 24px;
+}
+
+.notes-list .note-metadata {
+    margin-left: 24px;
+    min-width: 120px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-tertiary);
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    font-size: 20px;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    font-size: 14px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Loading States */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--surface-2) 0%,
+        var(--surface-3) 50%,
+        var(--surface-2) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+[data-theme="dark"] .skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--surface-2) 0%,
+        var(--surface-3) 50%,
+        var(--surface-2) 100%
+    );
+}
+
+/* Tooltip */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    padding: 6px 10px;
+    background: var(--text-primary);
+    color: var(--surface-0);
+    font-size: 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition-fast);
+}
+
+[data-tooltip]::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    border: 4px solid transparent;
+    border-top-color: var(--text-primary);
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition-fast);
+}
+
+[data-tooltip]:hover::before,
+[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Print Styles */
+@media print {
+    .app-header,
+    .sidebar,
+    .fab,
+    .note-actions {
+        display: none !important;
+    }
+
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .note-card {
+        break-inside: avoid;
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Accessibility */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Performance Optimizations */
+.modal-content,
+.formatting-toolbar,
+.note-card,
+.more-options-dropdown {
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+/* Optimize animations */
+@media (prefers-reduced-motion: no-preference) {
+    .with-animation {
+        will-change: transform, opacity;
+    }
+
+    .modal-content {
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+@media (hover: none) {
+    .format-btn,
+    .action-item,
+    .menu-item {
+        min-height: 44px; /* Minimum touch target size */
+    }
+    
+    .format-btn:active,
+    .action-item:active,
+    .menu-item:active {
+        background: var(--surface-2);
+    }
+    
+    /* Disable hover effects on touch devices */
+    .note-card:hover {
+        transform: none;
+    }
+}
+
+/* Loading Animation */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.loading {
+    animation: pulse 1.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--surface-0);
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-modal);
+}
