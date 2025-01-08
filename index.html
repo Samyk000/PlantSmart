@@ -197,12 +197,12 @@
                 <button class="btn btn-icon" id="cancelNoteBtn">
                     <i class="fas fa-times"></i>
                 </button>
-                <button class="btn btn-icon btn-primary" id="saveNoteBtn">
+                <button type="submit" class="btn btn-icon btn-primary" id="saveNoteBtn" form="noteForm">
                     <i class="fas fa-check"></i>
                 </button>
             </div>
         </div>
-        <form id="noteForm">
+        <form id="noteForm" onsubmit="handleNoteSubmit(event)">
             <div class="modal-body">
                 <div class="formatting-toolbar">
                     <!-- Primary Tools -->
