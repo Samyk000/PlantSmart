@@ -97,7 +97,6 @@ const elements = {
     settingsModal: document.getElementById('settingsModal'),
     passwordModal: document.getElementById('passwordModal'),
     createNoteBtn: document.getElementById('createNote'),
-    closeButtons: document.querySelectorAll('.close-btn'),
     noteForm: document.getElementById('noteForm'),
     notesContainer: document.getElementById('notesGrid'),
     navItems: document.querySelectorAll('.nav-item'),
@@ -172,23 +171,6 @@ function closeAllDropdowns() {
     });
 }
 
-// Update the closeAllModals function
-function closeAllModals() {
-    closeAllDropdowns();
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.classList.remove('active');
-    });
-    elements.overlay.classList.remove('active');
-    resetForms();
-    
-    if (elements.profileModal && elements.profileModal.classList.contains('active')) {
-        initializeProfile();
-    }
-    if (elements.settingsModal && elements.settingsModal.classList.contains('active')) {
-        initializeSettings();
-    }
-}
-
 const FormattingTools = {
     // Track active states
     activeStates: {
@@ -197,7 +179,7 @@ const FormattingTools = {
         underline: false,
         strikethrough: false,
     },
-
+    
     // Add cleanup management system
     cleanup: {
         listeners: new Set(),
@@ -216,6 +198,8 @@ const FormattingTools = {
             this.listeners.clear();
         }
     },
+
+    
 
     init() {
         try {
@@ -237,46 +221,6 @@ const FormattingTools = {
         }
     },
 
-    setupMoreOptions() {
-        const btn = elements.moreOptionsBtn;
-        const dropdown = elements.moreOptionsDropdown;
-        
-        if (!btn || !dropdown) return;
-
-        const handleClick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const isActive = btn.classList.contains('active');
-            this.closeAllDropdowns();
-            
-            if (!isActive) {
-                btn.classList.add('active');
-                document.addEventListener('click', handleOutsideClick);
-            }
-        };
-
-        const handleOutsideClick = (e) => {
-            if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
-                this.closeDropdown();
-            }
-        };
-
-        // Use cleanup management
-        this.cleanup.add(btn, 'click', handleClick);
-        
-        // Handle dropdown items
-        const dropdownItems = dropdown.querySelectorAll('[data-command]');
-        dropdownItems.forEach(item => {
-            this.cleanup.add(item, 'click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const command = item.dataset.command;
-                this.executeCommand(command);
-                this.closeDropdown();
-            });
-        });
-    },
 
     closeDropdown() {
         const btn = elements.moreOptionsBtn;
@@ -313,83 +257,14 @@ const FormattingTools = {
         this.cleanup.add(editor, 'keydown', handleKeyboard);
     },
 
-    setupMoreOptions() {
-        const { moreOptionsBtn, moreOptionsDropdown } = elements.formattingTools;
-        
-        if (!moreOptionsBtn || !moreOptionsDropdown) return;
-
-        // Close dropdown handler
-        const closeDropdown = () => {
-            moreOptionsBtn.classList.remove('active');
-            document.removeEventListener('click', outsideClickHandler);
-        };
-
-        // Outside click handler
-        const outsideClickHandler = (e) => {
-            if (!moreOptionsBtn.contains(e.target) && !moreOptionsDropdown.contains(e.target)) {
-                closeDropdown();
-            }
-        };
-
-        // Click handler for the more options button
-        moreOptionsBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            const isActive = moreOptionsBtn.classList.contains('active');
-
-            // Close all other dropdowns first
-            this.closeAllDropdowns();
-
-            if (!isActive) {
-                moreOptionsBtn.classList.add('active');
-                document.addEventListener('click', outsideClickHandler);
-            }
-        });
-
-        const cleanup = {
-            formatToolsCleanup() {
-                const { moreOptionsBtn } = elements.formattingTools;
-                if (moreOptionsBtn) {
-                    moreOptionsBtn.classList.remove('active');
-                    document.removeEventListener('click', this.outsideClickHandler);
-                }
-            }
-        };
-
-        // Handle dropdown item clicks
-        moreOptionsDropdown.addEventListener('click', (e) => {
-            e.stopPropagation();
-            
-            const dropdownItem = e.target.closest('[data-command]');
-            if (dropdownItem) {
-                const command = dropdownItem.dataset.command;
-                this.executeCommand(command);
-                closeDropdown();
-            }
-        });
-    },
 
     closeAllDropdowns() {
-        const { moreOptionsBtn } = elements.formattingTools;
+        const moreOptionsBtn = elements.moreOptionsBtn;
         document.querySelectorAll('.more-options-btn').forEach(btn => {
             if (btn !== moreOptionsBtn) {
                 btn.classList.remove('active');
             }
         });
-    },
-
-    
-    
-
-    // Initialize formatting tools
-    init() {
-        this.setupFormatButtons();
-        this.setupColorPickers();
-        this.setupFontSizeControls();
-        this.setupMoreOptions();
-        this.setupThemeOptions();
-        this.setupEditorListeners();
     },
 
     // Setup format buttons
@@ -654,16 +529,6 @@ function setupProfileAndSettingsListeners() {
     }
 }
 
-function setupModalCloseButtons() {
-    document.querySelectorAll('.close-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            closeAllModals();
-        });
-    });
-}
-
 
 function setupMenuButtons() {
     const profileBtn = document.getElementById('profileMenuBtn');
@@ -794,7 +659,6 @@ function initializeApp() {
         // Initialize core features
         loadTheme();
         setupEventListeners();
-        setupModalCloseButtons();
         setupMenuButtons();
         setupProfileAndSettingsListeners();
         setupFilterListeners();
@@ -938,14 +802,6 @@ function setupEventListeners() {
     document.getElementById('cancelPasswordBtn').addEventListener('click', (e) => {
         e.preventDefault();
         closeAllModals();
-    });
-
-    // Add event listeners for close buttons (X) in modals
-    document.querySelectorAll('.close-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            closeAllModals();
-        });
     });
 
     // Add event listeners for profile, settings, and sign out buttons
@@ -1179,31 +1035,6 @@ function updateCategorySelect() {
     });
 }
 
-// Setup Event Listeners
-
-    elements.closeButtons.forEach(btn => {
-        btn.addEventListener('click', closeAllModals);
-    });
-
-    elements.overlay.addEventListener('click', () => {
-        closeAllModals();
-        elements.sidebar.classList.remove('active');
-        elements.overlay.classList.remove('active');
-    });
-
-    elements.colorOptions.forEach(option => {
-        option.addEventListener('click', () => {
-            elements.colorOptions.forEach(opt => opt.classList.remove('active'));
-            option.classList.add('active');
-        });
-    });
-
-    elements.iconOptions.forEach(option => {
-        option.addEventListener('click', () => {
-            elements.iconOptions.forEach(opt => opt.classList.remove('active'));
-            option.classList.add('active');
-        });
-    });
 
 // Handle Note Submit
 function handleNoteSubmit(e) {
@@ -1231,6 +1062,32 @@ function handleNoteSubmit(e) {
     closeAllModals();
     resetNoteForm();
 }
+
+function closeAllModals() {
+    // First, close all dropdowns
+    closeAllDropdowns();
+    
+    // Close all modals
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.remove('active');
+    });
+    
+    // Remove overlay
+    elements.overlay.classList.remove('active');
+    
+    // Reset all forms
+    resetForms();
+    
+    // Reinitialize specific modals if they were active
+    if (elements.profileModal && elements.profileModal.classList.contains('active')) {
+        initializeProfile();
+    }
+    if (elements.settingsModal && elements.settingsModal.classList.contains('active')) {
+        initializeSettings();
+    }
+}
+
+
 
 // Create Note
 function createNote(data) {
