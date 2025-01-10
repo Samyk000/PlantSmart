@@ -2459,6 +2459,54 @@ body {
     }
 }
 
+/* Rich Editor Mobile Optimizations */
+@media (max-width: 768px) {
+    .rich-editor {
+        -webkit-user-select: text;
+        user-select: text;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+    }
+
+    /* Force font rendering */
+    .rich-editor[contenteditable="true"] {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Ensure proper list rendering */
+    .rich-editor ul, 
+    .rich-editor ol {
+        padding-left: 24px !important;
+        margin: 8px 0 !important;
+    }
+
+    .rich-editor li {
+        list-style-position: outside !important;
+    }
+
+    /* Force font sizes to be respected */
+    .rich-editor[contenteditable="true"] *[style*="font-size"] {
+        font-size: inherit !important;
+    }
+
+    /* Ensure font families are applied */
+    .rich-editor[contenteditable="true"] *[style*="font-family"] {
+        font-family: inherit !important;
+    }
+}
+
+/* Preserve formatting when saving */
+.note-preview ul,
+.note-preview ol {
+    padding-left: 24px !important;
+    margin: 8px 0 !important;
+}
+
+.note-preview li {
+    list-style-position: outside !important;
+}
+
 /* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
     .formatting-toolbar,
