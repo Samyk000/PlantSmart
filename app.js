@@ -85,6 +85,8 @@ const ErrorRecovery = {
 
 // Rich Text Editor
 
+// Rich Text Editor
+
 class RichTextEditor {
     constructor() {
         this.editor = document.getElementById('noteContent');
@@ -94,6 +96,7 @@ class RichTextEditor {
             this.initializeEditor();
         }
     }
+
 
     initializeEditor() {
         // Format Buttons
@@ -120,12 +123,10 @@ class RichTextEditor {
         fontSizeSelect?.addEventListener('change', (e) => {
             this.executeCommand('fontSize', e.target.value);
         });
-
         const fontFamilySelect = this.toolbar.querySelector('.font-family-select');
         fontFamilySelect?.addEventListener('change', (e) => {
             this.executeCommand('fontName', e.target.value);
         });
-
         // Color Pickers
         const colorPickers = this.toolbar.querySelectorAll('.color-picker');
         colorPickers.forEach(picker => {
@@ -136,14 +137,14 @@ class RichTextEditor {
             picker.addEventListener('click', e => e.stopPropagation());
         });
 
-        // Editor State Updates
-        this.editor.addEventListener('keyup', () => this.updateButtonStates());
-        this.editor.addEventListener('mouseup', () => this.updateButtonStates());
-    }
-    executeCommand(command, value = null) {
-        document.execCommand(command, false, value);
-        this.editor.focus();
-    }
+// Editor State Updates
+this.editor.addEventListener('keyup', () => this.updateButtonStates());
+this.editor.addEventListener('mouseup', () => this.updateButtonStates());
+}
+executeCommand(command, value = null) {
+document.execCommand(command, false, value);
+this.editor.focus();
+}
 
     handleLinkInsertion() {
         const selection = window.getSelection();
