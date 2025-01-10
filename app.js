@@ -96,51 +96,54 @@ class RichTextEditor {
     }
 
     initializeEditor() {
-        // Format Buttons
-        const formatButtons = this.toolbar.querySelectorAll('.format-btn');
-        formatButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                const command = button.dataset.command;
-                
-                if (command === 'createLink') {
-                    this.handleLinkInsertion();
-                } else {
-                    this.executeCommand(command);
-                }
-                
-                if (!['foreColor', 'hiliteColor', 'createLink'].includes(command)) {
-                    this.toggleActiveState(button);
-                }
-            });
+    // Format Buttons
+    const formatButtons = this.toolbar.querySelectorAll('.format-btn');
+    formatButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const command = button.dataset.command;
+            
+            if (command === 'createLink') {
+                this.handleLinkInsertion();
+            } else {
+                this.executeCommand(command);
+            }
+            
+            if (!['foreColor', 'hiliteColor', 'createLink'].includes(command)) {
+                this.toggleActiveState(button);
+            }
         });
+    });
 
-        // Font Controls
-        const fontSizeSelect = this.toolbar.querySelector('.font-size-select');
-        fontSizeSelect?.addEventListener('change', (e) => {
+    // Font Controls - Add these back
+    const fontSizeSelect = this.toolbar.querySelector('.font-size-select');
+    if (fontSizeSelect) {
+        fontSizeSelect.addEventListener('change', (e) => {
             this.executeCommand('fontSize', e.target.value);
         });
-
-        const fontFamilySelect = this.toolbar.querySelector('.font-family-select');
-        fontFamilySelect?.addEventListener('change', (e) => {
-            this.executeCommand('fontName', e.target.value);
-        });
-
-        // Color Pickers
-        const colorPickers = this.toolbar.querySelectorAll('.color-picker');
-        colorPickers.forEach(picker => {
-            picker.addEventListener('change', (e) => {
-                const command = picker.dataset.command;
-                this.executeCommand(command, e.target.value);
-            });
-            picker.addEventListener('click', e => e.stopPropagation());
-        });
-
-        // Editor State Updates
-        this.editor.addEventListener('keyup', () => this.updateButtonStates());
-        this.editor.addEventListener('mouseup', () => this.updateButtonStates());
     }
 
+    const fontFamilySelect = this.toolbar.querySelector('.font-family-select');
+    if (fontFamilySelect) {
+        fontFamilySelect.addEventListener('change', (e) => {
+            this.executeCommand('fontName', e.target.value);
+        });
+    }
+
+    // Color Pickers
+    const colorPickers = this.toolbar.querySelectorAll('.color-picker');
+    colorPickers.forEach(picker => {
+        picker.addEventListener('change', (e) => {
+            const command = picker.dataset.command;
+            this.executeCommand(command, e.target.value);
+        });
+        picker.addEventListener('click', e => e.stopPropagation());
+    });
+
+    // Editor State Updates
+    this.editor.addEventListener('keyup', () => this.updateButtonStates());
+    this.editor.addEventListener('mouseup', () => this.updateButtonStates());
+}
     executeCommand(command, value = null) {
         document.execCommand(command, false, value);
         this.editor.focus();
