@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -204,141 +205,105 @@
         </div>
         <form id="noteForm" onsubmit="handleNoteSubmit(event)">
             <div class="modal-body">
-                <div class="formatting-toolbar">
-                    <!-- Primary Tools -->
-                    <div class="toolbar-group">
-                        <button type="button" class="format-btn" data-command="bold" title="Bold">
-                            <i class="fas fa-bold"></i>
-                        </button>
-                        <button type="button" class="format-btn" data-command="italic" title="Italic">
-                            <i class="fas fa-italic"></i>
-                        </button>
-                        <button type="button" class="format-btn" data-command="underline" title="Underline">
-                            <i class="fas fa-underline"></i>
-                        </button>
-                    </div>
+                                
+                
+                                                <!-- Formatting Tools Here -->
 
-                    <div class="toolbar-divider"></div>
+                                                <div class="formatting-toolbar">
+                                                    <!-- Text Style Group -->
+                                                    <div class="toolbar-group">
+                                                        <button type="button" class="format-btn" data-command="bold" title="Bold">
+                                                            <i class="fas fa-bold"></i>
+                                                        </button>
+                                                        <button type="button" class="format-btn" data-command="italic" title="Italic">
+                                                            <i class="fas fa-italic"></i>
+                                                        </button>
+                                                        <button type="button" class="format-btn" data-command="underline" title="Underline">
+                                                            <i class="fas fa-underline"></i>
+                                                        </button>
+                                                        <button type="button" class="format-btn" data-command="strikethrough" title="Strikethrough">
+                                                            <i class="fas fa-strikethrough"></i>
+                                                        </button>
+                                                    </div>
+                                                
+                                                    <div class="toolbar-divider"></div>
+                                                
+                                                    <!-- Font Controls -->
+                                                    <div class="toolbar-group">
+                                                        <select class="format-select font-size-select" title="Font Size">
+                                                            <option value="1">8pt</option>
+                                                            <option value="2">10pt</option>
+                                                            <option value="3" selected>12pt</option>
+                                                            <option value="4">14pt</option>
+                                                            <option value="5">16pt</option>
+                                                            <option value="6">18pt</option>
+                                                            <option value="7">24pt</option>
+                                                        </select>
+                                                        <select class="format-select font-family-select" title="Font Family">
+                                                            <option value="Arial">Arial</option>
+                                                            <option value="Helvetica">Helvetica</option>
+                                                            <option value="Times New Roman">Times New Roman</option>
+                                                            <option value="Courier New">Courier New</option>
+                                                            <option value="Georgia">Georgia</option>
+                                                        </select>
+                                                    </div>
+                                                
+                                                    <div class="toolbar-divider"></div>
+                                                
+                                                    <!-- Text Alignment -->
+                                                    <div class="toolbar-group">
+                                                        <button type="button" class="format-btn" data-command="justifyLeft" title="Align Left">
+                                                            <i class="fas fa-align-left"></i>
+                                                        </button>
+                                                        <button type="button" class="format-btn" data-command="justifyCenter" title="Align Center">
+                                                            <i class="fas fa-align-center"></i>
+                                                        </button>
+                                                        <button type="button" class="format-btn" data-command="justifyRight" title="Align Right">
+                                                            <i class="fas fa-align-right"></i>
+                                                        </button>
+                                                    </div>
+                                                
+                                                    <div class="toolbar-divider"></div>
+                                                
+                                                    <!-- Lists -->
+                                                    <div class="toolbar-group">
+                                                        <button type="button" class="format-btn" data-command="insertUnorderedList" title="Bullet List">
+                                                            <i class="fas fa-list-ul"></i>
+                                                        </button>
+                                                        <button type="button" class="format-btn" data-command="insertOrderedList" title="Numbered List">
+                                                            <i class="fas fa-list-ol"></i>
+                                                        </button>
+                                                    </div>
+                                                
+                                                    <div class="toolbar-divider"></div>
+                                                
+                                                    <!-- Colors -->
+                                                    <div class="toolbar-group">
+                                                        <button type="button" class="format-btn color-btn" data-command="foreColor" title="Text Color">
+                                                            <i class="fas fa-font"></i>
+                                                            <input type="color" class="color-picker" data-command="foreColor">
+                                                        </button>
+                                                        <button type="button" class="format-btn color-btn" data-command="hiliteColor" title="Highlight Color">
+                                                            <i class="fas fa-highlighter"></i>
+                                                            <input type="color" class="color-picker" data-command="hiliteColor">
+                                                        </button>
+                                                    </div>
+                                                
+                                                    <div class="toolbar-divider"></div>
+                                                
+                                                    <!-- Additional Formatting -->
+                                                    <div class="toolbar-group">
+                                                        <button type="button" class="format-btn" data-command="createLink" title="Insert Link">
+                                                            <i class="fas fa-link"></i>
+                                                        </button>
+                                                        <button type="button" class="format-btn" data-command="removeFormat" title="Clear Formatting">
+                                                            <i class="fas fa-remove-format"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
 
-                    <!-- Lists -->
-                    <div class="toolbar-group">
-                        <button type="button" class="format-btn" data-command="insertUnorderedList" title="Bullet List">
-                            <i class="fas fa-list-ul"></i>
-                        </button>
-                        <button type="button" class="format-btn" data-command="insertOrderedList" title="Numbered List">
-                            <i class="fas fa-list-ol"></i>
-                        </button>
-                    </div>
 
-                    <div class="toolbar-divider"></div>
 
-                    <!-- Quick Access Color -->
-                    <div class="toolbar-group">
-                        <button type="button" class="format-btn color-picker-btn" title="Text Color">
-                            <i class="fas fa-palette"></i>
-                            <input type="color" class="color-picker" data-type="foreColor">
-                        </button>
-                    </div>
-
-                    <div class="toolbar-divider"></div>
-
-                    <!-- More Options Dropdown -->
-                    <div class="toolbar-group">
-                        <button type="button" class="format-btn more-options-btn" title="More Options">
-                            <i class="fas fa-ellipsis-h"></i>
-                        </button>
-                        <div class="more-options-dropdown">
-                            <!-- Formatting Section -->
-                            <div class="dropdown-section">
-                                <h4>Text Formatting</h4>
-                                <div class="dropdown-tools">
-                                    <button type="button" class="format-btn" data-command="strikethrough" title="Strikethrough">
-                                        <i class="fas fa-strikethrough"></i>
-                                    </button>
-                                    <button type="button" class="format-btn" data-command="heading" title="Heading">
-                                        <i class="fas fa-heading"></i>
-                                    </button>
-                                    <div class="font-size-control">
-                                        <select class="format-select font-size-select">
-                                            <option value="3">Normal</option>
-                                            <option value="1">Small</option>
-                                            <option value="4">Large</option>
-                                            <option value="5">Larger</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Alignment Section -->
-                            <div class="dropdown-section">
-                                <h4>Alignment</h4>
-                                <div class="dropdown-tools">
-                                    <button type="button" class="format-btn" data-command="justifyLeft" title="Align Left">
-                                        <i class="fas fa-align-left"></i>
-                                    </button>
-                                    <button type="button" class="format-btn" data-command="justifyCenter" title="Align Center">
-                                        <i class="fas fa-align-center"></i>
-                                    </button>
-                                    <button type="button" class="format-btn" data-command="justifyRight" title="Align Right">
-                                        <i class="fas fa-align-right"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Colors Section -->
-                            <div class="dropdown-section">
-                                <h4>Colors</h4>
-                                <div class="dropdown-tools">
-                                    <button type="button" class="format-btn color-picker-btn" title="Highlight Color">
-                                        <i class="fas fa-highlighter"></i>
-                                        <input type="color" class="color-picker" data-type="backColor">
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Insert Section -->
-                            <div class="dropdown-section">
-                                <h4>Insert</h4>
-                                <div class="dropdown-tools">
-                                    <button type="button" class="format-btn" data-command="createLink" title="Add Link">
-                                        <i class="fas fa-link"></i>
-                                    </button>
-                                    <button type="button" class="format-btn" data-command="insertImage" title="Add Image">
-                                        <i class="fas fa-image"></i>
-                                    </button>
-                                    <button type="button" class="format-btn" title="Add File">
-                                        <i class="fas fa-paperclip"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Theme Section -->
-                            <div class="dropdown-section">
-                                <h4>Note Theme</h4>
-                                <div class="theme-options">
-                                    <button class="theme-option active" data-theme="default">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="theme-option" data-theme="blue">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="theme-option" data-theme="green">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="theme-option" data-theme="purple">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="theme-option" data-theme="pink">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="theme-option" data-theme="yellow">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Rest of the form remains the same -->
                 <div class="form-group">
