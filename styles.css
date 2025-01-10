@@ -263,27 +263,6 @@ body {
         height: 56px;
     }
 
-    .formatting-toolbar {
-        padding: 8px;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none; /* IE and Edge */
-    }
-
-    .formatting-toolbar::-webkit-scrollbar {
-        display: none; /* Chrome, Safari, Opera */
-    }
-
-    .more-options-dropdown {
-        position: fixed;
-        inset: auto 0 0 0;
-        width: 100%;
-        border-radius: 16px 16px 0 0;
-        max-height: 75vh;
-        transform: translateY(100%);
-    }
-
     .toolbar-group {
         flex-shrink: 0;
     }
@@ -2162,6 +2141,333 @@ body {
     }
 }
 
+/*------------------------------------*\
+  #FORMATTING-TOOLBAR
+\*------------------------------------*/
+
+.formatting-toolbar {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    
+    /* Spacing */
+    padding: 12px;
+    gap: 8px;
+    
+    /* Visual */
+    background: var(--surface-1);
+    border-bottom: 1px solid var(--surface-2);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    
+    /* Scrolling */
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
+    
+    /* Prevent text selection */
+    user-select: none;
+}
+
+/* Scroll Indicator */
+.formatting-toolbar::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(90deg, transparent, var(--surface-1) 70%);
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+/* Subtle arrow indicator */
+.formatting-toolbar::before {
+    content: '›';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    font-size: 20px;
+    animation: subtleBounce 2s infinite;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.7;
+}
+
+@keyframes subtleBounce {
+    0%, 100% { transform: translate(0, -50%); }
+    50% { transform: translate(-3px, -50%); }
+}
+
+/* Hide scrollbar across browsers */
+.formatting-toolbar::-webkit-scrollbar {
+    display: none;
+}
+
+/*------------------------------------*\
+  #TOOLBAR-GROUPS
+\*------------------------------------*/
+
+.toolbar-group {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    
+    /* Spacing */
+    gap: 6px;
+    padding: 0 6px;
+    
+    /* Visual */
+    position: relative;
+}
+
+/* Move first toolbar-group (font controls) to start */
+.formatting-toolbar > .toolbar-group:first-child {
+    order: -1;
+    margin-right: 8px;
+}
+
+.toolbar-divider {
+    /* Layout */
+    width: 1px;
+    height: 28px;
+    flex-shrink: 0;
+    
+    /* Visual */
+    background: var(--surface-2);
+    opacity: 0.8;
+    margin: 0 4px;
+}
+
+
+/*------------------------------------*\
+  #FORMAT-BUTTONS
+\*------------------------------------*/
+
+.format-btn {
+    /* Layout */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    
+    /* Dimensions */
+    width: 38px;
+    height: 38px;
+    
+    /* Visual */
+    background: var(--surface-0);
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    
+    /* Interaction */
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Icon sizing */
+    font-size: 15px;
+}
+
+/* Button States */
+.format-btn:hover {
+    background: var(--surface-2);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.format-btn:active {
+    transform: translateY(0);
+}
+
+.format-btn.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/*------------------------------------*\
+  #SELECT-CONTROLS
+\*------------------------------------*/
+
+.format-select {
+    /* Layout */
+    height: 38px;
+    padding: 0 28px 0 10px;
+    
+    /* Visual */
+    background: var(--surface-0);
+    border: 1.5px solid var(--surface-2);
+    border-radius: 8px;
+    color: var(--text-primary);
+    
+    /* Typography */
+    font-size: 13px;
+    font-weight: 500;
+    
+    /* Custom dropdown arrow */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+    
+    /* Interaction */
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Remove default styling */
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+/* Specific select sizes */
+.font-size-select {
+    min-width: 70px;
+    max-width: 90px;
+    margin-left: -6px; /* Move slightly to the left */
+}
+
+.font-family-select {
+    min-width: 110px;
+    max-width: 160px;
+    margin-left: -4px; /* Slight offset for visual alignment */
+}
+
+/* Additional spacing adjustment for the first toolbar group */
+.formatting-toolbar > .toolbar-group:first-child {
+    order: -1;
+    margin-right: 8px;
+    padding-left: 0; /* Remove left padding from first group */
+}
+
+/* Select States */
+.format-select:hover {
+    border-color: var(--primary-light);
+    background-color: var(--surface-1);
+}
+
+.format-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+    outline: none;
+}
+
+/* Select Options Styling */
+.format-select option {
+    font-size: 13px;
+    padding: 8px;
+    background: var(--surface-0);
+    color: var(--text-primary);
+}
+
+/*------------------------------------*\
+  #COLOR-CONTROLS
+\*------------------------------------*/
+
+.color-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.color-picker {
+    /* Positioning */
+    position: absolute;
+    inset: 0;
+    
+    /* Visual */
+    opacity: 0;
+    cursor: pointer;
+    
+    /* Dimensions */
+    width: 100%;
+    height: 100%;
+}
+
+/*------------------------------------*\
+  #RESPONSIVE-DESIGN
+\*------------------------------------*/
+
+@media (max-width: 768px) {
+    .formatting-toolbar {
+        padding: 8px;
+        gap: 6px;
+    }
+
+    .format-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+    }
+
+    .format-select {
+        height: 40px;
+        padding: 0 24px 0 8px;
+        font-size: 12px;
+        background-size: 10px;
+        background-position: right 6px center;
+    }
+    
+    .font-size-select {
+        min-width: 60px;
+        max-width: 80px;
+    }
+    
+    .font-family-select {
+        min-width: 100px;
+        max-width: 140px;
+    }
+    
+    .toolbar-divider {
+        height: 24px;
+        margin-right: -20px;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+    .format-btn {
+        padding: 10px;
+    }
+    
+    .format-btn:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .format-select {
+        padding: 0 5px;
+    }
+}
+
+/* High Contrast Mode Support */
+@media (forced-colors: active) {
+    .format-btn.active {
+        border: 2px solid SelectedItem;
+    }
+    
+    .toolbar-divider {
+        background: ButtonText;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .formatting-toolbar,
+    .format-btn,
+    .format-select {
+        transition: none;
+    }
+}
+
 /* Category Modal Specifics */
 .color-options,
 .icon-options {
@@ -2374,266 +2680,6 @@ body {
     animation: shine 2s linear infinite;
 }
 
-/* Formatting Toolbar Enhanced Styles */
-.formatting-toolbar {
-    padding: 12px;
-    border-bottom: 1px solid var(--surface-2);
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    background: var(--surface-1);
-    position: sticky;
-    top: 0;
-    z-index: var(--z-sticky);
-    isolation: isolate; /* Creates stacking context */
-}
-
-.toolbar-group {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.format-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 6px;
-    border: 1px solid transparent;
-    background: var(--surface-0);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: var(--transition-fast);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
-
-.format-btn:hover {
-    background: var(--surface-2);
-    color: var(--text-primary);
-}
-
-.format-btn.active {
-    background: var(--primary-light);
-    color: var(--primary);
-    border-color: var(--primary);
-}
-
-/* Color Picker Styles */
-.color-picker-btn {
-    overflow: hidden;
-}
-
-.color-picker {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-}
-
-/* Font Size Select */
-.format-select {
-    height: 36px;
-    padding: 0 8px;
-    border: 1px solid var(--surface-2);
-    border-radius: 6px;
-    background: var(--surface-0);
-    color: var(--text-primary);
-    font-size: 14px;
-    cursor: pointer;
-    transition: var(--transition-fast);
-}
-
-.format-select:hover {
-    border-color: var(--primary);
-}
-
-/* Theme Picker */
-.theme-picker-btn {
-    position: relative;
-}
-
-.theme-picker-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    margin-top: 8px;
-    background: var(--surface-0);
-    border-radius: 8px;
-    box-shadow: var(--shadow-md);
-    padding: 8px;
-    display: none;
-    z-index: 100;
-}
-
-.theme-picker-btn.active .theme-picker-dropdown {
-    display: block;
-}
-
-.theme-options {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-}
-
-.theme-option {
-    width: 36px;
-    height: 36px;
-    border-radius: 6px;
-    border: 2px solid transparent;
-    background: var(--theme-color);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-primary);
-    transition: var(--transition-fast);
-}
-
-.theme-option i {
-    opacity: 0;
-    transform: scale(0.5);
-    transition: var(--transition-fast);
-}
-
-.theme-option.active {
-    border-color: var(--primary);
-}
-
-.theme-option.active i {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.more-options-btn {
-    position: relative;
-    z-index: 102;
-}
-
-.more-options-dropdown {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    width: 280px;
-    background: var(--surface-0);
-    border-radius: 12px;
-    box-shadow: var(--shadow-md);
-    padding: 16px;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-8px);
-    transition: var(--transition-normal);
-    z-index: var(--z-dropdown);
-    isolation: isolate;
-}
-
-/* Ensure dropdown appears above other content */
-.more-options-btn.active .more-options-dropdown {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-    z-index: 1001; /* Higher than parent */
-}
-
-.dropdown-section {
-    margin-bottom: 16px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--surface-2);
-}
-
-.dropdown-section:last-child {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
-}
-
-.dropdown-section h4 {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.dropdown-tools {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-/* Font Size Control in Dropdown */
-.font-size-control {
-    flex: 1;
-    min-width: 100px;
-}
-
-.font-size-control .format-select {
-    width: 100%;
-}
-
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-    .more-options-dropdown {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        top: auto;
-        width: 100%;
-        transform: translateY(100%);
-        border-radius: 12px 12px 0 0;
-        max-height: 80vh;
-        overflow-y: auto;
-    }
-}
-
-/* Note Themes */
-.rich-editor[data-theme="blue"] {
-    background: #E8F1FF;
-}
-
-.rich-editor[data-theme="green"] {
-    background: #E8FFF1;
-}
-
-.rich-editor[data-theme="purple"] {
-    background: #F1E8FF;
-}
-
-.rich-editor[data-theme="pink"] {
-    background: #FFE8F1;
-}
-
-.rich-editor[data-theme="yellow"] {
-    background: #FFF8E8;
-}
-
-/* Dark Theme Adjustments */
-[data-theme="dark"] .rich-editor[data-theme="blue"] {
-    background: #1a2942;
-}
-
-[data-theme="dark"] .rich-editor[data-theme="green"] {
-    background: #1a422d;
-}
-
-[data-theme="dark"] .rich-editor[data-theme="purple"] {
-    background: #2a1a42;
-}
-
-[data-theme="dark"] .rich-editor[data-theme="pink"] {
-    background: #421a2d;
-}
-
-[data-theme="dark"] .rich-editor[data-theme="yellow"] {
-    background: #423d1a;
-}
 
 /* Utility Classes */
 .with-animation {
