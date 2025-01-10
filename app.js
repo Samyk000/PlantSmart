@@ -83,6 +83,111 @@ const ErrorRecovery = {
     }
 };
 
+// Add this new class:
+
+class RichTextEditor {
+    constructor() {
+        this.editor = document.getElementById('noteContent');
+        this.toolbar = document.querySelector('.formatting-toolbar');
+        
+        if (this.editor && this.toolbar) {
+            this.initializeEditor();
+        }
+    }
+
+    initializeEditor() {
+        // Format Buttons
+        const formatButtons = this.toolbar.querySelectorAll('.format-btn');
+        formatButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const command = button.dataset.command;
+                
+                if (command === 'createLink') {
+                    this.handleLinkInsertion();
+                } else {
+                    this.executeCommand(command);
+                }
+                
+                if (!['foreColor', 'hiliteColor', 'createLink'].includes(command)) {
+                    this.toggleActiveState(button);
+                }
+            });
+        });
+
+        // Font Controls
+        const fontSizeSelect = this.toolbar.querySelector('.font-size-select');
+        fontSizeSelect?.addEventListener('change', (e) => {
+            this.executeCommand('fontSize', e.target.value);
+        });
+
+        const fontFamilySelect = this.toolbar.querySelector('.font-family-select');
+        fontFamilySelect?.addEventListener('change', (e) => {
+            this.executeCommand('fontName', e.target.value);
+        });
+
+        // Color Pickers
+        const colorPickers = this.toolbar.querySelectorAll('.color-picker');
+        colorPickers.forEach(picker => {
+            picker.addEventListener('change', (e) => {
+                const command = picker.dataset.command;
+                this.executeCommand(command, e.target.value);
+            });
+            picker.addEventListener('click', e => e.stopPropagation());
+        });
+
+        // Editor State Updates
+        this.editor.addEventListener('keyup', () => this.updateButtonStates());
+        this.editor.addEventListener('mouseup', () => this.updateButtonStates());
+    }
+
+    executeCommand(command, value = null) {
+        document.execCommand(command, false, value);
+        this.editor.focus();
+    }
+
+    handleLinkInsertion() {
+        const selection = window.getSelection();
+        const url = prompt('Enter the URL:', 'http://');
+        
+        if (url) {
+            if (selection.toString().length === 0) {
+                const linkText = prompt('Enter the link text:', '');
+                if (linkText) {
+                    this.executeCommand('insertHTML', 
+                        `<a href="${url}" target="_blank">${linkText}</a>`);
+                }
+            } else {
+                this.executeCommand('createLink', url);
+                const link = selection.anchorNode.parentElement;
+                if (link.tagName === 'A') {
+                    link.target = '_blank';
+                }
+            }
+        }
+    }
+
+    toggleActiveState(button) {
+        const command = button.dataset.command;
+        try {
+            const isActive = document.queryCommandState(command);
+            button.classList.toggle('active', isActive);
+        } catch (e) {
+            console.warn(`Command state check failed for: ${command}`);
+        }
+    }
+
+    updateButtonStates() {
+        const buttons = this.toolbar.querySelectorAll('.format-btn');
+        buttons.forEach(button => {
+            const command = button.dataset.command;
+            if (command && !['createLink', 'removeFormat', 'foreColor', 'hiliteColor'].includes(command)) {
+                this.toggleActiveState(button);
+            }
+        });
+    }
+}
+
 const elements = {
     body: document.body,
     overlay: document.getElementById('overlay'),
@@ -140,13 +245,6 @@ const elements = {
     favoritesOnly: document.getElementById('favoritesOnly'),
     resetFilters: document.getElementById('resetFilters'),
     applyFilters: document.getElementById('applyFilters'),
-    formatButtons: document.querySelectorAll('.format-btn'),
-    colorPickers: document.querySelectorAll('.color-picker'),
-    fontSizeSelect: document.querySelector('.font-size-select'),
-    moreOptionsBtn: document.querySelector('.more-options-btn'),
-    moreOptionsDropdown: document.querySelector('.more-options-dropdown'),
-    themeOptions: document.querySelectorAll('.theme-option'),
-    richEditor: document.getElementById('noteContent'),
 };
 
 function initializeProfile() {
@@ -171,274 +269,6 @@ function closeAllDropdowns() {
     });
 }
 
-const FormattingTools = {
-    // Track active states
-    activeStates: {
-        bold: false,
-        italic: false,
-        underline: false,
-        strikethrough: false,
-    },
-    
-    // Add cleanup management system
-    cleanup: {
-        listeners: new Set(),
-        add(element, type, handler) {
-            if (element && type && handler) {
-                element.addEventListener(type, handler);
-                this.listeners.add({ element, type, handler });
-            }
-        },
-        removeAll() {
-            this.listeners.forEach(({ element, type, handler }) => {
-                if (element && type && handler) {
-                    element.removeEventListener(type, handler);
-                }
-            });
-            this.listeners.clear();
-        }
-    },
-
-    
-
-    init() {
-        try {
-            this.setupFormatButtons();
-            this.setupColorPickers();
-            this.setupFontSizeControls();
-            this.setupMoreOptions();
-            this.setupThemeOptions();
-            this.setupEditorListeners();
-            this.setupKeyboardNavigation();
-            
-            // Return cleanup function
-            return () => {
-                this.cleanup.removeAll();
-            };
-        } catch (error) {
-            handleError(error, 'FormattingTools initialization');
-            showNotification('Error initializing formatting tools', 'error');
-        }
-    },
-
-
-    closeDropdown() {
-        const btn = elements.moreOptionsBtn;
-        if (btn) {
-            btn.classList.remove('active');
-        }
-        document.removeEventListener('click', this.handleOutsideClick);
-    },
-
-    setupKeyboardNavigation() {
-        const editor = elements.richEditor;
-        if (!editor) return;
-
-        const handleKeyboard = (e) => {
-            // Handle keyboard shortcuts
-            if (e.ctrlKey || e.metaKey) {
-                switch (e.key.toLowerCase()) {
-                    case 'b':
-                        e.preventDefault();
-                        this.executeCommand('bold');
-                        break;
-                    case 'i':
-                        e.preventDefault();
-                        this.executeCommand('italic');
-                        break;
-                    case 'u':
-                        e.preventDefault();
-                        this.executeCommand('underline');
-                        break;
-                }
-            }
-        };
-
-        this.cleanup.add(editor, 'keydown', handleKeyboard);
-    },
-
-
-    closeAllDropdowns() {
-        const moreOptionsBtn = elements.moreOptionsBtn;
-        document.querySelectorAll('.more-options-btn').forEach(btn => {
-            if (btn !== moreOptionsBtn) {
-                btn.classList.remove('active');
-            }
-        });
-    },
-
-    // Setup format buttons
-    setupFormatButtons() {
-        elements.formatButtons.forEach(btn => {
-            if (btn.dataset.command) {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    this.executeCommand(btn.dataset.command);
-                    this.updateButtonStates();
-                });
-            }
-        });
-    },
-
-    // Setup color pickers
-    setupColorPickers() {
-        elements.colorPickers.forEach(picker => {
-            picker.addEventListener('input', (e) => {
-                this.executeCommand(picker.dataset.type, e.target.value);
-            });
-
-            picker.addEventListener('change', (e) => {
-                // Reset color picker button state
-                const btn = picker.closest('.color-picker-btn');
-                btn.classList.remove('active');
-            });
-        });
-    },
-
-    // Setup font size controls
-    setupFontSizeControls() {
-        if (elements.fontSizeSelect) {
-            elements.fontSizeSelect.addEventListener('change', (e) => {
-                this.executeCommand('fontSize', e.target.value);
-            });
-        }
-
-        // Font size increase/decrease buttons
-        document.querySelectorAll('[data-command="increaseFontSize"], [data-command="decreaseFontSize"]')
-            .forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const currentSize = parseInt(elements.fontSizeSelect.value);
-                    const newSize = btn.dataset.command === 'increaseFontSize' 
-                        ? Math.min(currentSize + 1, 7)
-                        : Math.max(currentSize - 1, 1);
-                    
-                    elements.fontSizeSelect.value = newSize;
-                    this.executeCommand('fontSize', newSize);
-                });
-            });
-    },
-
-    // Setup more options dropdown
-    setupMoreOptions() {
-        if (elements.moreOptionsBtn) {
-            // Store references to elements
-            const btn = elements.moreOptionsBtn;
-            const dropdown = elements.moreOptionsDropdown;
-    
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Close all other dropdowns first
-                document.querySelectorAll('.more-options-btn').forEach(otherBtn => {
-                    if (otherBtn !== btn) {
-                        otherBtn.classList.remove('active');
-                    }
-                });
-    
-                // Toggle current dropdown
-                btn.classList.toggle('active');
-            });
-    
-            // Close when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
-                    btn.classList.remove('active');
-                }
-            });
-    
-            // Prevent dropdown from closing when clicking inside it
-            dropdown.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-        }
-    },
-
-    
-
-    // Setup theme options
-    setupThemeOptions() {
-        elements.themeOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                elements.themeOptions.forEach(opt => opt.classList.remove('active'));
-                option.classList.add('active');
-                
-                const theme = option.dataset.theme;
-                elements.richEditor.setAttribute('data-theme', theme);
-                
-                // Save theme preference
-                if (AppState.currentNoteId) {
-                    const note = AppState.notes.find(n => n.id === AppState.currentNoteId);
-                    if (note) {
-                        note.theme = theme;
-                        saveNotesToStorage();
-                    }
-                }
-            });
-        });
-    },
-
-    // Setup editor listeners
-    setupEditorListeners() {
-        elements.richEditor.addEventListener('keydown', (e) => {
-            // Handle tab key
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                this.executeCommand('insertHTML', '&emsp;');
-            }
-        });
-
-        // Update formatting button states on selection change
-        elements.richEditor.addEventListener('mouseup', () => this.updateButtonStates());
-        elements.richEditor.addEventListener('keyup', () => this.updateButtonStates());
-    },
-
-    // Execute formatting command
-    executeCommand(command, value = null) {
-        document.execCommand(command, false, value);
-        
-        // Update active states
-        if (command in this.activeStates) {
-            this.activeStates[command] = !this.activeStates[command];
-        }
-        
-        // Update UI
-        this.updateButtonStates();
-    },
-
-    // Update button states based on current selection
-    updateButtonStates() {
-        elements.formatButtons.forEach(btn => {
-            const command = btn.dataset.command;
-            if (command && document.queryCommandState(command)) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-    },
-
-    // Get formatted content
-    getFormattedContent() {
-        return elements.richEditor.innerHTML;
-    },
-
-    // Set formatted content
-    setFormattedContent(content) {
-        elements.richEditor.innerHTML = content;
-    },
-
-    // Reset editor
-    reset() {
-        elements.richEditor.innerHTML = '';
-        this.updateButtonStates();
-        elements.themeOptions.forEach(opt => {
-            opt.classList.toggle('active', opt.dataset.theme === 'default');
-        });
-        elements.richEditor.setAttribute('data-theme', 'default');
-    }
-};
 
 function handleProfileSubmit(e) {
     e.preventDefault();
@@ -667,7 +497,6 @@ function initializeApp() {
         PerformanceMonitor.start('render-initial-ui');
         renderCategories();
         renderNotes();
-        FormattingTools.init();
         updateCategoryCounts();
         loadView();
         PerformanceMonitor.end('render-initial-ui');
@@ -680,6 +509,7 @@ function initializeApp() {
         
         // Show success message
         showNotification('Application initialized successfully', 'success');
+        window.noteEditor = new RichTextEditor();
     } catch (error) {
         handleError(error, 'initializeApp');
         showNotification('Error initializing application. Attempting recovery...', 'error');
@@ -769,12 +599,6 @@ function setupEventListeners() {
         renderNotes();
     }, 300));
 
-    elements.formatButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const command = btn.title.toLowerCase();
-            document.execCommand(command, false, null);
-        });
-    });
 
     elements.newCategoryBtn.addEventListener('click', () => openModal(elements.categoryModal));
 
@@ -1040,9 +864,8 @@ function updateCategorySelect() {
 function handleNoteSubmit(e) {
     e.preventDefault();
     const title = elements.noteTitleInput.value.trim();
-    const content = FormattingTools.getFormattedContent().trim();
+    const content = elements.noteContent.innerHTML.trim();
     const category = elements.categorySelect.value;
-    const theme = elements.richEditor.getAttribute('data-theme') || 'default';
 
     if (!title) return;
 
@@ -1050,7 +873,6 @@ function handleNoteSubmit(e) {
         title,
         content,
         category,
-        theme
     };
 
     if (AppState.isEditMode && AppState.currentNoteId) {
@@ -1640,10 +1462,7 @@ const ValidationSchemas = {
             isValid: typeof value === 'string' && value.length > 0 && value.length <= 100,
             message: 'Title must be between 1 and 100 characters'
         }),
-        content: (value) => ({
-            isValid: typeof value === 'string',
-            message: 'Content must be a valid string'
-        }),
+
         category: (value) => ({
             isValid: !value || AppState.categories.some(cat => cat.id === value),
             message: 'Invalid category selected'
@@ -1839,15 +1658,12 @@ function openNoteModal(noteId = null) {
             AppState.currentNoteId = noteId;
             elements.modalTitle.textContent = 'Edit Note';
             elements.noteTitleInput.value = note.title;
-            FormattingTools.setFormattedContent(note.content);
+            elements.noteContent.innerHTML = note.content;
             elements.categorySelect.value = note.category;
             
-            // Set theme if exists
-            if (note.theme) {
-                elements.richEditor.setAttribute('data-theme', note.theme);
-                elements.themeOptions.forEach(opt => {
-                    opt.classList.toggle('active', opt.dataset.theme === note.theme);
-                });
+            // Update formatting toolbar states
+            if (window.noteEditor) {
+                window.noteEditor.updateButtonStates();
             }
         }
     } else {
@@ -1878,8 +1694,13 @@ function resetNoteForm() {
     AppState.isEditMode = false;
     AppState.currentNoteId = null;
     elements.noteTitleInput.value = '';
-    FormattingTools.reset();
+    elements.noteContent.innerHTML = '';
     elements.categorySelect.value = '';
+    
+    // Reset formatting toolbar states
+    if (window.noteEditor) {
+        window.noteEditor.updateButtonStates();
+    }
 }
 
 // Reset Forms
