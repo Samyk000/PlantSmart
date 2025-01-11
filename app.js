@@ -1,4 +1,5 @@
 // App State
+// App State
 const AppState = {
     notes: JSON.parse(localStorage.getItem('notes')) || [],
     categories: JSON.parse(localStorage.getItem('categories')) || [
@@ -13,7 +14,6 @@ const AppState = {
     currentNoteId: null,
     activeSection: 'all',
     editingCategoryId: null,
-    // ADD NEW PROPERTIES HERE
     userProfile: JSON.parse(localStorage.getItem('userProfile')) || {
         name: 'John Doe',
         email: 'john.doe@example.com',
@@ -83,13 +83,11 @@ const ErrorRecovery = {
     }
 };
 
-//Rich text Editor
 class RichTextEditor {
     constructor() {
         this.editor = document.getElementById('noteContent');
         this.toolbar = document.querySelector('.formatting-toolbar');
         this.savedRange = null;
-        this.lastSelection = null;
         
         if (this.editor && this.toolbar) {
             this.initializeEditor();
@@ -104,76 +102,54 @@ class RichTextEditor {
 
         // Format Buttons
         this.toolbar.querySelectorAll('.format-btn').forEach(button => {
-            if (!button.classList.contains('color-btn')) {
-                button.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const command = button.dataset.command;
-                    
-                    switch(command) {
-                        case 'createLink':
-                            this.handleLinkInsertion();
-                            break;
-                        case 'removeFormat':
-                            this.removeAllFormatting();
-                            break;
-                        default:
-                            this.applyFormatting(command);
-                    }
-                });
-            }
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation(); // Prevent other handlers
+                const command = button.dataset.command;
+                
+                this.restoreSelection();
+                switch(command) {
+                    case 'createLink':
+                        this.handleLinkInsertion();
+                        break;
+                    case 'removeFormat':
+                        this.removeAllFormatting();
+                        break;
+                    case 'insertUnorderedList':
+                    case 'insertOrderedList':
+                        this.executeCommand(command);
+                        break;
+                    default:
+                        this.applyFormatting(command);
+                }
+                this.saveSelection();
+                this.updateButtonStates();
+                this.editor.focus();
+            });
         });
 
         // Font Controls
-        const fontSizeSelect = this.toolbar.querySelector('.font-size-select');
-        const fontFamilySelect = this.toolbar.querySelector('.font-family-select');
-
-        if (fontSizeSelect) {
-            fontSizeSelect.addEventListener('mousedown', (e) => {
-                e.stopPropagation();
-            });
-
-            fontSizeSelect.addEventListener('change', (e) => {
-                e.preventDefault();
-                this.restoreSelection();
-                const size = e.target.value;
-                document.execCommand('fontSize', false, this.getFontSizeValue(size));
-                this.editor.focus();
-            });
-        }
-
-        if (fontFamilySelect) {
-            fontFamilySelect.addEventListener('mousedown', (e) => {
-                e.stopPropagation();
-            });
-
-            fontFamilySelect.addEventListener('change', (e) => {
-                e.preventDefault();
-                this.restoreSelection();
-                const family = e.target.value;
-                document.execCommand('fontName', false, family);
-                this.editor.focus();
-            });
-        }
+        this.setupFontControls('.font-size-select', 'fontSize', (size) => this.getFontSizeValue(size));
+        this.setupFontControls('.font-family-select', 'fontName');
 
         // Color Pickers
-        this.toolbar.querySelectorAll('.color-picker').forEach(picker => {
-            const button = picker.closest('.color-btn');
-            
+    this.toolbar.querySelectorAll('.color-btn').forEach(button => {
+        const picker = button.querySelector('.color-picker');
+        
+        if (picker) {
             button.addEventListener('click', (e) => {
                 e.preventDefault();
-                picker.click();
+                picker.click();  // Triggers the color input
             });
 
             picker.addEventListener('change', (e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 const command = picker.dataset.command;
                 const color = e.target.value;
                 this.applyColorFormatting(command, color);
             });
-        });
-
+        }
+    });
         // Selection change handling
         document.addEventListener('selectionchange', () => {
             if (document.activeElement === this.editor) {
@@ -183,14 +159,26 @@ class RichTextEditor {
         });
     }
 
-    setupFormatTracking() {
-        this.editor.addEventListener('input', () => {
-            this.updateButtonStates();
-        });
+    setupFontControls(selector, command, valueMapper = (value) => value) {
+        const control = this.toolbar.querySelector(selector);
+        if (control) {
+            control.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+            });
 
-        this.editor.addEventListener('click', () => {
-            this.updateButtonStates();
-        });
+            control.addEventListener('change', (e) => {
+                e.preventDefault();
+                this.restoreSelection();
+                const value = valueMapper(e.target.value);
+                this.executeCommand(command, value);
+                this.editor.focus();
+            });
+        }
+    }
+
+    setupFormatTracking() {
+        this.editor.addEventListener('input', () => this.updateButtonStates());
+        this.editor.addEventListener('click', () => this.updateButtonStates());
     }
 
     initializeSelectionHandling() {
@@ -201,9 +189,7 @@ class RichTextEditor {
             });
         });
 
-        this.editor.addEventListener('focus', () => {
-            this.restoreSelection();
-        });
+        this.editor.addEventListener('focus', () => this.restoreSelection());
 
         // Prevent toolbar interactions from losing focus
         this.toolbar.addEventListener('mousedown', (e) => {
@@ -246,25 +232,22 @@ class RichTextEditor {
         }
     }
 
-    applyFormatting(command) {
-        try {
-            this.restoreSelection();
-            document.execCommand(command, false, null);
-            this.updateButtonStates();
-            this.editor.focus();
-        } catch (error) {
-            console.error('Formatting error:', error);
-        }
-    }
-
-    applyColorFormatting(command, value) {
+    executeCommand(command, value = null) {
         try {
             this.restoreSelection();
             document.execCommand(command, false, value);
-            this.editor.focus();
+            this.updateButtonStates();
         } catch (error) {
-            console.error('Color formatting error:', error);
+            console.error(`Command execution error for ${command}:`, error);
         }
+    }
+
+    applyFormatting(command) {
+        this.executeCommand(command);
+    }
+
+    applyColorFormatting(command, value) {
+        this.executeCommand(command, value);
     }
 
     handleLinkInsertion() {
@@ -272,7 +255,7 @@ class RichTextEditor {
         const url = prompt('Enter URL:', 'http://');
         if (url) {
             document.execCommand('createLink', false, url);
-            
+
             // Make links open in new tab
             const selection = window.getSelection();
             const range = selection.getRangeAt(0);
@@ -295,10 +278,6 @@ class RichTextEditor {
             // Reset font properties
             document.execCommand('fontName', false, 'Arial');
             document.execCommand('fontSize', false, '3');
-            
-            // Remove lists
-            document.execCommand('insertUnorderedList', false, null);
-            document.execCommand('insertOrderedList', false, null);
             
             // Reset alignment to left
             document.execCommand('justifyLeft', false, null);
@@ -335,7 +314,6 @@ class RichTextEditor {
 document.addEventListener('DOMContentLoaded', () => {
     window.noteEditor = new RichTextEditor();
 });
-
 
 const elements = {
     body: document.body,
