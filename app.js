@@ -1903,5 +1903,6 @@ function resetForms() {
     resetCategoryForm();
 }
 
+
 // Initialize the App
 document.addEventListener('DOMContentLoaded', initializeApp);
