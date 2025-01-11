@@ -1,0 +1,30 @@
+{
+    "name": "Quiknotes",
+    "short_name": "Quiknotes",
+    "description": "A modern note-taking application.",
+    "start_url": "/quiknotes.net",
+    "display": "standalone",
+    "background_color": "#FFFFFF",
+    "theme_color": "#5B6BFF",
+    "orientation": "portrait",
+    "scope": "/",
+    "icons": [
+      {
+        "src": "/assets/images/icon-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/assets/images/favicon-32x32.png",
+        "sizes": "32x32",
+        "type": "image/png"
+      },
+      {
+        "src": "/assets/images/icon-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ],
+    "related_applications": [],
+    "prefer_related_applications": false
+}
