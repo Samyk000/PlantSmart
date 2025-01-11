@@ -83,110 +83,259 @@ const ErrorRecovery = {
     }
 };
 
-// Rich Text Editor
-
-// Rich Text Editor
-
+//Rich text Editor
 class RichTextEditor {
     constructor() {
         this.editor = document.getElementById('noteContent');
         this.toolbar = document.querySelector('.formatting-toolbar');
+        this.savedRange = null;
+        this.lastSelection = null;
         
         if (this.editor && this.toolbar) {
             this.initializeEditor();
+            this.initializeSelectionHandling();
+            this.setupFormatTracking();
         }
     }
 
-
     initializeEditor() {
+        this.editor.contentEditable = 'true';
+        this.editor.innerHTML = this.editor.innerHTML || '<div><br></div>';
+
         // Format Buttons
-        const formatButtons = this.toolbar.querySelectorAll('.format-btn');
-        formatButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                const command = button.dataset.command;
-                
-                if (command === 'createLink') {
-                    this.handleLinkInsertion();
-                } else {
-                    this.executeCommand(command);
-                }
-                
-                if (!['foreColor', 'hiliteColor', 'createLink'].includes(command)) {
-                    this.toggleActiveState(button);
-                }
-            });
+        this.toolbar.querySelectorAll('.format-btn').forEach(button => {
+            if (!button.classList.contains('color-btn')) {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const command = button.dataset.command;
+                    
+                    switch(command) {
+                        case 'createLink':
+                            this.handleLinkInsertion();
+                            break;
+                        case 'removeFormat':
+                            this.removeAllFormatting();
+                            break;
+                        default:
+                            this.applyFormatting(command);
+                    }
+                });
+            }
         });
 
         // Font Controls
         const fontSizeSelect = this.toolbar.querySelector('.font-size-select');
-        fontSizeSelect?.addEventListener('change', (e) => {
-            this.executeCommand('fontSize', e.target.value);
-        });
         const fontFamilySelect = this.toolbar.querySelector('.font-family-select');
-        fontFamilySelect?.addEventListener('change', (e) => {
-            this.executeCommand('fontName', e.target.value);
-        });
-        // Color Pickers
-        const colorPickers = this.toolbar.querySelectorAll('.color-picker');
-        colorPickers.forEach(picker => {
-            picker.addEventListener('change', (e) => {
-                const command = picker.dataset.command;
-                this.executeCommand(command, e.target.value);
+
+        if (fontSizeSelect) {
+            fontSizeSelect.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
             });
-            picker.addEventListener('click', e => e.stopPropagation());
+
+            fontSizeSelect.addEventListener('change', (e) => {
+                e.preventDefault();
+                this.restoreSelection();
+                const size = e.target.value;
+                document.execCommand('fontSize', false, this.getFontSizeValue(size));
+                this.editor.focus();
+            });
+        }
+
+        if (fontFamilySelect) {
+            fontFamilySelect.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+            });
+
+            fontFamilySelect.addEventListener('change', (e) => {
+                e.preventDefault();
+                this.restoreSelection();
+                const family = e.target.value;
+                document.execCommand('fontName', false, family);
+                this.editor.focus();
+            });
+        }
+
+        // Color Pickers
+        this.toolbar.querySelectorAll('.color-picker').forEach(picker => {
+            const button = picker.closest('.color-btn');
+            
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                picker.click();
+            });
+
+            picker.addEventListener('change', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const command = picker.dataset.command;
+                const color = e.target.value;
+                this.applyColorFormatting(command, color);
+            });
         });
 
-// Editor State Updates
-this.editor.addEventListener('keyup', () => this.updateButtonStates());
-this.editor.addEventListener('mouseup', () => this.updateButtonStates());
-}
-executeCommand(command, value = null) {
-document.execCommand(command, false, value);
-this.editor.focus();
-}
+        // Selection change handling
+        document.addEventListener('selectionchange', () => {
+            if (document.activeElement === this.editor) {
+                this.saveSelection();
+                this.updateButtonStates();
+            }
+        });
+    }
 
-    handleLinkInsertion() {
-        const selection = window.getSelection();
-        const url = prompt('Enter the URL:', 'http://');
-        
-        if (url) {
-            if (selection.toString().length === 0) {
-                const linkText = prompt('Enter the link text:', '');
-                if (linkText) {
-                    this.executeCommand('insertHTML', 
-                        `<a href="${url}" target="_blank">${linkText}</a>`);
-                }
-            } else {
-                this.executeCommand('createLink', url);
-                const link = selection.anchorNode.parentElement;
-                if (link.tagName === 'A') {
-                    link.target = '_blank';
-                }
+    setupFormatTracking() {
+        this.editor.addEventListener('input', () => {
+            this.updateButtonStates();
+        });
+
+        this.editor.addEventListener('click', () => {
+            this.updateButtonStates();
+        });
+    }
+
+    initializeSelectionHandling() {
+        ['mouseup', 'keyup', 'touchend'].forEach(event => {
+            this.editor.addEventListener(event, () => {
+                this.saveSelection();
+                this.updateButtonStates();
+            });
+        });
+
+        this.editor.addEventListener('focus', () => {
+            this.restoreSelection();
+        });
+
+        // Prevent toolbar interactions from losing focus
+        this.toolbar.addEventListener('mousedown', (e) => {
+            if (e.target.closest('button, select, input[type="color"]')) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    getFontSizeValue(size) {
+        const sizeMap = {
+            '8pt': '1',
+            '10pt': '2',
+            '12pt': '3',
+            '14pt': '4',
+            '16pt': '5',
+            '18pt': '6',
+            '24pt': '7'
+        };
+        return sizeMap[size] || '3';
+    }
+
+    saveSelection() {
+        if (window.getSelection) {
+            const sel = window.getSelection();
+            if (sel.getRangeAt && sel.rangeCount) {
+                this.savedRange = sel.getRangeAt(0).cloneRange();
             }
         }
     }
 
-    toggleActiveState(button) {
-        const command = button.dataset.command;
+    restoreSelection() {
+        if (this.savedRange) {
+            if (window.getSelection) {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(this.savedRange);
+            }
+            this.editor.focus();
+        }
+    }
+
+    applyFormatting(command) {
         try {
-            const isActive = document.queryCommandState(command);
-            button.classList.toggle('active', isActive);
-        } catch (e) {
-            console.warn(`Command state check failed for: ${command}`);
+            this.restoreSelection();
+            document.execCommand(command, false, null);
+            this.updateButtonStates();
+            this.editor.focus();
+        } catch (error) {
+            console.error('Formatting error:', error);
+        }
+    }
+
+    applyColorFormatting(command, value) {
+        try {
+            this.restoreSelection();
+            document.execCommand(command, false, value);
+            this.editor.focus();
+        } catch (error) {
+            console.error('Color formatting error:', error);
+        }
+    }
+
+    handleLinkInsertion() {
+        this.restoreSelection();
+        const url = prompt('Enter URL:', 'http://');
+        if (url) {
+            document.execCommand('createLink', false, url);
+            
+            // Make links open in new tab
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            const linkNode = range.commonAncestorContainer.parentNode;
+            if (linkNode.tagName === 'A') {
+                linkNode.target = '_blank';
+                linkNode.rel = 'noopener noreferrer';
+            }
+            this.editor.focus();
+        }
+    }
+
+    removeAllFormatting() {
+        try {
+            this.restoreSelection();
+            
+            // Remove all formatting
+            document.execCommand('removeFormat', false, null);
+            
+            // Reset font properties
+            document.execCommand('fontName', false, 'Arial');
+            document.execCommand('fontSize', false, '3');
+            
+            // Remove lists
+            document.execCommand('insertUnorderedList', false, null);
+            document.execCommand('insertOrderedList', false, null);
+            
+            // Reset alignment to left
+            document.execCommand('justifyLeft', false, null);
+            
+            this.updateButtonStates();
+            this.editor.focus();
+        } catch (error) {
+            console.error('Remove formatting error:', error);
         }
     }
 
     updateButtonStates() {
-        const buttons = this.toolbar.querySelectorAll('.format-btn');
-        buttons.forEach(button => {
+        this.toolbar.querySelectorAll('.format-btn').forEach(button => {
             const command = button.dataset.command;
-            if (command && !['createLink', 'removeFormat', 'foreColor', 'hiliteColor'].includes(command)) {
-                this.toggleActiveState(button);
+            if (command && !['createLink', 'removeFormat'].includes(command)) {
+                try {
+                    const isActive = document.queryCommandState(command);
+                    button.classList.toggle('active', isActive);
+                } catch (e) {
+                    console.warn(`Command state check failed for: ${command}`);
+                }
             }
         });
     }
+
+    reset() {
+        this.editor.innerHTML = '<div><br></div>';
+        this.savedRange = null;
+        this.updateButtonStates();
+    }
 }
+
+// Initialize the editor
+document.addEventListener('DOMContentLoaded', () => {
+    window.noteEditor = new RichTextEditor();
+});
+
 
 const elements = {
     body: document.body,
@@ -914,19 +1063,19 @@ function closeAllModals() {
 // Create Note
 function createNote(data) {
     try {
-        // Validate note data
         const validationErrors = validateData(data, ValidationSchemas.note);
         if (validationErrors.length > 0) {
             throw new Error(validationErrors.map(err => err.message).join('. '));
         }
 
-        // Sanitize content
-        const sanitizedContent = sanitizeHTML(data.content);
+        // Create a temporary div to process content
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = data.content;
 
         const note = {
             id: Date.now(),
             title: data.title.trim(),
-            content: sanitizedContent,
+            content: tempDiv.innerHTML,
             category: data.category,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -937,16 +1086,6 @@ function createNote(data) {
             lastModifiedBy: AppState.userProfile.name
         };
 
-        // Check storage limit before saving
-        const noteSize = new Blob([JSON.stringify(note)]).size;
-        const currentStorage = AppState.userProfile.storage.used * 1024 * 1024; // Convert GB to bytes
-        const newStorage = currentStorage + noteSize;
-        const totalStorage = AppState.userProfile.storage.total * 1024 * 1024 * 1024; // Convert GB to bytes
-
-        if (newStorage > totalStorage) {
-            throw new Error('Storage limit exceeded. Please upgrade your plan or delete some notes.');
-        }
-
         AppState.notes.unshift(note);
         saveNotesToStorage();
         renderNotes();
@@ -956,14 +1095,25 @@ function createNote(data) {
         return note;
     } catch (error) {
         handleError(error, 'createNote');
-        throw error; // Re-throw to handle in UI
+        throw error;
     }
 }
 
 // HTML Sanitizer
 function sanitizeHTML(html) {
+    // Create a temporary div
     const temp = document.createElement('div');
-    temp.textContent = html;
+    temp.innerHTML = html;
+    
+    // Process lists specifically
+    const lists = temp.querySelectorAll('ul, ol');
+    lists.forEach(list => {
+        list.style.listStylePosition = 'outside';
+        list.style.paddingLeft = '24px';
+        list.style.margin = '8px 0';
+    });
+
+    // Return the processed HTML
     return temp.innerHTML;
 }
 
@@ -1196,15 +1346,72 @@ function renderNotes() {
 }
 
 // Render Note Card
+function renderNotes() {
+    const filteredNotes = filterNotes();
+    const pinnedNotes = filteredNotes.filter(note => note.isPinned);
+    const unpinnedNotes = filteredNotes.filter(note => !note.isPinned);
+
+    elements.notesContainer.innerHTML = '';
+
+    // Create section for pinned notes if any exist
+    if (pinnedNotes.length > 0) {
+        const pinnedSection = document.createElement('div');
+        pinnedSection.className = 'notes-section pinned-notes';
+        if (AppState.currentView === 'grid') {
+            pinnedSection.classList.add('notes-grid');
+        }
+        
+        pinnedNotes.forEach(note => {
+            const noteCard = renderNoteCard(note);
+            pinnedSection.appendChild(noteCard);
+        });
+        
+        elements.notesContainer.appendChild(pinnedSection);
+    }
+
+    // Create section for unpinned notes
+    if (unpinnedNotes.length > 0) {
+        const unpinnedSection = document.createElement('div');
+        unpinnedSection.className = 'notes-section unpinned-notes';
+        if (AppState.currentView === 'grid') {
+            unpinnedSection.classList.add('notes-grid');
+        }
+        
+        unpinnedNotes.forEach(note => {
+            const noteCard = renderNoteCard(note);
+            unpinnedSection.appendChild(noteCard);
+        });
+        
+        elements.notesContainer.appendChild(unpinnedSection);
+    }
+
+    // Show empty state if no notes
+    if (filteredNotes.length === 0) {
+        renderEmptyState();
+    }
+}
+
 function renderNoteCard(note) {
     const category = AppState.categories.find(cat => cat.id === note.category);
     const noteElement = document.createElement('article');
     noteElement.className = `note-card ${note.isPinned ? 'pinned' : ''}`;
     
+    // Create a wrapper for the content to properly render HTML
+    const contentWrapper = document.createElement('div');
+    contentWrapper.innerHTML = note.content;
+
+    // Process any lists in the content
+    const lists = contentWrapper.querySelectorAll('ul, ol');
+    lists.forEach(list => {
+        list.style.paddingLeft = '24px';
+        list.style.margin = '8px 0';
+        list.style.listStylePosition = 'outside';
+    });
+    
     noteElement.innerHTML = `
         <div class="note-card-content">
             <h2 class="note-title">${note.title}</h2>
-            <div class="note-preview">${note.content}</div>
+            <div class="note-preview">${contentWrapper.innerHTML}</div>
             <div class="note-footer">
                 <div class="note-metadata">
                     <span class="date">
@@ -1255,8 +1462,10 @@ function renderNoteCard(note) {
         </div>
     `;
 
-    elements.notesContainer.appendChild(noteElement);
+    // Set up event listeners
     setupNoteCardListeners(noteElement, note.id);
+    
+    return noteElement;
 }
 
 // Render Empty State
@@ -1694,13 +1903,20 @@ function resetNoteForm() {
     AppState.isEditMode = false;
     AppState.currentNoteId = null;
     elements.noteTitleInput.value = '';
-    elements.noteContent.innerHTML = '';
     elements.categorySelect.value = '';
     
-    // Reset formatting toolbar states
-    if (window.noteEditor) {
-        window.noteEditor.updateButtonStates();
-    }
+// Reset editor content and state
+if (window.noteEditor) {
+    window.noteEditor.reset();
+} else {
+    elements.noteContent.innerHTML = '<div><br></div>';
+}
+
+// Ensure editor is in editable state
+elements.noteContent.contentEditable = 'true';
+
+// Focus the editor
+elements.noteContent.focus();
 }
 
 // Reset Forms
