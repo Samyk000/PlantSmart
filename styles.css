@@ -1721,6 +1721,35 @@ body {
     display: block;
 }
 
+.note-preview {
+    white-space: normal !important;
+}
+
+.note-preview ul, 
+.note-preview ol {
+    padding-left: 24px !important;
+    margin: 8px 0 !important;
+    list-style-position: outside !important;
+}
+
+.rich-editor {
+    min-height: 200px;
+    padding: 16px;
+    border: 1px solid var(--surface-2);
+    border-radius: 8px;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.rich-editor ul,
+.rich-editor ol {
+    padding-left: 24px !important;
+    margin: 8px 0 !important;
+    list-style-position: outside !important;
+}
+
 /* Webkit scrollbar styles (Chrome, Safari, newer Edge) */
 .note-preview::-webkit-scrollbar {
     width: 2px; /* Thinner scrollbar */
@@ -2151,7 +2180,7 @@ body {
     align-items: center;
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 1000;
     
     /* Spacing */
     padding: 12px;
@@ -2172,40 +2201,7 @@ body {
     user-select: none;
 }
 
-/* Scroll Indicator */
-.formatting-toolbar::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 40px;
-    background: linear-gradient(90deg, transparent, var(--surface-1) 70%);
-    pointer-events: none;
-    opacity: 0.8;
-}
-
-/* Subtle arrow indicator */
-.formatting-toolbar::before {
-    content: '›';
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-tertiary);
-    font-size: 20px;
-    animation: subtleBounce 2s infinite;
-    pointer-events: none;
-    z-index: 1;
-    opacity: 0.7;
-}
-
-@keyframes subtleBounce {
-    0%, 100% { transform: translate(0, -50%); }
-    50% { transform: translate(-3px, -50%); }
-}
-
-/* Hide scrollbar across browsers */
+/* Hide scrollbar */
 .formatting-toolbar::-webkit-scrollbar {
     display: none;
 }
@@ -2226,26 +2222,17 @@ body {
     
     /* Visual */
     position: relative;
-}
-
-/* Move first toolbar-group (font controls) to start */
-.formatting-toolbar > .toolbar-group:first-child {
-    order: -1;
-    margin-right: 8px;
+    z-index: 1000;
 }
 
 .toolbar-divider {
-    /* Layout */
     width: 1px;
     height: 28px;
     flex-shrink: 0;
-    
-    /* Visual */
     background: var(--surface-2);
     opacity: 0.8;
     margin: 0 4px;
 }
-
 
 /*------------------------------------*\
   #FORMAT-BUTTONS
@@ -2274,9 +2261,9 @@ body {
     
     /* Icon sizing */
     font-size: 15px;
+    position: relative;
 }
 
-/* Button States */
 .format-btn:hover {
     background: var(--surface-2);
     color: var(--text-primary);
@@ -2301,11 +2288,12 @@ body {
 
 .format-select {
     /* Layout */
+    position: relative;
     height: 38px;
     padding: 0 28px 0 10px;
     
     /* Visual */
-    background: var(--surface-0);
+    background-color: var(--surface-0);
     border: 1.5px solid var(--surface-2);
     border-radius: 8px;
     color: var(--text-primary);
@@ -2314,42 +2302,32 @@ body {
     font-size: 13px;
     font-weight: 500;
     
+    /* Interaction */
+    cursor: pointer;
+    z-index: 1000;
+    
     /* Custom dropdown arrow */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 8px center;
     background-size: 12px;
     
-    /* Interaction */
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    
     /* Remove default styling */
     appearance: none;
     -webkit-appearance: none;
+    -moz-appearance: none;
 }
 
-/* Specific select sizes */
 .font-size-select {
     min-width: 70px;
     max-width: 90px;
-    margin-left: -6px; /* Move slightly to the left */
 }
 
 .font-family-select {
     min-width: 110px;
     max-width: 160px;
-    margin-left: -4px; /* Slight offset for visual alignment */
 }
 
-/* Additional spacing adjustment for the first toolbar group */
-.formatting-toolbar > .toolbar-group:first-child {
-    order: -1;
-    margin-right: 8px;
-    padding-left: 0; /* Remove left padding from first group */
-}
-
-/* Select States */
 .format-select:hover {
     border-color: var(--primary-light);
     background-color: var(--surface-1);
@@ -2361,7 +2339,6 @@ body {
     outline: none;
 }
 
-/* Select Options Styling */
 .format-select option {
     font-size: 13px;
     padding: 8px;
@@ -2375,27 +2352,35 @@ body {
 
 .color-btn {
     position: relative;
-    overflow: hidden;
+    overflow: visible !important;
+}
+
+.color-btn i {
+    pointer-events: none;
 }
 
 .color-picker {
-    /* Positioning */
     position: absolute;
-    inset: 0;
-    
-    /* Visual */
-    opacity: 0;
-    cursor: pointer;
-    
-    /* Dimensions */
+    left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 1001;
+    padding: 0;
+    margin: 0;
+    border: none;
 }
 
-/*------------------------------------*\
-  #RESPONSIVE-DESIGN
-\*------------------------------------*/
+/* Ensure dropdowns are clickable */
+.format-select,
+.color-picker,
+.format-btn {
+    pointer-events: auto !important;
+}
 
+/* Additional fixes for mobile */
 @media (max-width: 768px) {
     .formatting-toolbar {
         padding: 8px;
@@ -2409,112 +2394,14 @@ body {
     }
 
     .format-select {
-        height: 40px;
+        height: 34px;
         padding: 0 24px 0 8px;
         font-size: 12px;
-        background-size: 10px;
-        background-position: right 6px center;
-    }
-    
-    .font-size-select {
-        min-width: 60px;
-        max-width: 80px;
-    }
-    
-    .font-family-select {
-        min-width: 100px;
-        max-width: 140px;
-    }
-    
-    .toolbar-divider {
-        height: 24px;
-        margin-right: -20px;
     }
 }
+/* End of the formatting toools */
 
-/* Touch Device Optimizations */
-@media (hover: none) {
-    .format-btn {
-        padding: 10px;
-    }
-    
-    .format-btn:hover {
-        transform: none;
-        box-shadow: none;
-    }
-    
-    .format-select {
-        padding: 0 5px;
-    }
-}
 
-/* High Contrast Mode Support */
-@media (forced-colors: active) {
-    .format-btn.active {
-        border: 2px solid SelectedItem;
-    }
-    
-    .toolbar-divider {
-        background: ButtonText;
-    }
-}
-
-/* Rich Editor Mobile Optimizations */
-@media (max-width: 768px) {
-    .rich-editor {
-        -webkit-user-select: text;
-        user-select: text;
-        -webkit-tap-highlight-color: transparent;
-        -webkit-touch-callout: none;
-    }
-
-    /* Force font rendering */
-    .rich-editor[contenteditable="true"] {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
-
-    /* Ensure proper list rendering */
-    .rich-editor ul, 
-    .rich-editor ol {
-        padding-left: 24px !important;
-        margin: 8px 0 !important;
-    }
-
-    .rich-editor li {
-        list-style-position: outside !important;
-    }
-
-    /* Force font sizes to be respected */
-    .rich-editor[contenteditable="true"] *[style*="font-size"] {
-        font-size: inherit !important;
-    }
-
-    /* Ensure font families are applied */
-    .rich-editor[contenteditable="true"] *[style*="font-family"] {
-        font-family: inherit !important;
-    }
-}
-
-/* Preserve formatting when saving */
-.note-preview ul,
-.note-preview ol {
-    padding-left: 24px !important;
-    margin: 8px 0 !important;
-}
-
-.note-preview li {
-    list-style-position: outside !important;
-}
-
-/* Reduced Motion */
-@media (prefers-reduced-motion: reduce) {
-    .formatting-toolbar,
-    .format-btn,
-    .format-select {
-        transition: none;
-    }
-}
 
 /* Category Modal Specifics */
 .color-options,
