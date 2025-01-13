@@ -1,4 +1,516 @@
-// App State
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { 
+    getFirestore, 
+    collection, 
+    getDocs, 
+    updateDoc, 
+    deleteDoc, 
+    doc, 
+    getDoc, 
+    setDoc 
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { 
+    getAuth, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    onAuthStateChanged, 
+    signOut, 
+    sendPasswordResetEmail, 
+    sendEmailVerification 
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyBEveTkDs4XE9xmUUFNp5ipdjr-UxMLCa0",
+    authDomain: "quiknotes-cd28b.firebaseapp.com",
+    projectId: "quiknotes-cd28b",
+    storageBucket: "quiknotes-cd28b.appspot.com",
+    messagingSenderId: "80075452780",
+    appId: "1:80075452780:web:5cb27e1f5fffda0e66c349",
+    measurementId: "G-N8DN28CELL"
+};
+
+// Initialize Firebase
+let app;
+try {
+    app = getApp();
+} catch (error) {
+    app = initializeApp(firebaseConfig);
+}
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Firestore Database Management
+const DatabaseManager = {
+    // Notes Collection Operations
+    async loadNotesFromFirestore() {
+        try {
+            const user = auth.currentUser;
+            if (!user) {
+                throw new Error('No authenticated user');
+            }
+    
+            const notesRef = collection(db, `users/${user.uid}/notes`);
+            const notesSnapshot = await getDocs(notesRef);
+            
+            AppState.notes = [];
+            notesSnapshot.forEach(doc => {
+                const noteData = doc.data();
+                if (noteData) {
+                    AppState.notes.push({
+                        ...noteData,
+                        id: doc.id,
+                        isDeleted: noteData.isDeleted || false
+                    });
+                }
+            });
+    
+            // Sort notes: pinned first, then by update date
+            AppState.notes.sort((a, b) => {
+                if (a.isPinned !== b.isPinned) {
+                    return b.isPinned ? 1 : -1;
+                }
+                return new Date(b.updatedAt) - new Date(a.updatedAt);
+            });
+    
+            localStorage.setItem('notes', JSON.stringify(AppState.notes));
+            renderNotes();
+            updateCategoryCounts();
+            
+        } catch (error) {
+            console.error('Error loading notes from Firestore:', error);
+            throw error;
+        }
+    },
+
+    async saveNoteToFirestore(note) {
+        try {
+            const user = auth.currentUser;
+            if (!user) {
+                throw new Error('No authenticated user');
+            }
+
+            const noteRef = doc(db, `users/${user.uid}/notes/${note.id}`);
+            const noteData = {
+                title: note.title,
+                content: note.content,
+                category: note.category,
+                createdAt: note.createdAt,
+                updatedAt: new Date().toISOString(),
+                isPinned: note.isPinned || false,
+                isFavorite: note.isFavorite || false,
+                isDeleted: note.isDeleted || false,
+                version: note.version || 1,
+                lastModifiedBy: note.lastModifiedBy || user.email
+            };
+
+            await setDoc(noteRef, noteData);
+        } catch (error) {
+            handleError(error, 'saveNoteToFirestore');
+            throw error;
+        }
+    },
+
+    async deleteNoteFromFirestore(noteId) {
+        try {
+            const user = auth.currentUser;
+            if (!user) {
+                throw new Error('No authenticated user');
+            }
+
+            await deleteDoc(doc(db, `users/${user.uid}/notes/${noteId}`));
+        } catch (error) {
+            handleError(error, 'deleteNoteFromFirestore');
+            throw error;
+        }
+    },
+
+    // User Data Operations
+    async updateUserProfile(userData) {
+        try {
+            const user = auth.currentUser;
+            if (!user) {
+                throw new Error('No authenticated user');
+            }
+
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+                ...userData,
+                updatedAt: new Date().toISOString()
+            });
+
+            return true;
+        } catch (error) {
+            handleError(error, 'updateUserProfile');
+            throw error;
+        }
+    },
+
+    async getUserData() {
+        try {
+            const user = auth.currentUser;
+            if (!user) {
+                throw new Error('No authenticated user');
+            }
+
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+                return userDoc.data();
+            }
+            return null;
+        } catch (error) {
+            handleError(error, 'getUserData');
+            throw error;
+        }
+    },
+
+    // Helper method to check authentication
+    checkAuth() {
+        const user = auth.currentUser;
+        if (!user) {
+            throw new Error('No authenticated user');
+        }
+        return user;
+    },
+
+    // Helper method to handle Firestore errors
+    handleFirestoreError(error, operation) {
+        console.error(`Firestore ${operation} error:`, error);
+        const errorMessage = error.code ? this.getFirestoreErrorMessage(error.code) : error.message;
+        throw new Error(errorMessage);
+    },
+
+    // Helper method to get user-friendly error messages
+    getFirestoreErrorMessage(errorCode) {
+        switch (errorCode) {
+            case 'permission-denied':
+                return 'You don\'t have permission to perform this action';
+            case 'not-found':
+                return 'The requested resource was not found';
+            case 'already-exists':
+                return 'This resource already exists';
+            case 'resource-exhausted':
+                return 'You\'ve exceeded the maximum number of operations';
+            default:
+                return 'An error occurred while processing your request';
+        }
+    }
+};
+
+const AuthUI = {
+    // Show/Hide Password Toggle
+    setupPasswordToggles() {
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const input = e.currentTarget.parentElement.querySelector('input');
+                const icon = e.currentTarget.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
+    },
+
+    // Modal Navigation
+    setupModalNavigation() {
+        elements.signInBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            elements.userMenu.classList.remove('active');
+            openModal(elements.loginModal);
+        });
+
+        elements.signOutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await this.logout();
+        });
+
+        elements.forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeAllModals();
+            openModal(elements.forgotPasswordModal);
+        });
+
+        elements.createAccountLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeAllModals();
+            openModal(elements.signupModal);
+        });
+
+        elements.backToLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeAllModals();
+            openModal(elements.loginModal);
+        });
+
+        elements.backToLoginLink2.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeAllModals();
+            openModal(elements.loginModal);
+        });
+
+        elements.cancelLoginBtn.addEventListener('click', () => closeAllModals());
+        elements.cancelForgotPasswordBtn.addEventListener('click', () => closeAllModals());
+        elements.cancelSignupBtn.addEventListener('click', () => closeAllModals());
+    },
+
+    // Firebase Authentication Functions
+    async login(email, password) {
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            if (!user.emailVerified) {
+                showNotification("Please verify your email before logging in.", 'error');
+                await signOut(auth);
+                return false;
+            }
+
+            await this.updateUIOnLogin(user);
+            showNotification("Successfully logged in!", 'success');
+            return true;
+        } catch (error) {
+            console.error('Login failed:', error);
+            const message = this.getAuthErrorMessage(error);
+            showNotification(message, 'error');
+            return false;
+        }
+    },
+
+    async signup(name, email, password) {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Save user profile
+            await setDoc(doc(db, "users", user.uid), {
+                name: name,
+                email: email,
+                createdAt: new Date().toISOString()
+            });
+
+            // Send verification email
+            await sendEmailVerification(user);
+            showNotification("Successfully signed up! Please verify your email via the link sent to your inbox.", 'success');
+            return true;
+        } catch (error) {
+            console.error('Signup failed:', error);
+            showNotification(this.getAuthErrorMessage(error), 'error');
+            return false;
+        }
+    },
+
+    async logout() {
+        try {
+            await signOut(auth);
+            this.updateUIOnLogout();
+            showNotification("Successfully logged out!", 'success');
+        } catch (error) {
+            console.error('Logout failed:', error);
+            showNotification("Failed to logout. Please try again.", 'error');
+        }
+    },
+
+    async resetPassword(email) {
+        try {
+            await sendPasswordResetEmail(auth, email);
+            showNotification("Password reset email sent!", 'success');
+            return true;
+        } catch (error) {
+            console.error('Password reset failed:', error);
+            showNotification("Failed to send reset email. Please try again.", 'error');
+            return false;
+        }
+    },
+
+    // UI Update Functions
+    async updateUIOnLogin(user) {
+        try {
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                AppState.userProfile = {
+                    ...AppState.userProfile,
+                    name: userData.name,
+                    email: userData.email
+                };
+                localStorage.setItem('userProfile', JSON.stringify(AppState.userProfile));
+            }
+
+            // Update user menu
+            document.querySelector('.user-fullname').textContent = AppState.userProfile.name;
+            document.querySelector('.user-email').textContent = AppState.userProfile.email;
+            document.querySelector('.user-menu-trigger .user-name').textContent = AppState.userProfile.name;
+
+            // Toggle sign in/sign out buttons
+            elements.signInBtn.style.display = 'none';
+            elements.signOutBtn.style.display = 'block';
+
+            await DatabaseManager.loadNotesFromFirestore();
+        } catch (error) {
+            console.error('Error updating UI:', error);
+        }
+    },
+
+    updateUIOnLogout() {
+        AppState.userProfile = {
+            name: 'Guest',
+            email: 'guest@example.com',
+            avatar: 'https://via.placeholder.com/120',
+            accountType: 'Basic',
+            storage: { used: 0, total: 5 }
+        };
+        localStorage.setItem('userProfile', JSON.stringify(AppState.userProfile));
+
+        // Update user menu
+        document.querySelector('.user-fullname').textContent = 'Guest';
+        document.querySelector('.user-email').textContent = 'guest@example.com';
+        document.querySelector('.user-menu-trigger .user-name').textContent = 'Guest';
+
+        // Toggle sign in/sign out buttons
+        elements.signInBtn.style.display = 'block';
+        elements.signOutBtn.style.display = 'none';
+
+        clearNotes(); // Clear notes on logout
+    },
+
+    // Form Submissions
+    setupFormSubmissions() {
+        // Login Form
+        elements.loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = elements.loginEmail.value.trim();
+            const password = elements.loginPassword.value;
+
+            if (!this.validateEmail(email)) {
+                showNotification('Please enter a valid email address', 'error');
+                return;
+            }
+
+            if (await this.login(email, password)) {
+                closeAllModals();
+            }
+        });
+
+        // Sign Up Form
+        elements.signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = elements.signupName.value.trim();
+            const email = elements.signupEmail.value.trim();
+            const password = elements.signupPassword.value;
+            const confirmPassword = elements.signupConfirmPassword.value;
+
+            if (!this.validateSignupForm(name, email, password, confirmPassword)) {
+                return;
+            }
+
+            if (await this.signup(name, email, password)) {
+                closeAllModals();
+            }
+        });
+
+        // Forgot Password Form
+        elements.forgotPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = elements.resetEmail.value.trim();
+
+            if (!this.validateEmail(email)) {
+                showNotification('Please enter a valid email address', 'error');
+                return;
+            }
+
+            if (await this.resetPassword(email)) {
+                closeAllModals();
+            }
+        });
+    },
+
+    // Validation Helpers
+    validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    },
+
+    validatePassword(password) {
+        return password.length >= 6;
+    },
+
+    validateSignupForm(name, email, password, confirmPassword) {
+        if (name.length < 2) {
+            showNotification('Please enter your full name', 'error');
+            return false;
+        }
+
+        if (!this.validateEmail(email)) {
+            showNotification('Please enter a valid email address', 'error');
+            return false;
+        }
+
+        if (!this.validatePassword(password)) {
+            showNotification('Password must be at least 6 characters long', 'error');
+            return false;
+        }
+
+        if (password !== confirmPassword) {
+            showNotification('Passwords do not match', 'error');
+            return false;
+        }
+
+        return true;
+    },
+
+    // Error Message Helper
+    getAuthErrorMessage(error) {
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                return 'Email already registered';
+            case 'auth/invalid-email':
+                return 'Invalid email address';
+            case 'auth/operation-not-allowed':
+                return 'Operation not allowed';
+            case 'auth/weak-password':
+                return 'Password is too weak';
+            case 'auth/user-disabled':
+                return 'Account has been disabled';
+            case 'auth/user-not-found':
+                return 'No account found with this email';
+            case 'auth/wrong-password':
+                return 'Invalid password';
+            default:
+                return 'Authentication failed. Please try again.';
+        }
+    },
+
+    // Initialize Auth State Observer
+    setupAuthStateObserver() {
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                if (!user.emailVerified) {
+                    await signOut(auth);
+                    return;
+                }
+                await this.updateUIOnLogin(user);
+            } else {
+                this.updateUIOnLogout();
+            }
+        });
+    },
+
+    // Initialize all auth UI features
+    init() {
+        this.setupPasswordToggles();
+        this.setupModalNavigation();
+        this.setupFormSubmissions();
+        this.setupAuthStateObserver();
+    }
+};
+
 // App State
 const AppState = {
     notes: JSON.parse(localStorage.getItem('notes')) || [],
@@ -11,6 +523,8 @@ const AppState = {
     currentView: localStorage.getItem('currentView') || 'grid',
     currentTheme: localStorage.getItem('theme') || 'light',
     isEditMode: false,
+    isAuthenticated: false,
+    currentUser: null,
     currentNoteId: null,
     activeSection: 'all',
     editingCategoryId: null,
@@ -83,6 +597,26 @@ const ErrorRecovery = {
     }
 };
 
+// Search and Filter Configuration
+const SearchConfig = {
+    debounceTime: 300,
+    minSearchLength: 2,
+    maxResults: 100,
+    searchFields: ['title', 'content', 'category']
+};
+
+// Advanced Search Options
+const SearchOptions = {
+    dateRange: null,
+    categories: [],
+    sortBy: 'updatedAt',
+    sortOrder: 'desc',
+    onlyPinned: false,
+    onlyFavorites: false
+};
+
+
+
 class RichTextEditor {
     constructor() {
         this.editor = document.getElementById('noteContent');
@@ -99,57 +633,57 @@ class RichTextEditor {
     initializeEditor() {
         this.editor.contentEditable = 'true';
         this.editor.innerHTML = this.editor.innerHTML || '<div><br></div>';
-
+    
         // Format Buttons
         this.toolbar.querySelectorAll('.format-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 e.preventDefault();
-                e.stopImmediatePropagation(); // Prevent other handlers
+                e.stopImmediatePropagation();
                 const command = button.dataset.command;
-                
+    
                 this.restoreSelection();
-                switch(command) {
-                    case 'createLink':
-                        this.handleLinkInsertion();
-                        break;
-                    case 'removeFormat':
-                        this.removeAllFormatting();
-                        break;
-                    case 'insertUnorderedList':
-                    case 'insertOrderedList':
-                        this.executeCommand(command);
-                        break;
-                    default:
-                        this.applyFormatting(command);
+                if (command) {
+                    switch(command) {
+                        case 'createLink':
+                            this.handleLinkInsertion();
+                            break;
+                        case 'removeFormat':
+                            this.removeAllFormatting();
+                            break;
+                        default:
+                            this.applyFormatting(command);
+                    }
                 }
                 this.saveSelection();
                 this.updateButtonStates();
                 this.editor.focus();
             });
         });
-
+    
         // Font Controls
         this.setupFontControls('.font-size-select', 'fontSize', (size) => this.getFontSizeValue(size));
         this.setupFontControls('.font-family-select', 'fontName');
-
+    
         // Color Pickers
-    this.toolbar.querySelectorAll('.color-btn').forEach(button => {
-        const picker = button.querySelector('.color-picker');
-        
-        if (picker) {
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                picker.click();  // Triggers the color input
-            });
-
-            picker.addEventListener('change', (e) => {
-                e.preventDefault();
-                const command = picker.dataset.command;
-                const color = e.target.value;
-                this.applyColorFormatting(command, color);
-            });
-        }
-    });
+        this.toolbar.querySelectorAll('.color-btn').forEach(button => {
+            const picker = button.querySelector('.color-picker');
+    
+            if (picker) {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    picker.click();  // Ensure this triggers the color input
+                });
+    
+                picker.addEventListener('change', (e) => {
+                    const command = picker.dataset.command;
+                    const color = e.target.value;
+                    if (command && color) {
+                        this.applyColorFormatting(command, color);
+                    }
+                });
+            }
+        });
+    
         // Selection change handling
         document.addEventListener('selectionchange', () => {
             if (document.activeElement === this.editor) {
@@ -170,8 +704,10 @@ class RichTextEditor {
                 e.preventDefault();
                 this.restoreSelection();
                 const value = valueMapper(e.target.value);
-                this.executeCommand(command, value);
-                this.editor.focus();
+                if (value) {
+                    this.executeCommand(command, value);
+                    this.editor.focus();
+                }
             });
         }
     }
@@ -191,7 +727,6 @@ class RichTextEditor {
 
         this.editor.addEventListener('focus', () => this.restoreSelection());
 
-        // Prevent toolbar interactions from losing focus
         this.toolbar.addEventListener('mousedown', (e) => {
             if (e.target.closest('button, select, input[type="color"]')) {
                 e.preventDefault();
@@ -256,7 +791,6 @@ class RichTextEditor {
         if (url) {
             document.execCommand('createLink', false, url);
 
-            // Make links open in new tab
             const selection = window.getSelection();
             const range = selection.getRangeAt(0);
             const linkNode = range.commonAncestorContainer.parentNode;
@@ -271,17 +805,10 @@ class RichTextEditor {
     removeAllFormatting() {
         try {
             this.restoreSelection();
-            
-            // Remove all formatting
             document.execCommand('removeFormat', false, null);
-            
-            // Reset font properties
             document.execCommand('fontName', false, 'Arial');
             document.execCommand('fontSize', false, '3');
-            
-            // Reset alignment to left
             document.execCommand('justifyLeft', false, null);
-            
             this.updateButtonStates();
             this.editor.focus();
         } catch (error) {
@@ -322,6 +849,28 @@ const elements = {
     menuToggle: document.getElementById('menuToggle'),
     themeToggle: document.getElementById('themeToggle'),
     userMenu: document.querySelector('.user-menu'),
+    signInBtn: document.getElementById('signInBtn'),
+    signOutBtn: document.getElementById('signOutBtn'),
+    loginModal: document.getElementById('loginModal'),
+    forgotPasswordModal: document.getElementById('forgotPasswordModal'),
+    signupModal: document.getElementById('signupModal'),
+    loginForm: document.getElementById('loginForm'),
+    forgotPasswordForm: document.getElementById('forgotPasswordForm'),
+    signupForm: document.getElementById('signupForm'),
+    loginEmail: document.getElementById('loginEmail'),
+    loginPassword: document.getElementById('loginPassword'),
+    resetEmail: document.getElementById('resetEmail'),
+    signupName: document.getElementById('signupName'),
+    signupEmail: document.getElementById('signupEmail'),
+    signupPassword: document.getElementById('signupPassword'),
+    signupConfirmPassword: document.getElementById('signupConfirmPassword'),
+    forgotPasswordLink: document.getElementById('forgotPasswordLink'),
+    createAccountLink: document.getElementById('createAccountLink'),
+    backToLoginLink: document.getElementById('backToLoginLink'),
+    backToLoginLink2: document.getElementById('backToLoginLink2'),
+    cancelLoginBtn: document.getElementById('cancelLoginBtn'),
+    cancelForgotPasswordBtn: document.getElementById('cancelForgotPasswordBtn'),
+    cancelSignupBtn: document.getElementById('cancelSignupBtn'),
     userMenuTrigger: document.querySelector('.user-menu-trigger'),
     noteModal: document.getElementById('noteModal'),
     categoryModal: document.getElementById('categoryModal'),
@@ -396,6 +945,12 @@ function closeAllDropdowns() {
     });
 }
 
+function clearNotes() {
+    AppState.notes = [];
+    localStorage.removeItem('notes');
+    elements.notesContainer.innerHTML = ''; // Clear the notes from the UI
+    updateCategoryCounts(); // Update the category counts to reflect the cleared state
+}
 
 function handleProfileSubmit(e) {
     e.preventDefault();
@@ -606,43 +1161,51 @@ function resetSearchFilters() {
 }
 
 // Initialize App
-function initializeApp() {
-    try {
-        PerformanceMonitor.start('app-initialization');
-        
-        // Create initial state backup
-        ErrorRecovery.saveState();
-        
-        // Initialize core features
-        loadTheme();
-        setupEventListeners();
-        setupMenuButtons();
-        setupProfileAndSettingsListeners();
-        setupFilterListeners();
-        
-        // Initialize UI components
-        PerformanceMonitor.start('render-initial-ui');
-        renderCategories();
-        renderNotes();
-        updateCategoryCounts();
-        loadView();
-        PerformanceMonitor.end('render-initial-ui');
-        
-        // Initialize user data
-        initializeProfile();
-        initializeSettings();
-        
-        PerformanceMonitor.end('app-initialization');
-        
-        // Show success message
-        showNotification('Application initialized successfully', 'success');
-        window.noteEditor = new RichTextEditor();
-    } catch (error) {
-        handleError(error, 'initializeApp');
-        showNotification('Error initializing application. Attempting recovery...', 'error');
-        ErrorRecovery.recover();
-    }
+try {
+    PerformanceMonitor.start('app-initialization');
+    
+    // Create initial state backup
+    ErrorRecovery.saveState();
+    
+    // Initialize Firebase Auth UI
+    AuthUI.init();
+    
+    // Initialize core features
+    loadTheme();
+    setupEventListeners();
+    setupMenuButtons();
+    setupProfileAndSettingsListeners();
+    setupFilterListeners();
+    
+    // Initialize UI components
+    PerformanceMonitor.start('render-initial-ui');
+    renderCategories();
+    renderNotes();
+    updateCategoryCounts();
+    loadView();
+    PerformanceMonitor.end('render-initial-ui');
+    
+    // Initialize user data
+    initializeProfile();
+    initializeSettings();
+    
+    // Check authentication state
+    onAuthStateChanged(auth, async (user) => {
+        if (user && user.emailVerified) {
+            await DatabaseManager.loadNotesFromFirestore();
+        }
+    });
+    
+    PerformanceMonitor.end('app-initialization');
+    
+    showNotification('Application initialized successfully', 'success');
+    window.noteEditor = new RichTextEditor();
+} catch (error) {
+    handleError(error, 'initializeApp');
+    showNotification('Error initializing application. Attempting recovery...', 'error');
+    ErrorRecovery.recover();
 }
+
 
 // Load Theme
 function loadTheme() {
@@ -702,14 +1265,48 @@ function setupEventListeners() {
         }
     });
 
-
     elements.createNoteBtn.addEventListener('click', () => {
         AppState.isEditMode = false;
         AppState.currentNoteId = null;
         openModal(elements.noteModal);
     });
 
-    elements.noteForm.addEventListener('submit', handleNoteSubmit);
+    // Updated note form submit handler
+// Updated note form submit handler
+elements.noteForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    try {
+        const title = elements.noteTitleInput.value.trim();
+        const content = elements.noteContent.innerHTML.trim();
+        const category = elements.categorySelect.value;
+
+        if (!title) {
+            showNotification('Please enter a title', 'error');
+            return;
+        }
+
+        const noteData = {
+            title,
+            content,
+            category,
+        };
+
+        if (AppState.isEditMode && AppState.currentNoteId) {
+            await updateNote(AppState.currentNoteId, noteData);
+        } else {
+            await createNote(noteData);
+        }
+
+        closeAllModals();
+        resetNoteForm();
+        // Remove notification from here
+        
+    } catch (error) {
+        handleError(error, 'handleNoteSubmit');
+        showNotification('Failed to save note', 'error');
+    }
+});
 
     elements.viewButtons.forEach(btn => {
         btn.addEventListener('click', () => toggleView(btn.dataset.view));
@@ -726,58 +1323,46 @@ function setupEventListeners() {
         renderNotes();
     }, 300));
 
-
     elements.newCategoryBtn.addEventListener('click', () => openModal(elements.categoryModal));
 
-    // Add event listeners for cancel buttons
-    document.getElementById('cancelNoteBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        closeAllModals();
+    // Cancel button event listeners
+    ['cancelNoteBtn', 'cancelCategoryBtn', 'cancelProfileBtn', 
+     'cancelSettingsBtn', 'cancelPasswordBtn'].forEach(btnId => {
+        const button = document.getElementById(btnId);
+        if (button) {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                closeAllModals();
+            });
+        }
     });
 
-    document.getElementById('cancelCategoryBtn').addEventListener('click', (e) => {
+    // Menu button event listeners
+    document.getElementById('profileMenuBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
-        closeAllModals();
-    });
-
-    document.getElementById('cancelProfileBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        closeAllModals();
-    });
-
-    document.getElementById('cancelSettingsBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        closeAllModals();
-    });
-
-    document.getElementById('cancelPasswordBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        closeAllModals();
-    });
-
-    // Add event listeners for profile, settings, and sign out buttons
-    document.getElementById('profileMenuBtn').addEventListener('click', (e) => {
-        e.preventDefault();
+        elements.userMenu.classList.remove('active');
         openModal(elements.profileModal);
     });
 
-    document.getElementById('settingsMenuBtn').addEventListener('click', (e) => {
+    document.getElementById('settingsMenuBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
+        elements.userMenu.classList.remove('active');
         openModal(elements.settingsModal);
     });
 
-    document.getElementById('signOutBtn').addEventListener('click', (e) => {
+    document.getElementById('signInBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
-        // Add sign-out functionality here
-        alert('Sign out functionality to be implemented.');
+        elements.userMenu.classList.remove('active');
+        openModal(elements.loginModal);
     });
 
-    // Add event listener for overlay
+    // Overlay click handler
     elements.overlay.addEventListener('click', () => {
         closeAllModals();
         elements.sidebar.classList.remove('active');
     });
 
+    // Color options handler
     elements.colorOptions.forEach(option => {
         option.addEventListener('click', () => {
             elements.colorOptions.forEach(opt => opt.classList.remove('active'));
@@ -785,6 +1370,7 @@ function setupEventListeners() {
         });
     });
 
+    // Category save handler
     if (elements.saveCategoryBtn) {
         elements.saveCategoryBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -792,12 +1378,46 @@ function setupEventListeners() {
         });
     }
 
+    // Icon options handler
     elements.iconOptions.forEach(option => {
         option.addEventListener('click', () => {
             elements.iconOptions.forEach(opt => opt.classList.remove('active'));
             option.classList.add('active');
         });
     });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.more-actions')) {
+            document.querySelectorAll('.more-actions').forEach(actions => {
+                actions.classList.remove('active');
+            });
+        }
+    });
+
+    // Initialize tooltips if any
+    document.querySelectorAll('[data-tooltip]').forEach(element => {
+        element.addEventListener('mouseenter', (e) => {
+            const tooltip = e.target.getAttribute('data-tooltip');
+            if (tooltip) {
+                showTooltip(e.target, tooltip);
+            }
+        });
+    });
+}
+
+// Helper function for tooltips (if you want to use them)
+function showTooltip(element, text) {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tooltip';
+    tooltip.textContent = text;
+    document.body.appendChild(tooltip);
+
+    const rect = element.getBoundingClientRect();
+    tooltip.style.top = `${rect.top - tooltip.offsetHeight - 5}px`;
+    tooltip.style.left = `${rect.left + (rect.width - tooltip.offsetWidth) / 2}px`;
+
+    element.addEventListener('mouseleave', () => tooltip.remove());
 }
 
 // Render Categories
@@ -969,11 +1589,6 @@ function resetCategoryForm() {
     AppState.editingCategoryId = null;
 }
 
-// Save Categories to Storage
-function saveCategoriesToStorage() {
-    localStorage.setItem('categories', JSON.stringify(AppState.categories));
-}
-
 // Update Category Select
 function updateCategorySelect() {
     const select = elements.categorySelect;
@@ -986,74 +1601,53 @@ function updateCategorySelect() {
     });
 }
 
-
 // Handle Note Submit
-function handleNoteSubmit(e) {
+async function handleNoteSubmit(e) {
     e.preventDefault();
-    const title = elements.noteTitleInput.value.trim();
-    const content = elements.noteContent.innerHTML.trim();
-    const category = elements.categorySelect.value;
-
-    if (!title) return;
-
-    const noteData = {
-        title,
-        content,
-        category,
-    };
-
-    if (AppState.isEditMode && AppState.currentNoteId) {
-        updateNote(AppState.currentNoteId, noteData);
-    } else {
-        createNote(noteData);
-    }
-
-    closeAllModals();
-    resetNoteForm();
-}
-
-function closeAllModals() {
-    // First, close all dropdowns
-    closeAllDropdowns();
     
-    // Close all modals
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.classList.remove('active');
-    });
-    
-    // Remove overlay
-    elements.overlay.classList.remove('active');
-    
-    // Reset all forms
-    resetForms();
-    
-    // Reinitialize specific modals if they were active
-    if (elements.profileModal && elements.profileModal.classList.contains('active')) {
-        initializeProfile();
-    }
-    if (elements.settingsModal && elements.settingsModal.classList.contains('active')) {
-        initializeSettings();
+    try {
+        const title = elements.noteTitleInput.value.trim();
+        const content = elements.noteContent.innerHTML.trim();
+        const category = elements.categorySelect.value;
+
+        if (!title) {
+            showNotification('Please enter a title', 'error');
+            return;
+        }
+
+        const noteData = {
+            title,
+            content,
+            category,
+        };
+
+        if (AppState.isEditMode && AppState.currentNoteId) {
+            await updateNote(AppState.currentNoteId, noteData);
+        } else {
+            await createNote(noteData);
+        }
+
+        closeAllModals();
+        resetNoteForm();
+        
+    } catch (error) {
+        console.error('Error saving note:', error);
+        showNotification(error.message || 'Failed to save note', 'error');
     }
 }
-
-
 
 // Create Note
-function createNote(data) {
+async function createNote(data) {
     try {
         const validationErrors = validateData(data, ValidationSchemas.note);
         if (validationErrors.length > 0) {
             throw new Error(validationErrors.map(err => err.message).join('. '));
         }
 
-        // Create a temporary div to process content
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = data.content;
-
         const note = {
-            id: Date.now(),
+            id: `note-${Date.now()}`,
             title: data.title.trim(),
-            content: tempDiv.innerHTML,
+            content: sanitizeHTML(data.content),
             category: data.category,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -1065,7 +1659,12 @@ function createNote(data) {
         };
 
         AppState.notes.unshift(note);
-        saveNotesToStorage();
+        
+        if (auth.currentUser) {
+            await DatabaseManager.saveNoteToFirestore(note);
+        }
+        
+        localStorage.setItem('notes', JSON.stringify(AppState.notes));
         renderNotes();
         updateCategoryCounts();
         
@@ -1077,9 +1676,84 @@ function createNote(data) {
     }
 }
 
+async function updateNote(id, data) {
+    try {
+        const index = AppState.notes.findIndex(note => note.id === id);
+        if (index === -1) {
+            throw new Error('Note not found');
+        }
+
+        const updatedNote = {
+            ...AppState.notes[index],
+            ...data,
+            updatedAt: new Date().toISOString(),
+            version: (AppState.notes[index].version || 1) + 1
+        };
+
+        AppState.notes[index] = updatedNote;
+        
+        if (auth.currentUser) {
+            await DatabaseManager.saveNoteToFirestore(updatedNote);
+        }
+        
+        localStorage.setItem('notes', JSON.stringify(AppState.notes));
+        renderNotes();
+        updateCategoryCounts();
+        
+        showNotification('Note updated successfully', 'success');
+        return updatedNote;
+    } catch (error) {
+        handleError(error, 'updateNote');
+        throw error;
+    }
+}
+
+async function deleteNote(id) {
+    try {
+        const note = AppState.notes.find(note => note.id === id);
+        if (!note) {
+            throw new Error('Note not found');
+        }
+
+        if (note.isDeleted) {
+            // Permanently delete the note
+            AppState.notes = AppState.notes.filter(n => n.id !== id);
+            
+            if (auth.currentUser) {
+                await DatabaseManager.deleteNoteFromFirestore(id);
+            }
+            
+            showNotification('Note permanently deleted', 'success');
+        } else {
+            // Move note to trash
+            note.isDeleted = true;
+            note.updatedAt = new Date().toISOString(); // Update timestamp
+            
+            if (auth.currentUser) {
+                await DatabaseManager.saveNoteToFirestore({
+                    ...note,
+                    isDeleted: true
+                });
+            }
+            
+            showNotification('Note moved to trash', 'success');
+        }
+
+        // Update local storage
+        localStorage.setItem('notes', JSON.stringify(AppState.notes));
+        
+        // Update UI
+        renderNotes();
+        updateCategoryCounts();
+
+    } catch (error) {
+        handleError(error, 'deleteNote');
+        showNotification('Failed to delete note', 'error');
+    }
+}
+
 // HTML Sanitizer
 function sanitizeHTML(html) {
-    // Create a temporary div
     const temp = document.createElement('div');
     temp.innerHTML = html;
     
@@ -1091,7 +1765,6 @@ function sanitizeHTML(html) {
         list.style.margin = '8px 0';
     });
 
-    // Return the processed HTML
     return temp.innerHTML;
 }
 
@@ -1113,35 +1786,6 @@ function duplicateNote(noteId) {
     }
 }
 
-// Update Note
-function updateNote(id, data) {
-    const index = AppState.notes.findIndex(note => note.id === id);
-    if (index !== -1) {
-        AppState.notes[index] = {
-            ...AppState.notes[index],
-            ...data,
-            updatedAt: new Date().toISOString()
-        };
-        saveNotesToStorage();
-        renderNotes();
-        updateCategoryCounts();
-    }
-}
-
-// Delete Note
-function deleteNote(id) {
-    const note = AppState.notes.find(note => note.id === id);
-    if (note) {
-        if (note.isDeleted) {
-            AppState.notes = AppState.notes.filter(n => n.id !== id);
-        } else {
-            note.isDeleted = true;
-        }
-        saveNotesToStorage();
-        renderNotes();
-        updateCategoryCounts();
-    }
-}
 
 // Toggle Note Favorite
 function toggleNoteFavorite(id) {
@@ -1154,23 +1798,6 @@ function toggleNoteFavorite(id) {
     }
 }
 
-// Search and Filter Configuration
-const SearchConfig = {
-    debounceTime: 300,
-    minSearchLength: 2,
-    maxResults: 100,
-    searchFields: ['title', 'content', 'category']
-};
-
-// Advanced Search Options
-const SearchOptions = {
-    dateRange: null,
-    categories: [],
-    sortBy: 'updatedAt',
-    sortOrder: 'desc',
-    onlyPinned: false,
-    onlyFavorites: false
-};
 
 // Filter Notes with Advanced Options
 function filterNotes() {
@@ -1304,24 +1931,6 @@ function updateSearchOptions(options) {
     renderNotes();
 }
 
-// Render Notes
-function renderNotes() {
-    const filteredNotes = filterNotes();
-    const pinnedNotes = filteredNotes.filter(note => note.isPinned);
-    const unpinnedNotes = filteredNotes.filter(note => !note.isPinned);
-
-    elements.notesContainer.innerHTML = '';
-
-    if (pinnedNotes.length > 0) {
-        pinnedNotes.forEach(note => renderNoteCard(note));
-    }
-
-    unpinnedNotes.forEach(note => renderNoteCard(note));
-
-    if (filteredNotes.length === 0) {
-        renderEmptyState();
-    }
-}
 
 // Render Note Card
 function renderNotes() {
@@ -1902,7 +2511,3 @@ function resetForms() {
     resetNoteForm();
     resetCategoryForm();
 }
-
-
-// Initialize the App
-document.addEventListener('DOMContentLoaded', initializeApp);
