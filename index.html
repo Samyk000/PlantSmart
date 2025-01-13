@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -110,15 +109,149 @@
                             <span>Settings</span>
                         </a>
                         <div class="menu-divider"></div>
-                        <a href="#" class="menu-item sign-out" id="signOutBtn">
-                            <i class="fas fa-sign-out-alt"></i>
+                        <a href="#" class="menu-item sign-in" id="signInBtn">
+                            <i class="fas fa-sign-in-alt"></i>
                             <span>Sign In</span>
+                            <a href="#" class="menu-item sign-out" id="signOutBtn" style="display: none;">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Sign Out</span>
+                            </a>
                         </a>
                     </div>
                 </div>
             </div>
         </div>
     </header>
+
+    <!-- Login Modal -->
+<div class="modal login-modal" id="loginModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">
+                <i class="fas fa-sign-in-alt"></i>
+                <h2>Sign In</h2>
+            </div>
+            <button class="btn btn-icon" id="cancelLoginBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                        <button type="button" class="toggle-password">
+                            <i class="far fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group text-right">
+                    <a href="#" class="forgot-password" id="forgotPasswordLink">Forgot Password?</a>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+                <div class="form-footer">
+                    <p>Don't have an account? <a href="#" id="createAccountLink">Create Account</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal forgot-password-modal" id="forgotPasswordModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">
+                <i class="fas fa-key"></i>
+                <h2>Reset Password</h2>
+            </div>
+            <button class="btn btn-icon" id="cancelForgotPasswordBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="forgotPasswordForm">
+                <div class="form-group">
+                    <label for="resetEmail">Email</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="resetEmail" placeholder="Enter your email" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Send Reset Link</button>
+                <div class="form-footer">
+                    <p>Remember your password? <a href="#" id="backToLoginLink">Back to Login</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Sign Up Modal -->
+<div class="modal signup-modal" id="signupModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">
+                <i class="fas fa-user-plus"></i>
+                <h2>Create Account</h2>
+            </div>
+            <button class="btn btn-icon" id="cancelSignupBtn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="signupForm">
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="signupName" placeholder="Enter your full name" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signupPassword" placeholder="Create a password" required>
+                        <button type="button" class="toggle-password">
+                            <i class="far fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signupConfirmPassword">Confirm Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signupConfirmPassword" placeholder="Confirm your password" required>
+                        <button type="button" class="toggle-password">
+                            <i class="far fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+                <div class="form-footer">
+                    <p>Already have an account? <a href="#" id="backToLoginLink2">Sign In</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
@@ -204,7 +337,7 @@
                 </button>
             </div>
         </div>
-        <form id="noteForm" onsubmit="handleNoteSubmit(event)">
+        <form id="noteForm">
             <div class="modal-body">
                                 
                 
@@ -700,6 +833,6 @@
         <i class="fas fa-plus"></i>
     </button>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
