@@ -189,7 +189,7 @@ body {
     transition: var(--transition-fast);
 }
 
-.icon-btn.menu-toggle:hover {
+.menu-toggle:hover {
     background: var(--surface-2);
 }
 
@@ -2027,7 +2027,6 @@ body {
     opacity: 0.5;
 }
 
-/* Modal Base Styles */
 .modal {
     position: fixed;
     inset: 0;
@@ -2244,11 +2243,6 @@ body {
 .modal-content:focus-visible {
     outline: 2px solid var(--text-primary);
     outline-offset: 2px;
-}
-
-/* Improve touch targets on mobile */
-.modal .btn {
-    min-height: 44px; /* Minimum touch target size */
 }
 
 /* Form Elements */
@@ -2729,29 +2723,15 @@ body {
 /* Category Modal Specifics */
 .color-options,
 .icon-options {
-    display: grid;
+    display: flex;
     gap: 12px;
-    padding: 4px;
-    justify-content: center;
+    flex-wrap: wrap;
 }
 
-/* Color Options Grid */
-.color-options {
-    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
-    max-width: 100%;
-}
-
-/* Icon Options Grid */
-.icon-options {
-    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
-    max-width: 100%;
-}
-
-/* Color Option Base */
 .color-option {
-    width: 100%;
-    aspect-ratio: 1;
-    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
     border: 2px solid transparent;
     background: var(--color);
     cursor: pointer;
@@ -2759,20 +2739,15 @@ body {
     align-items: center;
     justify-content: center;
     color: white;
-    transition: all 0.2s ease-in-out;
-    position: relative;
-    touch-action: manipulation;
+    transition: var(--transition-fast);
 }
 
-/* Color Option Icon */
 .color-option i {
     opacity: 0;
     transform: scale(0.5);
-    transition: all 0.2s ease-in-out;
-    font-size: 14px;
+    transition: var(--transition-fast);
 }
 
-/* Active Color Option */
 .color-option.active {
     border-color: var(--surface-0);
     box-shadow: 0 0 0 2px var(--color);
@@ -2783,18 +2758,9 @@ body {
     transform: scale(1);
 }
 
-/* Hover Effects for Desktop */
-@media (hover: hover) {
-    .color-option:hover {
-        transform: scale(1.1);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-}
-
-/* Icon Option Base */
 .icon-option {
-    width: 100%;
-    aspect-ratio: 1;
+    width: 48px;
+    height: 48px;
     border-radius: 12px;
     border: 2px solid var(--surface-2);
     background: var(--surface-0);
@@ -2803,156 +2769,19 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease-in-out;
-    touch-action: manipulation;
-    position: relative;
-    overflow: hidden;
+    font-size: 20px;
+    transition: var(--transition-fast);
 }
 
-/* Icon Option Icon */
-.icon-option i {
-    font-size: 18px;
-    transition: transform 0.2s ease-in-out;
+.icon-option:hover {
+    border-color: var(--primary-light);
+    color: var(--primary);
 }
 
-/* Active Icon Option */
 .icon-option.active {
     border-color: var(--primary);
     color: var(--primary);
     background: var(--surface-1);
-}
-
-/* Hover Effects for Desktop */
-@media (hover: hover) {
-    .icon-option:hover {
-        border-color: var(--primary-light);
-        color: var(--primary);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    .icon-option:hover i {
-        transform: scale(1.1);
-    }
-}
-
-/* Responsive Breakpoints */
-/* Mobile (Default) */
-@media screen and (max-width: 374px) {
-    .color-options {
-        gap: 8px;
-    }
-    
-    .icon-options {
-        gap: 8px;
-    }
-    
-    .color-option i {
-        font-size: 12px;
-    }
-    
-    .icon-option i {
-        font-size: 16px;
-    }
-}
-
-/* Small Mobile to Tablet */
-@media screen and (min-width: 375px) and (max-width: 767px) {
-    .color-options,
-    .icon-options {
-        gap: 10px;
-    }
-}
-
-/* Tablet */
-@media screen and (min-width: 768px) {
-    .color-options,
-    .icon-options {
-        gap: 12px;
-        padding: 8px;
-    }
-    
-    .color-option {
-        border-width: 2.5px;
-    }
-    
-    .icon-option {
-        border-width: 2px;
-    }
-    
-    .color-option i {
-        font-size: 16px;
-    }
-    
-    .icon-option i {
-        font-size: 20px;
-    }
-}
-
-/* Desktop */
-@media screen and (min-width: 1024px) {
-    .color-options,
-    .icon-options {
-        gap: 16px;
-        padding: 12px;
-    }
-    
-    .color-option::after {
-        content: '';
-        position: absolute;
-        inset: -4px;
-        border-radius: inherit;
-        pointer-events: none;
-        transition: all 0.2s ease-in-out;
-    }
-    
-    .color-option:focus-visible::after {
-        box-shadow: 0 0 0 2px var(--primary);
-    }
-    
-    .icon-option:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
-    }
-}
-
-/* Touch Device Optimizations */
-@media (pointer: coarse) {
-    .color-option,
-    .icon-option {
-        min-width: 44px;
-        min-height: 44px;
-    }
-}
-
-/* Dark Mode Considerations */
-@media (prefers-color-scheme: dark) {
-    .icon-option {
-        border-color: var(--surface-3);
-    }
-    
-    .icon-option:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-}
-
-/* High Contrast Mode */
-@media (forced-colors: active) {
-    .color-option.active {
-        outline: 2px solid CanvasText;
-    }
-    
-    .icon-option {
-        border: 2px solid CanvasText;
-    }
-}
-
-#categoryName {
-    text-align: center;
-}
-
-categoryName::placeholder {
-    text-align: center;
 }
 
 /* Floating Action Button */
