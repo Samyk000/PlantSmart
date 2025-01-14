@@ -174,6 +174,25 @@ body {
     background: var(--surface-2);
 }
 
+.icon-btn.menu-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    font-size: 18px;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+}
+
+.icon-btn.menu-toggle:hover {
+    background: var(--surface-2);
+}
+
 /* Search Bar */
 .search-wrapper {
     position: relative;
@@ -280,9 +299,9 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 12px;
-    background: var(--surface-1);
-    border: 1px solid var(--surface-2);
+    padding: 8px 1px;
+    background: transparent;
+    border: none;
     border-radius: 8px;
     color: var(--text-secondary);
     cursor: pointer;
@@ -2008,19 +2027,19 @@ body {
     opacity: 0.5;
 }
 
-/* Modal Styles */
+/* Modal Base Styles */
 .modal {
     position: fixed;
     inset: 0;
-    background: rgba(26, 31, 54, 0.8);
+    background: rgba(26, 31, 54, 0.9);
     display: flex;
-    align-items: center;
+    align-items: flex-end; /* Default to bottom alignment for mobile */
     justify-content: center;
     opacity: 0;
     visibility: hidden;
-    transition: var(--transition-normal);
+    transition: all 0.3s ease-in-out;
     z-index: var(--z-modal);
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
 }
 
 .modal.active {
@@ -2028,53 +2047,208 @@ body {
     visibility: visible;
 }
 
+/* Modal Content Base */
 .modal-content {
-    width: 90%;
-    max-width: 720px;
-    max-height: 90vh;
+    width: 100%;
+    height: 85vh;
     background: var(--surface-0);
-    border-radius: 16px;
+    border-radius: 20px 20px 0 0;
     box-shadow: var(--shadow-lg);
     overflow: hidden;
-    transform: scale(0.95);
-    transition: var(--transition-normal);
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
+.modal.active .modal-content {
+    transform: translateY(0);
+}
+
+/* Modal Header */
 .modal-header {
-    padding: 16px 20px;
+    padding: 16px;
     border-bottom: 1px solid var(--surface-2);
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    background: var(--surface-0);
+    z-index: 2;
 }
 
-.modal.active .modal-content {
-    transform: scale(1);
+/* Pull Indicator for Mobile */
+.modal-header::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    background: var(--surface-2);
+    border-radius: 2px;
+    opacity: 0.8;
 }
 
+/* Modal Title */
 .modal-title {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     color: var(--text-primary);
 }
 
 .modal-title h2 {
     font-family: 'Poppins', sans-serif;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 600;
     white-space: nowrap;
 }
 
+.modal-title i {
+    font-size: 18px;
+}
+
+/* Modal Body */
 .modal-body {
-    padding: 24px;
+    padding: 20px 16px;
     overflow-y: auto;
     flex: 1;
-    /* Adjust max-height since we removed footer */
-    max-height: calc(90vh - 70px);
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Form Specific Styles */
+.modal .form-group {
+    margin-bottom: 16px;
+}
+
+.modal .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.modal input {
+    height: 44px; /* Larger touch targets */
+}
+
+.modal .btn {
+    min-height: 44px;
+}
+
+/* Tablet Breakpoint */
+@media (min-width: 768px) {
+    .modal {
+        align-items: center;
+        padding: 20px;
+    }
+
+    .modal-content {
+        width: 90%;
+        max-width: 500px;
+        height: auto;
+        max-height: 85vh;
+        border-radius: 16px;
+        transform: scale(0.95);
+    }
+
+    .modal.active .modal-content {
+        transform: scale(1);
+    }
+
+    .modal-header {
+        padding: 20px;
+    }
+
+    .modal-header::before {
+        display: none; /* Hide pull indicator on tablet+ */
+    }
+
+    .modal-title h2 {
+        font-size: 17px;
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+}
+
+/* Desktop Breakpoint */
+@media (min-width: 1024px) {
+    .modal-content {
+        max-width: 600px;
+    }
+
+    .modal-header {
+        padding: 24px 28px;
+    }
+
+    .modal-body {
+        padding: 28px;
+    }
+}
+
+/* Large Desktop Breakpoint */
+@media (min-width: 1440px) {
+    .modal-content {
+        max-width: 720px;
+    }
+}
+
+/* Landscape Mode Handling */
+@media (max-height: 500px) and (orientation: landscape) {
+    .modal-content {
+        height: 100vh;
+        border-radius: 0;
+    }
+    
+    .modal-header {
+        padding: 12px 20px;
+    }
+    
+    .modal-body {
+        padding: 16px;
+    }
+}
+
+/* Specific Modal Types */
+/* Login/Signup/Forgot Password Modals */
+.login-modal .modal-content,
+.signup-modal .modal-content,
+.forgot-password-modal .modal-content {
+    max-height: 90vh;
+}
+
+@media (min-width: 768px) {
+    .login-modal .modal-content,
+    .signup-modal .modal-content,
+    .forgot-password-modal .modal-content {
+        max-width: 440px;
+    }
+}
+
+/* Animation Improvements */
+.modal-content {
+    will-change: transform;
+}
+
+/* Accessibility Improvements */
+.modal:focus-visible {
+    outline: none;
+}
+
+.modal-content:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+}
+
+/* Improve touch targets on mobile */
+.modal .btn {
+    min-height: 44px; /* Minimum touch target size */
 }
 
 /* Form Elements */
@@ -2555,15 +2729,29 @@ body {
 /* Category Modal Specifics */
 .color-options,
 .icon-options {
-    display: flex;
+    display: grid;
     gap: 12px;
-    flex-wrap: wrap;
+    padding: 4px;
+    justify-content: center;
 }
 
+/* Color Options Grid */
+.color-options {
+    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+    max-width: 100%;
+}
+
+/* Icon Options Grid */
+.icon-options {
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+    max-width: 100%;
+}
+
+/* Color Option Base */
 .color-option {
-    width: 36px;
-    height: 36px;
-    border-radius: 18px;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
     border: 2px solid transparent;
     background: var(--color);
     cursor: pointer;
@@ -2571,15 +2759,20 @@ body {
     align-items: center;
     justify-content: center;
     color: white;
-    transition: var(--transition-fast);
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    touch-action: manipulation;
 }
 
+/* Color Option Icon */
 .color-option i {
     opacity: 0;
     transform: scale(0.5);
-    transition: var(--transition-fast);
+    transition: all 0.2s ease-in-out;
+    font-size: 14px;
 }
 
+/* Active Color Option */
 .color-option.active {
     border-color: var(--surface-0);
     box-shadow: 0 0 0 2px var(--color);
@@ -2590,9 +2783,18 @@ body {
     transform: scale(1);
 }
 
+/* Hover Effects for Desktop */
+@media (hover: hover) {
+    .color-option:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Icon Option Base */
 .icon-option {
-    width: 48px;
-    height: 48px;
+    width: 100%;
+    aspect-ratio: 1;
     border-radius: 12px;
     border: 2px solid var(--surface-2);
     background: var(--surface-0);
@@ -2601,19 +2803,156 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    transition: var(--transition-fast);
+    transition: all 0.2s ease-in-out;
+    touch-action: manipulation;
+    position: relative;
+    overflow: hidden;
 }
 
-.icon-option:hover {
-    border-color: var(--primary-light);
-    color: var(--primary);
+/* Icon Option Icon */
+.icon-option i {
+    font-size: 18px;
+    transition: transform 0.2s ease-in-out;
 }
 
+/* Active Icon Option */
 .icon-option.active {
     border-color: var(--primary);
     color: var(--primary);
     background: var(--surface-1);
+}
+
+/* Hover Effects for Desktop */
+@media (hover: hover) {
+    .icon-option:hover {
+        border-color: var(--primary-light);
+        color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .icon-option:hover i {
+        transform: scale(1.1);
+    }
+}
+
+/* Responsive Breakpoints */
+/* Mobile (Default) */
+@media screen and (max-width: 374px) {
+    .color-options {
+        gap: 8px;
+    }
+    
+    .icon-options {
+        gap: 8px;
+    }
+    
+    .color-option i {
+        font-size: 12px;
+    }
+    
+    .icon-option i {
+        font-size: 16px;
+    }
+}
+
+/* Small Mobile to Tablet */
+@media screen and (min-width: 375px) and (max-width: 767px) {
+    .color-options,
+    .icon-options {
+        gap: 10px;
+    }
+}
+
+/* Tablet */
+@media screen and (min-width: 768px) {
+    .color-options,
+    .icon-options {
+        gap: 12px;
+        padding: 8px;
+    }
+    
+    .color-option {
+        border-width: 2.5px;
+    }
+    
+    .icon-option {
+        border-width: 2px;
+    }
+    
+    .color-option i {
+        font-size: 16px;
+    }
+    
+    .icon-option i {
+        font-size: 20px;
+    }
+}
+
+/* Desktop */
+@media screen and (min-width: 1024px) {
+    .color-options,
+    .icon-options {
+        gap: 16px;
+        padding: 12px;
+    }
+    
+    .color-option::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: inherit;
+        pointer-events: none;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .color-option:focus-visible::after {
+        box-shadow: 0 0 0 2px var(--primary);
+    }
+    
+    .icon-option:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (pointer: coarse) {
+    .color-option,
+    .icon-option {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* Dark Mode Considerations */
+@media (prefers-color-scheme: dark) {
+    .icon-option {
+        border-color: var(--surface-3);
+    }
+    
+    .icon-option:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+}
+
+/* High Contrast Mode */
+@media (forced-colors: active) {
+    .color-option.active {
+        outline: 2px solid CanvasText;
+    }
+    
+    .icon-option {
+        border: 2px solid CanvasText;
+    }
+}
+
+#categoryName {
+    text-align: center;
+}
+
+categoryName::placeholder {
+    text-align: center;
 }
 
 /* Floating Action Button */
