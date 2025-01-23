@@ -1,0 +1,266 @@
+/* Responsive Styles */
+
+/* Large Screens */
+@media (min-width: 1200px) {
+    .main-content {
+        padding: 32px;
+    }
+
+    .notes-grid {
+        gap: 32px;
+    }
+}
+
+/* Medium Screens */
+@media (max-width: 1024px) {
+    .search-wrapper {
+        width: 280px;
+    }
+
+    .sidebar {
+        width: 240px;
+    }
+
+    .sidebar.active + .main-content {
+        margin-left: 240px;
+    }
+}
+
+
+
+
+/* Small Screens */
+@media (max-width: 768px) {
+    .app-header {
+        padding: 0 16px;
+        height: var(--mobile-header-height);
+    }
+
+    .form-group input[type="text"] {
+        margin-top: 23px;
+        }
+
+    .search-wrapper {
+        width: 220px;
+    }
+    
+    .search-bar {
+        height: 36px;
+    }
+    
+    .search-bar input {
+        font-size: 13px;
+    }
+
+    .sidebar {
+        top: var(--mobile-header-height);
+        width: 100%;
+        transform: translateX(-100%);
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+        width:280px;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        margin-top: var(--mobile-header-height);
+        padding: 16px;
+    }
+
+    .content-header h1 {
+        font-size: 20px;
+    }
+
+    .notes-grid {
+        gap: 16px;
+    }
+
+    .note-card {
+        flex: 0 0 100%;
+    }
+
+    .modal-content {
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .profile-section,
+    .setting-item {
+        padding: 16px;
+    }
+
+    .account-status {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+
+    .status-info {
+        justify-content: center;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .setting-item {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .setting-select,
+    .btn-secondary {
+        width: 100%;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+
+    .fab {
+        right: 20px;
+        bottom: 20px;
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+    }
+}
+
+/* Extra Small Screens */
+@media (max-width: 480px) {
+    .app-header {
+        padding: 0 12px;
+    }
+
+    .search-wrapper {
+        width: 180px;
+    }
+    
+    .search-bar {
+        padding: 0 12px;
+    }
+    
+    .search-bar input {
+        padding: 0 8px;
+    }
+
+    .user-menu-dropdown {
+        width: 240px;
+    }
+
+    .modal-header {
+        padding: 12px 16px;
+    }
+
+    .modal-body {
+        padding: 16px;
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .formatting-toolbar {
+        padding: 4px 6px;
+    }
+
+    .format-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+
+    .format-select {
+        height: 32px;
+        font-size: 12px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .app-header,
+    .sidebar,
+    .fab,
+    .note-actions {
+        display: none !important;
+    }
+
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .note-card {
+        break-inside: avoid;
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* High Contrast Mode */
+@media (forced-colors: active) {
+    .btn,
+    .note-card,
+    .modal-content {
+        border: 1px solid CanvasText;
+    }
+}
+
+/* Dark color scheme preference */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        /* Use dark theme variables */
+        color-scheme: dark;
+    }
+}
+
+/* Hover capability */
+@media (hover: hover) {
+    .note-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+    }
+}
+
+/* Fix for Safari and iOS */
+@supports (-webkit-touch-callout: none) {
+    .sidebar {
+        height: -webkit-fill-available;
+    }
+    
+    .sidebar-content {
+        height: calc(100vh - 120px);
+    }
+}
+
+/* Fix for Firefox */
+@-moz-document url-prefix() {
+    .sidebar-content {
+        height: calc(100vh - 120px);
+    }
+}
+
+/* Fix for Microsoft Edge */
+@supports (-ms-ime-align: auto) {
+    .sidebar-content {
+        height: calc(100vh - 120px);
+    }
+}
+

@@ -1,0 +1,577 @@
+/* Modal Styles */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: var(--modal-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition-normal);
+    z-index: var(--z-modal);
+    backdrop-filter: blur(4px);
+}
+
+.modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 720px;
+    max-height: 90vh;
+    background: var(--surface-0);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: var(--transition-normal);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--surface-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.modal.active .modal-content {
+    transform: scale(1);
+}
+
+.modal-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-primary);
+}
+
+.modal-title h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+    max-height: calc(90vh - 70px);
+}
+
+/* Auth Modal Styles */
+.login-modal .modal-content,
+.signup-modal .modal-content,
+.forgot-password-modal .modal-content {
+    max-width: 400px;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrapper i {
+    position: absolute;
+    left: 12px;
+    color: var(--text-tertiary);
+    font-size: 16px;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    border: 1px solid var(--surface-2);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--surface-0);
+    transition: var(--transition-fast);
+}
+
+.input-wrapper input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 4px;
+}
+
+.toggle-password:hover {
+    color: var(--text-secondary);
+}
+
+.forgot-password {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 14px;
+    transition: var(--transition-fast);
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+.btn-block {
+    width: 100%;
+    margin: 24px 0;
+    padding: 12px;
+    font-size: 16px;
+}
+
+.form-footer {
+    text-align: center;
+    margin-top: 16px;
+    color: var(--text-secondary);
+}
+
+.form-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Profile Modal Styles */
+.profile-modal .modal-content {
+    max-width: 560px;
+}
+
+.profile-section {
+    margin-bottom: 32px;
+    padding: 24px;
+    background: var(--surface-1);
+    border-radius: 12px;
+}
+
+.profile-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.profile-avatar-section {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.avatar-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 60px;
+    object-fit: cover;
+    border: 4px solid var(--surface-0);
+    box-shadow: var(--shadow-md);
+}
+
+.change-avatar-btn {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    border: 3px solid var(--surface-0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.change-avatar-btn:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+.account-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--surface-2);
+    border-radius: 12px;
+}
+
+.status-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    background: var(--surface-3);
+    color: var(--text-secondary);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.btn-upgrade {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.btn-upgrade:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-upgrade i {
+    color: #FFD700;
+}
+
+/* Usage Stats Styles */
+.usage-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.storage-meter {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.storage-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.storage-label {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.storage-text {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+}
+
+.storage-used {
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.storage-separator {
+    color: var(--text-tertiary);
+}
+
+.storage-total {
+    color: var(--text-secondary);
+}
+
+.storage-bar {
+    height: 8px;
+    background: var(--surface-2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.storage-progress {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--surface-2);
+    border-radius: 12px;
+}
+
+.stat-item i {
+    font-size: 24px;
+    color: var(--primary);
+}
+
+.stat-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* Settings Modal Styles */
+.settings-modal .modal-content {
+    max-width: 640px;
+}
+
+.settings-section {
+    margin-bottom: 32px;
+}
+
+.settings-section:last-child {
+    margin-bottom: 0;
+}
+
+.settings-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: var(--surface-1);
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.setting-item:last-child {
+    margin-bottom: 0;
+}
+
+.setting-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.setting-label span:first-child {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.setting-description {
+    font-size: 13px;
+    color: var(--text-tertiary);
+}
+
+.setting-select {
+    padding: 8px 12px;
+    border: 1px solid var(--surface-2);
+    border-radius: 8px;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-size: 14px;
+    min-width: 120px;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-switch label {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--surface-2);
+    border-radius: 12px;
+    transition: var(--transition-fast);
+}
+
+.toggle-switch label:before {
+    content: '';
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background: white;
+    border-radius: 50%;
+    transition: var(--transition-fast);
+}
+
+.toggle-switch input:checked + label {
+    background: var(--primary);
+}
+
+.toggle-switch input:checked + label:before {
+    transform: translateX(20px);
+}
+
+/* Form Inputs */
+.profile-modal input,
+.profile-modal textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--surface-2);
+    border-radius: 8px;
+    background: var(--surface-0);
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: var(--transition-fast);
+}
+
+.profile-modal input:focus,
+.profile-modal textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(91, 107, 255, 0.1);
+}
+
+/* Password Change Section */
+.password-input-wrapper {
+    position: relative;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 4px;
+}
+
+.toggle-password:hover {
+    color: var(--text-secondary);
+}
+
+/* Category Modal Specifics */
+.color-options,
+.icon-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.color-option {
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+    border: 2px solid transparent;
+    background: var(--color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    transition: var(--transition-fast);
+}
+
+.color-option i {
+    opacity: 0;
+    transform: scale(0.5);
+    transition: var(--transition-fast);
+}
+
+.color-option.active {
+    border-color: var(--surface-0);
+    box-shadow: 0 0 0 2px var(--color);
+}
+
+.color-option.active i {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.icon-option {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    border: 2px solid var(--surface-2);
+    background: var(--surface-0);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: var(--transition-fast);
+}
+
+.icon-option:hover {
+    border-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.icon-option.active {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--surface-1);
+}
+
+/* Dark Theme Adjustments */
+[data-theme="dark"] .setting-item {
+    background: var(--surface-2);
+}
+
+[data-theme="dark"] .toggle-switch label:before {
+    background: var(--surface-0);
+}
+
+[data-theme="dark"] .profile-avatar {
+    border-color: var(--surface-2);
+}
