@@ -41,6 +41,33 @@ class TaskTracker {
         this.toggleThemeBtn = document.getElementById('toggleTheme');
         this.exportTasksBtn = document.getElementById('exportTasks');
         this.importTasksBtn = document.getElementById('importTasks');
+        this.sidebar = document.getElementById('sidebar');
+        this.sidebarToggle = document.getElementById('sidebarToggle');
+        this.editTaskModal = document.getElementById('editTaskModal');
+        this.editTaskInput = document.getElementById('editTaskInput');
+        this.editTaskPriority = document.getElementById('editTaskPriority');
+        this.editTaskDueDate = document.getElementById('editTaskDueDate');
+        this.editTaskCategory = document.getElementById('editTaskCategory');
+        this.saveEditTaskBtn = document.getElementById('saveEditTask');
+        this.cancelEditTaskBtn = document.getElementById('cancelEditTask');
+        this.categoriesModal = document.getElementById('categoriesModal');
+        this.newCategoryInput = document.getElementById('newCategory');
+        this.categoriesList = document.getElementById('categoriesList');
+        this.saveCategoryBtn = document.getElementById('saveCategory');
+        this.cancelCategoryBtn = document.getElementById('cancelCategory');
+        this.settingsModal = document.getElementById('settingsModal');
+        this.themeSetting = document.getElementById('themeSetting');
+        this.notificationSetting = document.getElementById('notificationSetting');
+        this.saveSettingsBtn = document.getElementById('saveSettings');
+        this.cancelSettingsBtn = document.getElementById('cancelSettings');
+        this.helpModal = document.getElementById('helpModal');
+        this.closeHelpBtn = document.getElementById('closeHelp');
+        this.aboutModal = document.getElementById('aboutModal');
+        this.closeAboutBtn = document.getElementById('closeAbout');
+        this.categoriesBtn = document.getElementById('categoriesBtn');
+        this.settingsBtn = document.getElementById('settingsBtn');
+        this.helpBtn = document.getElementById('helpBtn');
+        this.aboutBtn = document.getElementById('aboutBtn');
     }
 
     addEventListeners() {
@@ -69,6 +96,30 @@ class TaskTracker {
         this.toggleThemeBtn.addEventListener('click', () => this.toggleTheme());
         this.exportTasksBtn.addEventListener('click', () => this.exportTasks());
         this.importTasksBtn.addEventListener('click', () => this.importTasks());
+
+        this.sidebarToggle.addEventListener('click', () => this.toggleSidebar());
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.sidebar') && !e.target.closest('.sidebar-toggle')) {
+                this.sidebar.classList.remove('active');
+            }
+        });
+
+        this.saveEditTaskBtn.addEventListener('click', () => this.saveEditedTask());
+        this.cancelEditTaskBtn.addEventListener('click', () => this.closeEditTaskModal());
+
+        this.categoriesBtn.addEventListener('click', () => this.openCategoriesModal());
+        this.saveCategoryBtn.addEventListener('click', () => this.saveCategory());
+        this.cancelCategoryBtn.addEventListener('click', () => this.closeCategoriesModal());
+
+        this.settingsBtn.addEventListener('click', () => this.openSettingsModal());
+        this.saveSettingsBtn.addEventListener('click', () => this.saveSettings());
+        this.cancelSettingsBtn.addEventListener('click', () => this.closeSettingsModal());
+
+        this.helpBtn.addEventListener('click', () => this.openHelpModal());
+        this.closeHelpBtn.addEventListener('click', () => this.closeHelpModal());
+
+        this.aboutBtn.addEventListener('click', () => this.openAboutModal());
+        this.closeAboutBtn.addEventListener('click', () => this.closeAboutModal());
     }
 
     openTaskModal() {
@@ -168,9 +219,11 @@ class TaskTracker {
         `;
 
         const checkbox = li.querySelector('.task-checkbox');
+        const editBtn = li.querySelector('.edit-btn');
         const deleteBtn = li.querySelector('.delete-btn');
 
         checkbox.addEventListener('change', () => this.toggleTaskStatus(task.id));
+        editBtn.addEventListener('click', () => this.openEditTaskModal(task));
         deleteBtn.addEventListener('click', () => this.deleteTask(task.id));
 
         return li;
@@ -231,6 +284,102 @@ class TaskTracker {
             reader.readAsText(file);
         };
         input.click();
+    }
+
+    toggleSidebar() {
+        this.sidebar.classList.toggle('active');
+    }
+
+    openEditTaskModal(task) {
+        this.editTaskInput.value = task.text;
+        this.editTaskPriority.value = task.priority;
+        this.editTaskDueDate.value = task.dueDate;
+        this.editTaskCategory.value = task.category;
+        this.editTaskModal.style.display = 'flex';
+        this.currentTaskId = task.id;
+    }
+
+    closeEditTaskModal() {
+        this.editTaskModal.style.display = 'none';
+        this.currentTaskId = null;
+    }
+
+    saveEditedTask() {
+        const task = this.tasks.find(task => task.id === this.currentTaskId);
+        if (task) {
+            task.text = this.editTaskInput.value.trim();
+            task.priority = this.editTaskPriority.value;
+            task.dueDate = this.editTaskDueDate.value;
+            task.category = this.editTaskCategory.value.trim();
+            this.saveToLocalStorage();
+            this.render();
+            this.closeEditTaskModal();
+        }
+    }
+
+    openCategoriesModal() {
+        this.categoriesModal.style.display = 'flex';
+        this.renderCategories();
+    }
+
+    closeCategoriesModal() {
+        this.categoriesModal.style.display = 'none';
+    }
+
+    renderCategories() {
+        const categories = [...new Set(this.tasks.map(task => task.category).filter(category => category))];
+        this.categoriesList.innerHTML = '';
+        categories.forEach(category => {
+            const li = document.createElement('li');
+            li.textContent = category;
+            this.categoriesList.appendChild(li);
+        });
+    }
+
+    saveCategory() {
+        const category = this.newCategoryInput.value.trim();
+        if (category) {
+            this.tasks.forEach(task => {
+                if (!task.category) {
+                    task.category = category;
+                }
+            });
+            this.saveToLocalStorage();
+            this.render();
+            this.closeCategoriesModal();
+        }
+    }
+
+    openSettingsModal() {
+        this.settingsModal.style.display = 'flex';
+    }
+
+    closeSettingsModal() {
+        this.settingsModal.style.display = 'none';
+    }
+
+    saveSettings() {
+        const theme = this.themeSetting.value;
+        const notifications = this.notificationSetting.value;
+        document.body.setAttribute('data-theme', theme);
+        this.saveToLocalStorage();
+        this.closeSettingsModal();
+    }
+
+    openHelpModal() {
+        this.helpModal.style.display = 'flex';
+    }
+
+    closeHelpModal() {
+        this.helpModal.style.display = 'none';
+    }
+
+    openAboutModal() {
+        this.aboutModal.style.display = 'flex';
+    }
+
+    closeAboutModal() {
+        this.aboutModal.style.display = 'none';
     }
 }
 
