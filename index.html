@@ -11,83 +11,113 @@
     <div class="container">
         <header>
             <div class="header-top">
-                <h1>Taskify Pro</h1>
+                <div class="logo">
+                    <i class="fas fa-tasks"></i>
+                </div>
                 <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="Search">
+                    <input type="text" id="searchInput" placeholder="Search tasks...">
                 </div>
                 <div class="settings">
-                    <button id="settingsButton">
+                    <button id="settingsButton" class="icon-btn">
                         <i class="fas fa-cog"></i>
                     </button>
                     <div class="settings-dropdown" id="settingsDropdown">
-                        <button id="toggleTheme">
+                        <button id="toggleTheme" class="dropdown-btn">
                             <i class="fas fa-moon"></i> Dark Mode
                         </button>
-                        <button id="exportTasks">
+                        <button id="exportTasks" class="dropdown-btn">
                             <i class="fas fa-file-export"></i> Export Tasks
                         </button>
-                        <button id="importTasks">
+                        <button id="importTasks" class="dropdown-btn">
                             <i class="fas fa-file-import"></i> Import Tasks
                         </button>
                     </div>
                 </div>
             </div>
 
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">
+                    <span class="filter-text">All</span>
+                    <span class="task-count" id="allCount">0</span>
+                </button>
+                <button class="filter-btn" data-filter="pending">
+                    <span class="filter-text">Pending</span>
+                    <span class="task-count" id="pendingCount">0</span>
+                </button>
+                <button class="filter-btn" data-filter="completed">
+                    <span class="filter-text">Completed</span>
+                    <span class="task-count" id="completedCount">0</span>
+                </button>
+            </div>
         </header>
-
-        <div class="task-input-container">
-            <input type="text" id="taskInput" placeholder="Add a new task...">
-            <button id="addTask">
-                <i class="fas fa-plus"></i>
-            </button>
-            <button id="toggleAdvanced">
-                <i class="fas fa-cog"></i> Advanced
-            </button>
-        </div>
-
-        <div class="advanced-options" id="advancedOptions">
-            <select id="taskPriority">
-                <option value="low">Low Priority</option>
-                <option value="medium">Medium Priority</option>
-                <option value="high">High Priority</option>
-            </select>
-            <input type="date" id="taskDueDate">
-            <input type="text" id="taskCategory" placeholder="Category (e.g., Work)">
-        </div>
-
-        <div class="filters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="pending">Pending</button>
-            <button class="filter-btn" data-filter="completed">Completed</button>
-        </div>
 
         <div class="tasks-container">
             <ul id="tasksList"></ul>
         </div>
 
-        <div class="stats">
-            <span class="total-tasks">Total Tasks: <span id="totalTasks">0</span></span>
-            <span class="completed-tasks">Completed: <span id="completedTasks">0</span></span>
-            <div class="progress-bar">
-                <div class="progress"></div>
+        <div class="stats-container">
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="stats-content">
+                    <span class="stats-value" id="totalTasks">0</span>
+                    <span class="stats-label">Total Tasks</span>
+                </div>
+            </div>
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stats-content">
+                    <span class="stats-value" id="completedTasks">0</span>
+                    <span class="stats-label">Completed</span>
+                </div>
+            </div>
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stats-content">
+                    <span class="stats-value" id="pendingTasks">0</span>
+                    <span class="stats-label">Pending</span>
+                </div>
             </div>
         </div>
+
+        <button class="floating-btn" id="createTaskBtn">
+            <i class="fas fa-plus"></i>
+        </button>
     </div>
 
-    <div class="modal" id="editModal">
+    <div class="modal" id="taskModal">
         <div class="modal-content">
-            <h2>Edit Task</h2>
-            <input type="text" id="editTaskInput">
-            <input type="date" id="editDueDate">
-            <input type="text" id="editCategory" placeholder="Category">
-            <select id="editPriority">
-                <option value="low">Low Priority</option>
-                <option value="medium">Medium Priority</option>
-                <option value="high">High Priority</option>
-            </select>
-            <div class="modal-buttons">
-                <button id="saveEdit">Save</button>
-                <button id="cancelEdit">Cancel</button>
+            <h2>Create New Task</h2>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="taskInput">Task Name</label>
+                    <input type="text" id="taskInput" placeholder="Enter task name">
+                </div>
+                <div class="input-group">
+                    <label for="taskPriority">Priority</label>
+                    <select id="taskPriority">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="taskDueDate">Due Date</label>
+                    <input type="date" id="taskDueDate">
+                </div>
+                <div class="input-group">
+                    <label for="taskCategory">Category</label>
+                    <input type="text" id="taskCategory" placeholder="Enter category">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelTask">Cancel</button>
+                <button class="btn-primary" id="saveTask">Save Task</button>
             </div>
         </div>
     </div>
