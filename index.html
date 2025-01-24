@@ -3,14 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Tracker Pro</title>
+    <title>Taskify Pro - Ultimate Task Manager</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Tasks</h1>
+            <div class="header-top">
+                <h1>Taskify Pro</h1>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search">
+                </div>
+                <div class="settings">
+                    <button id="settingsButton">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <div class="settings-dropdown" id="settingsDropdown">
+                        <button id="toggleTheme">
+                            <i class="fas fa-moon"></i> Dark Mode
+                        </button>
+                        <button id="exportTasks">
+                            <i class="fas fa-file-export"></i> Export Tasks
+                        </button>
+                        <button id="importTasks">
+                            <i class="fas fa-file-import"></i> Import Tasks
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </header>
 
         <div class="task-input-container">
@@ -18,6 +40,19 @@
             <button id="addTask">
                 <i class="fas fa-plus"></i>
             </button>
+            <button id="toggleAdvanced">
+                <i class="fas fa-cog"></i> Advanced
+            </button>
+        </div>
+
+        <div class="advanced-options" id="advancedOptions">
+            <select id="taskPriority">
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+            </select>
+            <input type="date" id="taskDueDate">
+            <input type="text" id="taskCategory" placeholder="Category (e.g., Work)">
         </div>
 
         <div class="filters">
@@ -33,6 +68,9 @@
         <div class="stats">
             <span class="total-tasks">Total Tasks: <span id="totalTasks">0</span></span>
             <span class="completed-tasks">Completed: <span id="completedTasks">0</span></span>
+            <div class="progress-bar">
+                <div class="progress"></div>
+            </div>
         </div>
     </div>
 
@@ -40,6 +78,13 @@
         <div class="modal-content">
             <h2>Edit Task</h2>
             <input type="text" id="editTaskInput">
+            <input type="date" id="editDueDate">
+            <input type="text" id="editCategory" placeholder="Category">
+            <select id="editPriority">
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+            </select>
             <div class="modal-buttons">
                 <button id="saveEdit">Save</button>
                 <button id="cancelEdit">Cancel</button>
@@ -47,6 +92,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
