@@ -9,6 +9,7 @@
     --transition: all 0.3s ease;
     --background-color: white;
     --task-background: #f8f9fa;
+    --stats-color: #6c5ce7;
 }
 
 [data-theme="dark"] {
@@ -18,6 +19,7 @@
     --background-color: #1e1e1e;
     --task-background: #2d3436;
     --border-color: #636e72;
+    --stats-color: #a29bfe;
 }
 
 * {
@@ -30,61 +32,76 @@
 body {
     background: var(--background-color);
     min-height: 100vh;
-    padding: 32px 16px;
+    padding: 16px;
     color: var(--text-color);
     transition: var(--transition);
 }
 
 .container {
+    width: 100%;
     max-width: 800px;
     margin: 0 auto;
     background: var(--background-color);
     border-radius: 24px;
-    padding: 32px;
+    padding: 24px;
     box-shadow: 0 10px 40px var(--shadow-color);
     transition: var(--transition);
+    position: relative;
 }
 
 header {
-    margin-bottom: 40px;
-    text-align: center;
+    margin-bottom: 32px;
 }
 
 .header-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
 }
 
-header h1 {
+.logo {
+    font-size: 1.8rem;
     color: var(--primary-color);
-    font-size: 2rem;
-    font-weight: 700;
-    letter-spacing: -1px;
 }
 
-header p {
+.search-container {
+    flex: 1;
+    margin: 0 16px;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--task-background);
     color: var(--text-color);
-    font-size: 1rem;
+    transition: var(--transition);
+    font-size: 0.9rem;
 }
 
 .settings {
     position: relative;
 }
 
-#settingsButton {
+.icon-btn {
     background: var(--primary-color);
     color: white;
     border: none;
-    padding: 12px;
+    padding: 10px;
     border-radius: 12px;
     cursor: pointer;
     transition: var(--transition);
     font-size: 1rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-#settingsButton:hover {
+.icon-btn:hover {
     opacity: 0.9;
     transform: translateY(-2px);
 }
@@ -102,7 +119,7 @@ header p {
     min-width: 180px;
 }
 
-.settings-dropdown button {
+.dropdown-btn {
     display: block;
     width: 100%;
     text-align: left;
@@ -116,92 +133,31 @@ header p {
     transition: var(--transition);
 }
 
-.settings-dropdown button:hover {
+.dropdown-btn:hover {
     background: var(--primary-color);
     color: white;
-}
-
-.task-input-container {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 32px;
-    flex-wrap: wrap;
-}
-
-input[type="text"],
-input[type="date"],
-select {
-    flex: 1;
-    padding: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    font-size: 1rem;
-    transition: var(--transition);
-    background-color: var(--task-background);
-    color: var(--text-color);
-}
-
-button {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    margin: auto;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: var(--transition);
-    font-weight: 600;
-    font-size: 1rem;
-}
-
-button:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
-}
-
-#toggleAdvanced {
-    background: var(--secondary-color);
-    color: var(--primary-color);
-}
-
-.advanced-options {
-    display: none;
-    gap: 12px;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-}
-
-.advanced-options.visible {
-    display: flex;
-}
-
-.search-container {
-    margin-bottom: 24px;
-    text-align: center;
-}
-
-#searchInput {
-    width: 100%;
-    max-width: 200px;
-    margin: 0 auto;
-    margin-top: 25px;
-    margin-left: 300px;
 }
 
 .filters {
     display: flex;
-    gap: 12px;
-    margin-bottom: 32px;
-    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
 }
 
 .filter-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    border-radius: 12px;
     background: var(--task-background);
     color: var(--text-color);
-    font-size: 0.9rem;
-    padding: 12px 20px;
-    border-radius: 12px;
+    border: none;
+    cursor: pointer;
     transition: var(--transition);
+    font-size: 0.9rem;
 }
 
 .filter-btn.active {
@@ -209,8 +165,16 @@ button:hover {
     color: white;
 }
 
+.task-count {
+    background: var(--background-color);
+    color: var(--text-color);
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
 .tasks-container {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 #tasksList {
@@ -223,7 +187,7 @@ button:hover {
 .task-item {
     display: flex;
     align-items: center;
-    padding: 16px;
+    padding: 12px;
     background: var(--task-background);
     border-radius: 12px;
     animation: slideIn 0.3s ease;
@@ -247,13 +211,13 @@ button:hover {
     flex: 1;
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 }
 
 .task-checkbox {
     appearance: none;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border: 2px solid var(--border-color);
     border-radius: 6px;
     cursor: pointer;
@@ -270,14 +234,14 @@ button:hover {
     content: '✓';
     position: absolute;
     color: white;
-    font-size: 14px;
+    font-size: 12px;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
 }
 
 .task-text {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: var(--text-color);
     transition: var(--transition);
 }
@@ -293,11 +257,11 @@ button:hover {
 }
 
 .edit-btn, .delete-btn {
-    padding: 8px;
+    padding: 6px;
     border-radius: 8px;
-    font-size: 1.1rem;
-    width: 40px;
-    height: 40px;
+    font-size: 1rem;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -314,28 +278,64 @@ button:hover {
     color: white;
 }
 
-.stats {
+.stats-container {
     display: flex;
-    justify-content: space-between;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.stats-card {
+    flex: 1;
+    background: var(--task-background);
+    padding: 12px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stats-icon {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+}
+
+.stats-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.stats-value {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.stats-label {
+    font-size: 0.8rem;
     color: var(--text-color);
-    font-size: 0.9rem;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-color);
 }
 
-.progress-bar {
-    width: 100%;
-    height: 8px;
-    background: var(--border-color);
-    border-radius: 4px;
-    margin-top: 12px;
-}
-
-.progress {
-    height: 100%;
+.floating-btn {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
     background: var(--primary-color);
-    border-radius: 4px;
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
     transition: var(--transition);
+}
+
+.floating-btn:hover {
+    transform: scale(1.1);
 }
 
 .modal {
@@ -349,27 +349,75 @@ button:hover {
     justify-content: center;
     align-items: center;
     backdrop-filter: blur(5px);
+    z-index: 1000;
 }
 
 .modal-content {
     background: var(--background-color);
-    padding: 32px;
+    padding: 24px;
     border-radius: 24px;
     width: 90%;
-    max-width: 500px;
+    max-width: 400px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     animation: fadeIn 0.3s ease;
 }
 
-.modal-content h2 {
-    margin-bottom: 20px;
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-size: 0.9rem;
     color: var(--text-color);
 }
 
-.modal-buttons {
+.input-group input,
+.input-group select {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--task-background);
+    color: var(--text-color);
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.modal-actions {
     display: flex;
     gap: 12px;
-    margin-top: 24px;
+    justify-content: flex-end;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-secondary {
+    background: var(--task-background);
+    color: var(--text-color);
 }
 
 @keyframes slideIn {
@@ -395,35 +443,99 @@ button:hover {
 }
 
 @media (max-width: 600px) {
+    body {
+        padding: 12px;
+    }
+
     .container {
-        padding: 24px 16px;
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .header-top {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .logo {
+        font-size: 1.5rem;
+    }
+
+    .search-container {
+        margin: 0 8px;
     }
 
     #searchInput {
-        width: 100%;
-        max-width: 120px;
-        margin: 0 auto;
-        margin-top: 25px;
+        padding: 8px 10px;
+        font-size: 0.8rem;
     }
 
-    h1 {
-        font-size: 2rem;
+    .settings {
+        position: relative;
+    }
+
+    .settings-dropdown {
+        top: 100%;
+        right: 0;
     }
 
     .filters {
-        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 12px;
     }
 
     .filter-btn {
-        flex: 1;
+        padding: 8px;
+        font-size: 0.8rem;
     }
 
-    .task-actions {
-        gap: 6px;
+    .stats-container {
+        gap: 8px;
+        margin-top: 16px;
     }
-    
-    .edit-btn, .delete-btn {
-        width: 36px;
-        height: 36px;
+
+    .stats-card {
+        padding: 10px;
+    }
+
+    .stats-icon {
+        font-size: 1rem;
+    }
+
+    .stats-value {
+        font-size: 0.9rem;
+    }
+
+    .stats-label {
+        font-size: 0.7rem;
+    }
+
+    .floating-btn {
+        bottom: 12px;
+        right: 12px;
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .modal-content {
+        padding: 16px;
+    }
+
+    .modal-body {
+        gap: 8px;
+    }
+
+    .input-group input,
+    .input-group select {
+        padding: 8px;
+        font-size: 0.8rem;
+    }
+
+    .btn-primary, .btn-secondary {
+        padding: 8px 16px;
+        font-size: 0.8rem;
     }
 }
