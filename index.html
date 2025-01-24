@@ -8,9 +8,10 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-        <button class="sidebar-toggle" id="sidebarToggle">
-            <i class="fas fa-bars"></i>
+        <button class="sidebar-close" id="sidebarClose">
+            <i class="fas fa-times"></i>
         </button>
         <ul class="sidebar-menu">
             <li><a href="#" class="sidebar-item active"><i class="fas fa-home"></i> Home</a></li>
@@ -20,20 +21,26 @@
             <li><a href="#" class="sidebar-item" id="aboutBtn"><i class="fas fa-info-circle"></i> About</a></li>
         </ul>
     </div>
+
+    <!-- Main Container -->
     <div class="container">
         <header>
             <div class="header-top">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <div class="search-container">
                     <input type="text" id="searchInput" placeholder="Search">
                 </div>
+                <!-- Dark Theme Toggle Button -->
+                <button id="themeToggle" class="icon-btn">
+                    <i class="fas fa-moon"></i>
+                </button>
                 <div class="settings">
                     <button id="settingsButton" class="icon-btn">
                         <i class="fas fa-cog"></i>
                     </button>
                     <div class="settings-dropdown" id="settingsDropdown">
-                        <button id="toggleTheme" class="dropdown-btn">
-                            <i class="fas fa-moon"></i> Dark Mode
-                        </button>
                         <button id="exportTasks" class="dropdown-btn">
                             <i class="fas fa-file-export"></i> Export Tasks
                         </button>
@@ -44,61 +51,50 @@
                 </div>
             </div>
 
-            <div class="filters">
-                <button class="filter-btn active" data-filter="all">
-                    <span class="filter-text">All</span>
-                    <span class="task-count" id="allCount">0</span>
-                </button>
-                <button class="filter-btn" data-filter="pending">
-                    <span class="filter-text">Pending</span>
-                    <span class="task-count" id="pendingCount">0</span>
-                </button>
-                <button class="filter-btn" data-filter="completed">
-                    <span class="filter-text">Completed</span>
-                    <span class="task-count" id="completedCount">0</span>
-                </button>
+            <!-- Stats Container -->
+            <div class="stats-container">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stats-content">
+                        <span class="stats-value" id="totalTasks">0</span>
+                        <span class="stats-label">Total Tasks</span>
+                    </div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stats-content">
+                        <span class="stats-value" id="completedTasks">0</span>
+                        <span class="stats-label">Completed</span>
+                    </div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stats-content">
+                        <span class="stats-value" id="pendingTasks">0</span>
+                        <span class="stats-label">Pending</span>
+                    </div>
+                </div>
             </div>
         </header>
 
+        <!-- Tasks Container -->
         <div class="tasks-container">
             <ul id="tasksList"></ul>
         </div>
 
-        <div class="stats-container">
-            <div class="stats-card">
-                <div class="stats-icon">
-                    <i class="fas fa-tasks"></i>
-                </div>
-                <div class="stats-content">
-                    <span class="stats-value" id="totalTasks">0</span>
-                    <span class="stats-label">Total Tasks</span>
-                </div>
-            </div>
-            <div class="stats-card">
-                <div class="stats-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="stats-content">
-                    <span class="stats-value" id="completedTasks">0</span>
-                    <span class="stats-label">Completed</span>
-                </div>
-            </div>
-            <div class="stats-card">
-                <div class="stats-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="stats-content">
-                    <span class="stats-value" id="pendingTasks">0</span>
-                    <span class="stats-label">Pending</span>
-                </div>
-            </div>
-        </div>
-
+        <!-- Floating Button -->
         <button class="floating-btn" id="createTaskBtn">
             <i class="fas fa-plus"></i>
         </button>
     </div>
 
+    <!-- Modals -->
     <div class="modal" id="taskModal">
         <div class="modal-content">
             <h2>Create New Task</h2>
@@ -131,6 +127,7 @@
         </div>
     </div>
 
+    <!-- Edit Task Modal -->
     <div class="modal" id="editTaskModal">
         <div class="modal-content">
             <h2>Edit Task</h2>
@@ -163,6 +160,7 @@
         </div>
     </div>
 
+    <!-- Categories Modal -->
     <div class="modal" id="categoriesModal">
         <div class="modal-content">
             <h2>Categories</h2>
@@ -180,17 +178,11 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
     <div class="modal" id="settingsModal">
         <div class="modal-content">
             <h2>Settings</h2>
             <div class="modal-body">
-                <div class="input-group">
-                    <label for="themeSetting">Theme</label>
-                    <select id="themeSetting">
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                    </select>
-                </div>
                 <div class="input-group">
                     <label for="notificationSetting">Notifications</label>
                     <select id="notificationSetting">
@@ -206,6 +198,7 @@
         </div>
     </div>
 
+    <!-- Help Modal -->
     <div class="modal" id="helpModal">
         <div class="modal-content">
             <h2>Help</h2>
@@ -218,6 +211,7 @@
         </div>
     </div>
 
+    <!-- About Modal -->
     <div class="modal" id="aboutModal">
         <div class="modal-content">
             <h2>About</h2>
@@ -230,6 +224,7 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="script.js"></script>
 </body>
