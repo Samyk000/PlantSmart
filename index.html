@@ -8,14 +8,23 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="sidebar" id="sidebar">
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="sidebar-item active"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="#" class="sidebar-item" id="categoriesBtn"><i class="fas fa-tags"></i> Categories</a></li>
+            <li><a href="#" class="sidebar-item" id="settingsBtn"><i class="fas fa-cog"></i> Settings</a></li>
+            <li><a href="#" class="sidebar-item" id="helpBtn"><i class="fas fa-question-circle"></i> Help</a></li>
+            <li><a href="#" class="sidebar-item" id="aboutBtn"><i class="fas fa-info-circle"></i> About</a></li>
+        </ul>
+    </div>
     <div class="container">
         <header>
             <div class="header-top">
-                <div class="logo">
-                    <i class="fas fa-tasks"></i>
-                </div>
                 <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="Search tasks...">
+                    <input type="text" id="searchInput" placeholder="Search">
                 </div>
                 <div class="settings">
                     <button id="settingsButton" class="icon-btn">
@@ -118,6 +127,105 @@
             <div class="modal-actions">
                 <button class="btn-secondary" id="cancelTask">Cancel</button>
                 <button class="btn-primary" id="saveTask">Save Task</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editTaskModal">
+        <div class="modal-content">
+            <h2>Edit Task</h2>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="editTaskInput">Task Name</label>
+                    <input type="text" id="editTaskInput" placeholder="Enter task name">
+                </div>
+                <div class="input-group">
+                    <label for="editTaskPriority">Priority</label>
+                    <select id="editTaskPriority">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="editTaskDueDate">Due Date</label>
+                    <input type="date" id="editTaskDueDate">
+                </div>
+                <div class="input-group">
+                    <label for="editTaskCategory">Category</label>
+                    <input type="text" id="editTaskCategory" placeholder="Enter category">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelEditTask">Cancel</button>
+                <button class="btn-primary" id="saveEditTask">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="categoriesModal">
+        <div class="modal-content">
+            <h2>Categories</h2>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="newCategory">New Category</label>
+                    <input type="text" id="newCategory" placeholder="Enter category name">
+                </div>
+                <ul id="categoriesList"></ul>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelCategory">Cancel</button>
+                <button class="btn-primary" id="saveCategory">Save Category</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <h2>Settings</h2>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="themeSetting">Theme</label>
+                    <select id="themeSetting">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="notificationSetting">Notifications</label>
+                    <select id="notificationSetting">
+                        <option value="enabled">Enabled</option>
+                        <option value="disabled">Disabled</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancelSettings">Cancel</button>
+                <button class="btn-primary" id="saveSettings">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <h2>Help</h2>
+            <div class="modal-body">
+                <p>If you need help, please contact us at support@taskifypro.com.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="closeHelp">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="aboutModal">
+        <div class="modal-content">
+            <h2>About</h2>
+            <div class="modal-body">
+                <p>Taskify Pro is the ultimate task manager to help you stay organized and productive.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="closeAbout">Close</button>
             </div>
         </div>
     </div>
