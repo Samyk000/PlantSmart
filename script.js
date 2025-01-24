@@ -16,6 +16,7 @@ class TaskTracker {
         this.currentFilter = 'all';
         this.initializeElements();
         this.addEventListeners();
+        this.initializeTheme(); // Initialize theme on load
         this.render();
     }
 
@@ -38,10 +39,10 @@ class TaskTracker {
         this.cancelTaskBtn = document.getElementById('cancelTask');
         this.settingsButton = document.getElementById('settingsButton');
         this.settingsDropdown = document.getElementById('settingsDropdown');
-        this.toggleThemeBtn = document.getElementById('toggleTheme');
         this.exportTasksBtn = document.getElementById('exportTasks');
         this.importTasksBtn = document.getElementById('importTasks');
         this.sidebar = document.getElementById('sidebar');
+        this.sidebarClose = document.getElementById('sidebarClose');
         this.sidebarToggle = document.getElementById('sidebarToggle');
         this.editTaskModal = document.getElementById('editTaskModal');
         this.editTaskInput = document.getElementById('editTaskInput');
@@ -68,14 +69,47 @@ class TaskTracker {
         this.settingsBtn = document.getElementById('settingsBtn');
         this.helpBtn = document.getElementById('helpBtn');
         this.aboutBtn = document.getElementById('aboutBtn');
+        this.themeToggle = document.getElementById('themeToggle'); // Dark theme toggle button
+    }
+
+    initializeTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.body.setAttribute('data-theme', savedTheme);
+            this.updateThemeIcon(savedTheme); // Update icon based on saved theme
+        } else {
+            document.body.setAttribute('data-theme', 'light');
+            this.updateThemeIcon('light'); // Default to light theme icon
+        }
+    }
+
+    toggleTheme() {
+        const currentTheme = document.body.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        this.updateThemeIcon(newTheme); // Update icon based on new theme
+    }
+
+    updateThemeIcon(theme) {
+        if (this.themeToggle) {
+            const icon = this.themeToggle.querySelector('i');
+            if (theme === 'dark') {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
     }
 
     addEventListeners() {
-        this.createTaskBtn.addEventListener('click', () => this.openTaskModal());
-        this.saveTaskBtn.addEventListener('click', () => this.addTask());
-        this.cancelTaskBtn.addEventListener('click', () => this.closeTaskModal());
+        this.createTaskBtn?.addEventListener('click', () => this.openTaskModal());
+        this.saveTaskBtn?.addEventListener('click', () => this.addTask());
+        this.cancelTaskBtn?.addEventListener('click', () => this.closeTaskModal());
 
-        this.filterBtns.forEach(btn => {
+        this.filterBtns?.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.currentFilter = e.target.closest('.filter-btn').dataset.filter;
                 this.updateActiveFilter();
@@ -83,7 +117,7 @@ class TaskTracker {
             });
         });
 
-        this.settingsButton.addEventListener('click', () => {
+        this.settingsButton?.addEventListener('click', () => {
             this.settingsDropdown.style.display = this.settingsDropdown.style.display === 'block' ? 'none' : 'block';
         });
 
@@ -93,33 +127,36 @@ class TaskTracker {
             }
         });
 
-        this.toggleThemeBtn.addEventListener('click', () => this.toggleTheme());
-        this.exportTasksBtn.addEventListener('click', () => this.exportTasks());
-        this.importTasksBtn.addEventListener('click', () => this.importTasks());
+        this.exportTasksBtn?.addEventListener('click', () => this.exportTasks());
+        this.importTasksBtn?.addEventListener('click', () => this.importTasks());
 
-        this.sidebarToggle.addEventListener('click', () => this.toggleSidebar());
+        this.sidebarToggle?.addEventListener('click', () => this.toggleSidebar());
+        this.sidebarClose?.addEventListener('click', () => this.toggleSidebar());
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.sidebar') && !e.target.closest('.sidebar-toggle')) {
                 this.sidebar.classList.remove('active');
             }
         });
 
-        this.saveEditTaskBtn.addEventListener('click', () => this.saveEditedTask());
-        this.cancelEditTaskBtn.addEventListener('click', () => this.closeEditTaskModal());
+        this.saveEditTaskBtn?.addEventListener('click', () => this.saveEditedTask());
+        this.cancelEditTaskBtn?.addEventListener('click', () => this.closeEditTaskModal());
 
-        this.categoriesBtn.addEventListener('click', () => this.openCategoriesModal());
-        this.saveCategoryBtn.addEventListener('click', () => this.saveCategory());
-        this.cancelCategoryBtn.addEventListener('click', () => this.closeCategoriesModal());
+        this.categoriesBtn?.addEventListener('click', () => this.openCategoriesModal());
+        this.saveCategoryBtn?.addEventListener('click', () => this.saveCategory());
+        this.cancelCategoryBtn?.addEventListener('click', () => this.closeCategoriesModal());
 
-        this.settingsBtn.addEventListener('click', () => this.openSettingsModal());
-        this.saveSettingsBtn.addEventListener('click', () => this.saveSettings());
-        this.cancelSettingsBtn.addEventListener('click', () => this.closeSettingsModal());
+        this.settingsBtn?.addEventListener('click', () => this.openSettingsModal());
+        this.saveSettingsBtn?.addEventListener('click', () => this.saveSettings());
+        this.cancelSettingsBtn?.addEventListener('click', () => this.closeSettingsModal());
 
-        this.helpBtn.addEventListener('click', () => this.openHelpModal());
-        this.closeHelpBtn.addEventListener('click', () => this.closeHelpModal());
+        this.helpBtn?.addEventListener('click', () => this.openHelpModal());
+        this.closeHelpBtn?.addEventListener('click', () => this.closeHelpModal());
 
-        this.aboutBtn.addEventListener('click', () => this.openAboutModal());
-        this.closeAboutBtn.addEventListener('click', () => this.closeAboutModal());
+        this.aboutBtn?.addEventListener('click', () => this.openAboutModal());
+        this.closeAboutBtn?.addEventListener('click', () => this.closeAboutModal());
+
+        // Dark theme toggle event listener
+        this.themeToggle?.addEventListener('click', () => this.toggleTheme());
     }
 
     openTaskModal() {
@@ -161,13 +198,13 @@ class TaskTracker {
         const completedTasks = this.tasks.filter(task => task.completed).length;
         const pendingTasks = totalTasks - completedTasks;
 
-        this.totalTasksElement.textContent = totalTasks;
-        this.completedTasksElement.textContent = completedTasks;
-        this.pendingTasksElement.textContent = pendingTasks;
+        if (this.totalTasksElement) this.totalTasksElement.textContent = totalTasks;
+        if (this.completedTasksElement) this.completedTasksElement.textContent = completedTasks;
+        if (this.pendingTasksElement) this.pendingTasksElement.textContent = pendingTasks;
 
-        this.allCountElement.textContent = totalTasks;
-        this.pendingCountElement.textContent = pendingTasks;
-        this.completedCountElement.textContent = completedTasks;
+        if (this.allCountElement) this.allCountElement.textContent = totalTasks;
+        if (this.pendingCountElement) this.pendingCountElement.textContent = pendingTasks;
+        if (this.completedCountElement) this.completedCountElement.textContent = completedTasks;
     }
 
     saveToLocalStorage() {
@@ -176,14 +213,16 @@ class TaskTracker {
 
     render() {
         const filteredTasks = this.getFilteredTasks();
-        this.tasksList.innerHTML = '';
+        if (this.tasksList) {
+            this.tasksList.innerHTML = '';
 
-        filteredTasks.forEach(task => {
-            const taskElement = this.createTaskElement(task);
-            this.tasksList.appendChild(taskElement);
-        });
+            filteredTasks.forEach(task => {
+                const taskElement = this.createTaskElement(task);
+                this.tasksList.appendChild(taskElement);
+            });
 
-        this.updateStats();
+            this.updateStats();
+        }
     }
 
     getFilteredTasks() {
@@ -222,9 +261,9 @@ class TaskTracker {
         const editBtn = li.querySelector('.edit-btn');
         const deleteBtn = li.querySelector('.delete-btn');
 
-        checkbox.addEventListener('change', () => this.toggleTaskStatus(task.id));
-        editBtn.addEventListener('click', () => this.openEditTaskModal(task));
-        deleteBtn.addEventListener('click', () => this.deleteTask(task.id));
+        checkbox?.addEventListener('change', () => this.toggleTaskStatus(task.id));
+        editBtn?.addEventListener('click', () => this.openEditTaskModal(task));
+        deleteBtn?.addEventListener('click', () => this.deleteTask(task.id));
 
         return li;
     }
@@ -245,16 +284,9 @@ class TaskTracker {
     }
 
     updateActiveFilter() {
-        this.filterBtns.forEach(btn => {
+        this.filterBtns?.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.filter === this.currentFilter);
         });
-    }
-
-    toggleTheme() {
-        const isDark = document.body.getAttribute('data-theme') === 'dark';
-        document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
-        this.toggleThemeBtn.innerHTML = isDark ? '<i class="fas fa-moon"></i> Dark Mode' : '<i class="fas fa-sun"></i> Light Mode';
-        this.saveToLocalStorage();
     }
 
     exportTasks() {
@@ -320,6 +352,7 @@ class TaskTracker {
     openCategoriesModal() {
         this.categoriesModal.style.display = 'flex';
         this.renderCategories();
+        this.toggleSidebar();
     }
 
     closeCategoriesModal() {
@@ -328,12 +361,14 @@ class TaskTracker {
 
     renderCategories() {
         const categories = [...new Set(this.tasks.map(task => task.category).filter(category => category))];
-        this.categoriesList.innerHTML = '';
-        categories.forEach(category => {
-            const li = document.createElement('li');
-            li.textContent = category;
-            this.categoriesList.appendChild(li);
-        });
+        if (this.categoriesList) {
+            this.categoriesList.innerHTML = '';
+            categories.forEach(category => {
+                const li = document.createElement('li');
+                li.textContent = category;
+                this.categoriesList.appendChild(li);
+            });
+        }
     }
 
     saveCategory() {
@@ -352,6 +387,7 @@ class TaskTracker {
 
     openSettingsModal() {
         this.settingsModal.style.display = 'flex';
+        this.toggleSidebar();
     }
 
     closeSettingsModal() {
@@ -368,6 +404,7 @@ class TaskTracker {
 
     openHelpModal() {
         this.helpModal.style.display = 'flex';
+        this.toggleSidebar();
     }
 
     closeHelpModal() {
@@ -376,6 +413,7 @@ class TaskTracker {
 
     openAboutModal() {
         this.aboutModal.style.display = 'flex';
+        this.toggleSidebar();
     }
 
     closeAboutModal() {
@@ -385,4 +423,4 @@ class TaskTracker {
 
 document.addEventListener('DOMContentLoaded', () => {
     const taskTracker = new TaskTracker();
-});
+}); 
