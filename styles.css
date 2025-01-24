@@ -73,13 +73,32 @@ header {
 
 #searchInput {
     width: 20%;
-    padding: 10px 40px;
+    min-width: 200px;
+    padding: 12px 40px;
     margin-left: -10px;
-    border: 1px solid var(--border-color);
+    border: 1.5px solid var(--border-color);
     border-radius: 12px;
     background: var(--task-background);
     color: var(--text-color);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    transition: all 0.25s ease-in-out;
+    outline: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+#searchInput:focus {
+    border-color: var(--primary-color, #4a90e2);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+#searchInput:hover {
+    border-color: var(--border-hover-color, #c0c0c0);
+}
+
+#searchInput::placeholder {
+    color: var(--placeholder-color, #888);
+    opacity: 0.7;
 }
 
 .settings {
@@ -299,6 +318,7 @@ header {
     display: flex;
     align-items: center;
     gap: 6px;
+    margin-top: 10px;
 }
 
 .stats-icon {
@@ -449,18 +469,8 @@ header {
     left: 0;
 }
 
-.sidebar-toggle {
-    position: fixed;
-    top: 25px;
-    left: 30px;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: var(--transition);
-    z-index: 1200;
+.sidebar-close:hover {
+    color: var(--primary-color);
 }
 
 .sidebar-menu {
@@ -478,6 +488,7 @@ header {
     border-radius: 12px;
     transition: var(--transition);
     margin: 4px 0;
+    width: 160px;
 }
 
 .sidebar-item:hover {
@@ -516,18 +527,15 @@ header {
     }
 }
 
+
+
+
 @media (max-width: 600px) {
     .container {
         padding: 12px;
         height: 100dvh;
         max-width: 100%;
         border-radius: 0;
-    }
-
-    .sidebar-toggle {
-        position: fixed;
-        top: 14px;
-        left: 10px;
     }
 
     header {
@@ -539,10 +547,24 @@ header {
     }
 
     #searchInput {
-        width: 120px;
-        padding: 8px 35px;
-        font-size: 0.8rem;
+        width: 200px;
+        padding: 12px 70px;
+        height: 38px;
+        margin-top: 3px;
+        font-size: 1rem;
         margin-left: 30px;
+        border-radius: 15px;
+    }
+    
+    #searchInput:focus {
+        border-color: #6c5ce7;
+        box-shadow: 0 3px 8px rgba(74, 144, 226, 0.1);
+        background-color: #ffffff;
+    }
+    
+    #searchInput::placeholder {
+        color: #999;
+        font-weight: 300;
     }
 
     .tasks-container {
@@ -571,7 +593,7 @@ header {
     }
 
     .sidebar {
-        width: 80%;
+        width: 60%;
         left: -80%;
     }
 
@@ -612,4 +634,99 @@ header {
         padding: 8px 16px;
         font-size: 0.8rem;
     }
+}
+
+/* Add these styles to your existing CSS */
+
+/* Sidebar Toggle Button */
+.sidebar-toggle {
+    position: fixed;
+    top: 25px;
+    left: 25px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+}
+
+.sidebar-toggle:hover {
+    background: var(--primary-color);
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.sidebar-toggle i {
+    font-size: 1.2rem;
+}
+
+@media (max-width: 600px) {
+    .sidebar-toggle {
+        top: 16px; /* Adjust position for mobile */
+        left: 10px; /* Adjust position for mobile */
+        padding: 10px; /* Smaller padding for mobile */
+        border-radius: 10px; /* Slightly smaller border radius */
+    }
+
+    .sidebar-toggle i {
+        font-size: 1rem; /* Smaller icon for mobile */
+    }
+}
+
+/* Sidebar Close Button */
+.sidebar-close {
+    position: absolute;
+    top: 24px;
+    right: 10px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+}
+
+/* Dark Theme Toggle Button */
+#themeToggle {
+    margin-left: 8px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#themeToggle:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+#themeToggle i {
+    transition: transform 0.3s ease;
+}
+
+/* Animation for theme toggle */
+#themeToggle.active i {
+    transform: rotate(180deg);
 }
