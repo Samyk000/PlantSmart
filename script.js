@@ -397,9 +397,42 @@ class TaskTracker {
     saveSettings() {
         const theme = this.themeSetting.value;
         const notifications = this.notificationSetting.value;
+        const dueDateReminder = document.getElementById('dueDateReminder').value;
+        const defaultPriority = document.getElementById('defaultPriority').value;
+        const autoArchive = document.getElementById('autoArchive').value;
+        
+        // Save theme and notifications
         document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        localStorage.setItem('notifications', notifications);
+        
+        // Save new settings
+        localStorage.setItem('dueDateReminder', dueDateReminder);
+        localStorage.setItem('defaultPriority', defaultPriority);
+        localStorage.setItem('autoArchive', autoArchive);
+        
+        // Update default priority in task creation form
+        this.taskPriority.value = defaultPriority;
+        
         this.saveToLocalStorage();
         this.closeSettingsModal();
+    }
+
+    // Load saved settings when initializing
+    initializeSettings() {
+        const savedTheme = localStorage.getItem('theme') || 'system';
+        const savedNotifications = localStorage.getItem('notifications') || 'enabled';
+        const savedDueDateReminder = localStorage.getItem('dueDateReminder') || '1';
+        const savedDefaultPriority = localStorage.getItem('defaultPriority') || 'low';
+        const savedAutoArchive = localStorage.getItem('autoArchive') || '7';
+
+        document.body.setAttribute('data-theme', savedTheme);
+        this.themeSetting.value = savedTheme;
+        this.notificationSetting.value = savedNotifications;
+        document.getElementById('dueDateReminder').value = savedDueDateReminder;
+        document.getElementById('defaultPriority').value = savedDefaultPriority;
+        document.getElementById('autoArchive').value = savedAutoArchive;
+        this.taskPriority.value = savedDefaultPriority;
     }
 
     openHelpModal() {
@@ -423,4 +456,4 @@ class TaskTracker {
 
 document.addEventListener('DOMContentLoaded', () => {
     const taskTracker = new TaskTracker();
-}); 
+});
