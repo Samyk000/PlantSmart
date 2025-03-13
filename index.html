@@ -1,290 +1,178 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taskify Pro - Ultimate Task Manager</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PlantSmart AI | Instant Plant Identification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <button class="sidebar-close" id="sidebarClose">
-            <i class="fas fa-times"></i>
-        </button>
-        <div class="sidebar-header">
-            <div class="user-profile">
-                <div class="avatar">
-                    <i class="fas fa-user-circle"></i>
+    <div class="app-container">
+        <!-- Main Screen -->
+        <div class="main-screen" id="mainScreen">
+            <header class="app-header">
+                <div class="logo">
+                    <i class="fas fa-leaf"></i>
+                    <span>PlantSmart</span>
                 </div>
-                <div class="user-info">
-                    <span class="username">Guest User</span>
-                    <span class="user-email">guest@taskify.com</span>
-                </div>
-            </div>
-        </div>
-        
-        <ul class="sidebar-menu">
-            <li><a href="#" class="sidebar-item active"><i class="fas fa-home"></i> Home</a></li>
-            <li><a href="#" class="sidebar-item" id="todayTasksBtn"><i class="fas fa-sun"></i> Today's Tasks</a></li>
-            <li><a href="#" class="sidebar-item" id="upcomingBtn"><i class="fas fa-calendar-alt"></i> Upcoming</a></li>
-            <li><a href="#" class="sidebar-item" id="projectsBtn"><i class="fas fa-folder-open"></i> Projects</a></li>
-            <li><a href="#" class="sidebar-item" id="categoriesBtn"><i class="fas fa-tags"></i> Categories</a></li>
-            <li class="menu-divider">Workspace</li>
-            <li><a href="#" class="sidebar-item" id="teamBtn"><i class="fas fa-users"></i> Team Tasks</a></li>
-            <li><a href="#" class="sidebar-item" id="reportsBtn"><i class="fas fa-chart-pie"></i> Reports</a></li>
-            <li class="menu-divider">Preferences</li>
-            <li><a href="#" class="sidebar-item" id="settingsBtn"><i class="fas fa-cog"></i> Settings</a></li>
-            <li><a href="#" class="sidebar-item" id="themeBtn"><i class="fas fa-palette"></i> Themes</a></li>
-        </ul>
-        
-        <div class="sidebar-footer">
-            <button class="upgrade-btn">
-                <i class="fas fa-rocket"></i> Upgrade to Pro
-            </button>
-        </div>
-    </div>
+                <button class="history-btn" id="showHistory" title="View History">
+                    <i class="fas fa-history"></i>
+                </button>
+            </header>
 
-    <!-- Main Container -->
-    <div class="container">
-        <header>
-            <div class="header-top">
-                <button class="sidebar-toggle" id="sidebarToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="search-container">
-                    <input type="text" id="searchInput" placeholder="Search">
+            <div class="camera-section">
+                <div class="camera-prompt">
+                    <h1>Discover Plants Around You</h1>
+                    <p>Instant plant identification using AI</p>
                 </div>
-                <!-- Dark Theme Toggle Button -->
-                <button id="themeToggle" class="icon-btn">
-                    <i class="fas fa-moon"></i>
-                </button>
-                <div class="settings">
-                    <button id="settingsButton" class="icon-btn">
-                        <i class="fas fa-cog"></i>
+                
+                <div class="camera-buttons">
+                    <button class="camera-btn" id="openCamera">
+                        <i class="fas fa-camera"></i>
+                        Take Photo
                     </button>
-                    <div class="settings-dropdown" id="settingsDropdown">
-                        <button id="exportTasks" class="dropdown-btn">
-                            <i class="fas fa-file-export"></i> Export Tasks
-                        </button>
-                        <button id="importTasks" class="dropdown-btn">
-                            <i class="fas fa-file-import"></i> Import Tasks
-                        </button>
+                    <button class="upload-btn" id="uploadBtn">
+                        <i class="fas fa-image"></i>
+                        Upload Image
+                    </button>
+                    <input type="file" id="imageInput" accept="image/*" hidden>
+                </div>
+            </div>
+
+            <div class="info-cards">
+                <div class="info-card">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>Accurate Results</h3>
+                    <p>Powered by advanced AI technology</p>
+                </div>
+                <div class="info-card">
+                    <i class="fas fa-leaf"></i>
+                    <h3>Detailed Information</h3>
+                    <p>Get comprehensive plant details</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Screen -->
+        <div class="history-screen hidden" id="historyScreen">
+            <header class="app-header">
+                <button class="back-btn" id="closeHistory">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <span>Recent Plants</span>
+                <button class="clear-btn" id="clearHistory" title="Clear History">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </header>
+            
+            <div class="history-list" id="historyList"></div>
+        </div>
+
+        <!-- Camera Screen -->
+        <div class="camera-screen hidden" id="cameraScreen">
+            <div class="camera-container">
+                <video id="cameraFeed" autoplay playsinline></video>
+                <div class="camera-overlay">
+                    <div class="camera-frame"></div>
+                </div>
+                <div class="camera-controls">
+                    <button class="camera-control-btn" id="closeCamera" title="Close Camera">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <button class="capture-btn" id="capturePhoto" title="Take Photo">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                    <button class="camera-control-btn" id="switchCamera" title="Switch Camera">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Screen -->
+        <div class="preview-screen hidden" id="previewScreen">
+            <header class="app-header">
+                <button class="back-btn" id="backToMain">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <span>Preview Photo</span>
+                <button class="retake-btn" id="retakePhoto">
+                    <i class="fas fa-redo"></i>
+                </button>
+            </header>
+
+            <div class="preview-container">
+                <img id="preview" alt="Plant Preview">
+                <button class="identify-btn" id="identifyBtn">
+                    <i class="fas fa-search"></i>
+                    Identify Plant
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div class="results-screen hidden" id="resultsScreen">
+            <header class="app-header">
+                <button class="back-btn" id="backToMain">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <span>Plant Details</span>
+                <button class="share-btn" id="shareResults">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+            </header>
+
+            <!-- Loading State -->
+            <div class="loading-container" id="loadingContainer">
+                <div class="loading-animation">
+                    <div class="loading-icon">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <div class="loading-text">
+                        <h3>Analyzing your plant...</h3>
+                        <p>Using AI to identify species</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Stats Container -->
-            <div class="stats-container">
-                <div class="stats-card">
-                    <div class="stats-icon">
-                        <i class="fas fa-tasks"></i>
+            <!-- Results Content -->
+            <div class="results-content hidden" id="resultsContent">
+                <div class="plant-header">
+                    <div class="plant-image">
+                        <img id="resultImage" alt="Identified Plant">
                     </div>
-                    <div class="stats-content">
-                        <span class="stats-value" id="totalTasks">0</span>
-                        <span class="stats-label">Total Tasks</span>
-                    </div>
-                </div>
- 
-                <div class="stats-card">
-                    <div class="stats-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="stats-content">
-                        <span class="stats-value" id="pendingTasks">0</span>
-                        <span class="stats-label">Pending</span>
+                    <div class="plant-main-info">
+                        <h2 id="plantCommonName">Plant Name</h2>
+                        <p id="plantScientificName">Scientific Name</p>
+                        <div class="confidence-badge">
+                            <i class="fas fa-check-circle"></i>
+                            <span>AI Identified</span>
+                        </div>
                     </div>
                 </div>
-                <div class="stats-card">
-                    <div class="stats-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="stats-content">
-                        <span class="stats-value" id="completedTasks">0</span>
-                        <span class="stats-label">Completed</span>
-                    </div>
+
+                <div class="plant-details" id="plantDetails">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+
+                <div class="action-buttons">
+                    <button class="new-search-btn" id="newSearch">
+                        <i class="fas fa-camera"></i>
+                        Identify Another Plant
+                    </button>
                 </div>
             </div>
-        </header>
-
-        <!-- Tasks Container -->
-        <div class="tasks-container">
-            <ul id="tasksList"></ul>
         </div>
 
-        <!-- Floating Button -->
-        <button class="floating-btn" id="createTaskBtn">
-            <i class="fas fa-plus"></i>
-        </button>
-    </div>
-
-    <!-- Modals -->
-    <div class="modal" id="taskModal">
-        <div class="modal-content">
-            <h2>Create New Task</h2>
-            <div class="modal-body">
-                <div class="input-group">
-                    <label for="taskInput">Task Name</label>
-                    <input type="text" id="taskInput" placeholder="Enter task name">
-                </div>
-                <div class="input-group">
-                    <label for="taskPriority">Priority</label>
-                    <select id="taskPriority">
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="taskDueDate">Due Date</label>
-                    <input type="date" id="taskDueDate">
-                </div>
-                <div class="input-group">
-                    <label for="taskCategory">Category</label>
-                    <input type="text" id="taskCategory" placeholder="Enter category">
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-secondary" id="cancelTask">Cancel</button>
-                <button class="btn-primary" id="saveTask">Save Task</button>
-            </div>
+        <!-- Toast Notification -->
+        <div class="toast hidden" id="toast">
+            <i class="fas fa-info-circle"></i>
+            <span id="toastMessage"></span>
         </div>
     </div>
 
-    <!-- Edit Task Modal -->
-    <div class="modal" id="editTaskModal">
-        <div class="modal-content">
-            <h2>Edit Task</h2>
-            <div class="modal-body">
-                <div class="input-group">
-                    <label for="editTaskInput">Task Name</label>
-                    <input type="text" id="editTaskInput" placeholder="Enter task name">
-                </div>
-                <div class="input-group">
-                    <label for="editTaskPriority">Priority</label>
-                    <select id="editTaskPriority">
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="editTaskDueDate">Due Date</label>
-                    <input type="date" id="editTaskDueDate">
-                </div>
-                <div class="input-group">
-                    <label for="editTaskCategory">Category</label>
-                    <input type="text" id="editTaskCategory" placeholder="Enter category">
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-secondary" id="cancelEditTask">Cancel</button>
-                <button class="btn-primary" id="saveEditTask">Save Changes</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Categories Modal -->
-    <div class="modal" id="categoriesModal">
-        <div class="modal-content">
-            <h2>Categories</h2>
-            <div class="modal-body">
-                <div class="input-group">
-                    <label for="newCategory">New Category</label>
-                    <input type="text" id="newCategory" placeholder="Enter category name">
-                </div>
-                <ul id="categoriesList"></ul>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-secondary" id="cancelCategory">Cancel</button>
-                <button class="btn-primary" id="saveCategory">Save Category</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Settings Modal -->
-    <div class="modal" id="settingsModal">
-        <div class="modal-content">
-            <h2>Settings</h2>
-            <div class="modal-body">
-            <div class="input-group">
-                <label for="themeSetting">App Theme</label>
-                <select id="themeSetting">
-                    <option value="system">System Default</option>
-                    <option value="light">Light Mode</option>
-                    <option value="dark">Dark Mode</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label for="notificationSetting">Notifications</label>
-                <select id="notificationSetting">
-                    <option value="enabled">Enabled</option>
-                    <option value="disabled">Disabled</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label for="dueDateReminder">Due Date Reminders</label>
-                <select id="dueDateReminder">
-                    <option value="1">1 Day Before</option>
-                    <option value="3">3 Days Before</option>
-                    <option value="7">1 Week Before</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label for="defaultPriority">Default Task Priority</label>
-                <select id="defaultPriority">
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label for="autoArchive">Auto-Archive Completed</label>
-                <select id="autoArchive">
-                    <option value="7">After 7 Days</option>
-                    <option value="14">After 14 Days</option>
-                    <option value="30">After 30 Days</option>
-                    <option value="never">Never</option>
-                </select>
-            </div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-secondary" id="cancelSettings">Cancel</button>
-                <button class="btn-primary" id="saveSettings">Save Settings</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Help Modal -->
-    <div class="modal" id="helpModal">
-        <div class="modal-content">
-            <h2>Help</h2>
-            <div class="modal-body">
-                <p>If you need help, please contact us at support@taskifypro.com.</p>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-secondary" id="closeHelp">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- About Modal -->
-    <div class="modal" id="aboutModal">
-        <div class="modal-content">
-            <h2>About</h2>
-            <div class="modal-body">
-                <p>Taskify Pro is the ultimate task manager to help you stay organized and productive.</p>
-            </div>
-            <div class="modal-actions">
-                <button class="btn-secondary" id="closeAbout">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
