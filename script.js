@@ -4,7 +4,15 @@ const CONFIG = {
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     ALLOWED_TYPES: ['image/jpeg', 'image/png', 'image/jpg'],
     HISTORY_KEY: 'plantSearchHistory',
-    MAX_HISTORY_ITEMS: 20
+    MAX_HISTORY_ITEMS: 20,
+    TOAST_DURATION: 3000
+};
+
+// Feature Detection
+const FEATURES = {
+    camera: 'mediaDevices' in navigator,
+    share: 'share' in navigator,
+    storage: 'localStorage' in window
 };
 
 // DOM Elements
@@ -28,7 +36,8 @@ const elements = {
         showHistory: document.getElementById('showHistory'),
         closeHistory: document.getElementById('closeHistory'),
         clearHistory: document.getElementById('clearHistory'),
-        backToMain: document.getElementById('backToMain'),
+        backFromPreview: document.getElementById('backFromPreview'),
+        backFromResults: document.getElementById('backFromResults'),
         retakePhoto: document.getElementById('retakePhoto'),
         identifyBtn: document.getElementById('identifyBtn'),
         newSearch: document.getElementById('newSearch'),
@@ -49,57 +58,181 @@ const elements = {
         plantCommonName: document.getElementById('plantCommonName'),
         plantScientificName: document.getElementById('plantScientificName')
     },
-    toast: document.getElementById('toast')
+    toast: document.getElementById('toast'),
+    toastMessage: document.getElementById('toastMessage')
 };
 
-// State Management
-let currentPlantData = null;
-let searchHistory = [];
-let stream = null;
-let facingMode = 'environment';
+// Application State
+const AppState = {
+    currentScreen: 'main',
+    previousScreen: null,
+    isLoading: false,
+    currentPlantData: null,
+    history: [],
+    stream: null,
+    facingMode: 'environment',
+    isFromHistory: false,
+
+    setState(updates) {
+        Object.assign(this, updates);
+        this.notifyListeners();
+    },
+
+    listeners: new Set(),
+
+    subscribe(listener) {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+    },
+
+    notifyListeners() {
+        this.listeners.forEach(listener => listener(this));
+    }
+};
 
 // Initialize Application
-document.addEventListener('DOMContentLoaded', () => {
-    initializeApp();
-    loadSearchHistory();
-});
+document.addEventListener('DOMContentLoaded', initializeApp);
 
 function initializeApp() {
     setupEventListeners();
     checkCameraSupport();
+    loadSearchHistory();
+    updateUIBasedOnFeatures();
 }
 
 // Event Listeners Setup
 function setupEventListeners() {
     // Camera Controls
-    elements.camera.openBtn.addEventListener('click', initCamera);
-    elements.camera.closeBtn.addEventListener('click', stopCamera);
-    elements.camera.captureBtn.addEventListener('click', capturePhoto);
-    elements.camera.switchBtn.addEventListener('click', switchCamera);
+    if (elements.camera.openBtn) {
+        elements.camera.openBtn.addEventListener('click', initCamera);
+    }
+    if (elements.camera.closeBtn) {
+        elements.camera.closeBtn.addEventListener('click', () => {
+            stopCamera();
+            navigateToScreen('main');
+        });
+    }
+    if (elements.camera.captureBtn) {
+        elements.camera.captureBtn.addEventListener('click', capturePhoto);
+    }
+    if (elements.camera.switchBtn) {
+        elements.camera.switchBtn.addEventListener('click', switchCamera);
+    }
 
     // Upload Controls
-    elements.buttons.upload.addEventListener('click', () => elements.inputs.imageInput.click());
-    elements.inputs.imageInput.addEventListener('change', handleImageSelect);
+    if (elements.buttons.upload && elements.inputs.imageInput) {
+        elements.buttons.upload.addEventListener('click', () => elements.inputs.imageInput.click());
+        elements.inputs.imageInput.addEventListener('change', handleImageSelect);
+    }
 
     // Navigation
-    elements.buttons.showHistory.addEventListener('click', showHistory);
-    elements.buttons.closeHistory.addEventListener('click', hideHistory);
-    elements.buttons.clearHistory.addEventListener('click', clearHistory);
-    elements.buttons.backToMain.addEventListener('click', navigateToMain);
-    elements.buttons.retakePhoto.addEventListener('click', navigateToMain);
-    elements.buttons.identifyBtn.addEventListener('click', startIdentification);
-    elements.buttons.newSearch.addEventListener('click', navigateToMain);
+    if (elements.buttons.showHistory) {
+        elements.buttons.showHistory.addEventListener('click', () => {
+            AppState.previousScreen = AppState.currentScreen;
+            navigateToScreen('history');
+        });
+    }
+    if (elements.buttons.closeHistory) {
+        elements.buttons.closeHistory.addEventListener('click', () => {
+            navigateToScreen(AppState.previousScreen || 'main');
+        });
+    }
+    if (elements.buttons.clearHistory) {
+        elements.buttons.clearHistory.addEventListener('click', clearHistory);
+    }
+    if (elements.buttons.backFromPreview) {
+        elements.buttons.backFromPreview.addEventListener('click', () => navigateBack('preview'));
+    }
+    if (elements.buttons.backFromResults) {
+        elements.buttons.backFromResults.addEventListener('click', () => navigateBack('results'));
+    }
+    if (elements.buttons.retakePhoto) {
+        elements.buttons.retakePhoto.addEventListener('click', () => {
+            cleanup();
+            initCamera();
+        });
+    }
+    if (elements.buttons.identifyBtn) {
+        elements.buttons.identifyBtn.addEventListener('click', startIdentification);
+    }
+    if (elements.buttons.newSearch) {
+        elements.buttons.newSearch.addEventListener('click', () => {
+            cleanup();
+            navigateToScreen('main');
+        });
+    }
+    if (elements.buttons.shareResults) {
+        elements.buttons.shareResults.addEventListener('click', shareResults);
+    }
+
+    // Handle back button
+    window.addEventListener('popstate', handlePopState);
 }
 
-// Camera Handling
+// Navigation Functions
+function navigateToScreen(screenId) {
+    if (screenId === AppState.currentScreen) return;
+
+    Object.entries(elements.screens).forEach(([id, screen]) => {
+        if (screen) {
+            screen.classList.toggle('hidden', id !== screenId);
+        }
+    });
+
+    // Special handling for history navigation
+    if (screenId === 'history') {
+        renderHistoryList(); // Refresh history list when showing history screen
+    }
+
+    AppState.setState({ 
+        previousScreen: AppState.currentScreen,
+        currentScreen: screenId
+    });
+
+    history.pushState({ screen: screenId }, '', `#${screenId}`);
+}
+
+function navigateBack(fromScreen) {
+    switch (fromScreen) {
+        case 'preview':
+            if (AppState.isFromHistory) {
+                navigateToScreen('history');
+            } else {
+                stopCamera();
+                navigateToScreen('main');
+            }
+            break;
+        case 'results':
+            if (AppState.isFromHistory) {
+                navigateToScreen('history');
+            } else {
+                navigateToScreen('preview');
+            }
+            break;
+        default:
+            navigateToScreen('main');
+    }
+    AppState.setState({ isFromHistory: false });
+}
+
+function handlePopState(event) {
+    const screen = event.state?.screen || 'main';
+    navigateToScreen(screen);
+}
+
+// Camera Functions
 async function checkCameraSupport() {
     try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const hasCamera = devices.some(device => device.kind === 'videoinput');
-        elements.camera.openBtn.style.display = hasCamera ? 'flex' : 'none';
+        if (elements.camera.openBtn) {
+            elements.camera.openBtn.style.display = hasCamera ? 'flex' : 'none';
+        }
     } catch (error) {
         console.error('Camera check failed:', error);
-        elements.camera.openBtn.style.display = 'none';
+        if (elements.camera.openBtn) {
+            elements.camera.openBtn.style.display = 'none';
+        }
     }
 }
 
@@ -107,21 +240,25 @@ async function initCamera() {
     try {
         const constraints = {
             video: { 
-                facingMode: facingMode,
+                facingMode: AppState.facingMode,
                 width: { ideal: 1920 },
                 height: { ideal: 1080 }
             }
         };
 
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-        elements.camera.feed.srcObject = stream;
-        elements.screens.camera.classList.remove('hidden');
+        AppState.stream = await navigator.mediaDevices.getUserMedia(constraints);
+        if (elements.camera.feed) {
+            elements.camera.feed.srcObject = AppState.stream;
+            await elements.camera.feed.play();
+        }
         
-        // Check if device has multiple cameras
         const devices = await navigator.mediaDevices.enumerateDevices();
         const hasMultipleCameras = devices.filter(device => device.kind === 'videoinput').length > 1;
-        elements.camera.switchBtn.style.display = hasMultipleCameras ? 'block' : 'none';
+        if (elements.camera.switchBtn) {
+            elements.camera.switchBtn.style.display = hasMultipleCameras ? 'block' : 'none';
+        }
 
+        navigateToScreen('camera');
     } catch (error) {
         console.error('Camera initialization failed:', error);
         showToast('Cannot access camera. Please check permissions or try uploading an image.');
@@ -129,57 +266,64 @@ async function initCamera() {
 }
 
 function stopCamera() {
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        stream = null;
+    if (AppState.stream) {
+        AppState.stream.getTracks().forEach(track => track.stop());
+        AppState.stream = null;
     }
-    elements.screens.camera.classList.add('hidden');
 }
 
 async function switchCamera() {
-    facingMode = facingMode === 'environment' ? 'user' : 'environment';
+    AppState.facingMode = AppState.facingMode === 'environment' ? 'user' : 'environment';
     await stopCamera();
     await initCamera();
 }
 
 async function capturePhoto() {
     try {
-        const canvas = document.createElement('canvas');
         const video = elements.camera.feed;
+        const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        
+
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-        
+        if (AppState.facingMode === 'user') {
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+        } else {
+            ctx.drawImage(video, 0, 0);
+        }
+
         const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
         handleCapturedImage(blob);
-        
     } catch (error) {
         console.error('Photo capture failed:', error);
         showToast('Failed to capture photo. Please try again.');
     }
 }
 
+// Image Handling
 function handleCapturedImage(blob) {
     stopCamera();
     displayPreview(blob);
-    navigateToPreview();
+    navigateToScreen('preview');
 }
 
-// Image Handling
 async function handleImageSelect(e) {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!validateImage(file)) return;
-
     try {
+        if (!validateImage(file)) return;
         const optimizedImage = await optimizeImage(file);
         displayPreview(optimizedImage);
-        navigateToPreview();
+        navigateToScreen('preview');
     } catch (error) {
+        console.error('Image processing error:', error);
         showToast('Error processing image. Please try again.');
+    } finally {
+        if (elements.inputs.imageInput) {
+            elements.inputs.imageInput.value = '';
+        }
     }
 }
 
@@ -197,22 +341,31 @@ function validateImage(file) {
     return true;
 }
 
+function displayPreview(blob) {
+    const url = URL.createObjectURL(blob);
+    if (elements.containers.preview) {
+        elements.containers.preview.src = url;
+    }
+    if (elements.containers.resultImage) {
+        elements.containers.resultImage.src = url;
+    }
+}
+
 async function optimizeImage(file) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         const url = URL.createObjectURL(file);
-        
+
         img.onload = () => {
             URL.revokeObjectURL(url);
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
             let { width, height } = calculateDimensions(img.width, img.height, 1200);
-
             canvas.width = width;
             canvas.height = height;
-            ctx.drawImage(img, 0, 0, width, height);
 
+            ctx.drawImage(img, 0, 0, width, height);
             canvas.toBlob(resolve, 'image/jpeg', 0.8);
         };
 
@@ -240,85 +393,164 @@ function calculateDimensions(width, height, maxDim) {
     return { width, height };
 }
 
-function displayPreview(blob) {
-    const url = URL.createObjectURL(blob);
-    elements.containers.preview.src = url;
-    elements.containers.resultImage.src = url;
-}
-
 // Plant Identification
 async function startIdentification() {
     try {
+        navigateToScreen('results');
         showLoading(true);
-        navigateToResults();
-
         const imageData = await getBase64FromImage(elements.containers.preview);
-        const plantData = await identifyPlant(imageData);
+        await identifyPlant(imageData);
+    } catch (error) {
+        console.error('Start identification error:', error);
+        showToast('Failed to process image. Please try again.');
+        navigateToScreen('preview');
+    }
+}
+
+async function identifyPlant(base64Image) {
+    try {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${CONFIG.API_KEY}`,
+                'HTTP-Referer': window.location.href,
+                'X-Title': 'PlantSmart AI'
+            },
+            body: JSON.stringify({
+                model: 'google/gemini-pro-vision',
+                messages: [{
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'text',
+                            text: "Analyze this plant and provide ONLY a JSON response in this format (no additional text): {\"commonName\":\"\",\"scientificName\":\"\",\"description\":\"\",\"characteristics\":{\"type\":\"\",\"height\":\"\",\"spread\":\"\",\"flowering\":\"\"},\"growingInfo\":{\"sunlight\":\"\",\"water\":\"\",\"soil\":\"\"},\"quickFacts\":[\"fact1\",\"fact2\",\"fact3\",\"fact4\",\"fact5\"]}"
+                        },
+                        {
+                            type: 'image_url',
+                            image_url: { url: base64Image }
+                        }
+                    ]
+                }]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`API request failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const plantData = JSON.parse(sanitizeJSON(data.choices[0].message.content));
         
-        currentPlantData = plantData;
+        AppState.setState({ currentPlantData: plantData });
         saveToHistory(plantData);
         displayResults(plantData);
     } catch (error) {
-        console.error('Identification error:', error);
-        showToast('Error identifying plant. Please try again.');
-        navigateToPreview();
+        console.error('Plant identification failed:', error);
+        throw new Error('Failed to identify plant');
     } finally {
         showLoading(false);
     }
 }
 
-async function identifyPlant(base64Image) {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${CONFIG.API_KEY}`,
-            'HTTP-Referer': window.location.href,
-            'X-Title': 'PlantSmart AI'
-        },
-        body: JSON.stringify({
-            model: 'google/gemini-2.0-flash-thinking-exp:free',
-            messages: [{
-                role: 'user',
-                content: [
-                    {
-                        type: 'text',
-                        text: "Analyze this plant and provide ONLY a JSON response in this format (no additional text): {\"commonName\":\"\",\"scientificName\":\"\",\"description\":\"\",\"characteristics\":{\"type\":\"\",\"height\":\"\",\"spread\":\"\",\"flowering\":\"\"},\"growingInfo\":{\"sunlight\":\"\",\"water\":\"\",\"soil\":\"\"},\"quickFacts\":[]}"
-                    },
-                    {
-                        type: 'image_url',
-                        image_url: { url: base64Image }
-                    }
-                ]
-            }]
-        })
-    });
+// History Management
+function loadSearchHistory() {
+    try {
+        const saved = localStorage.getItem(CONFIG.HISTORY_KEY);
+        AppState.history = saved ? JSON.parse(saved) : [];
+        renderHistoryList();
+    } catch (error) {
+        console.error('History loading error:', error);
+        AppState.history = [];
+        showToast('Error loading history');
+    }
+}
 
-    if (!response.ok) {
-        throw new Error('API request failed');
+function renderHistoryList() {
+    if (!elements.containers.historyList) return;
+
+    if (!AppState.history.length) {
+        elements.containers.historyList.innerHTML = `
+            <div class="empty-history">
+                <i class="fas fa-history"></i>
+                <p>No plants identified yet</p>
+                <small>Your identified plants will appear here</small>
+            </div>
+        `;
+        return;
     }
 
-    const data = await response.json();
-    try {
-        const content = data.choices[0].message.content;
-        const jsonStart = content.indexOf('{');
-        const jsonEnd = content.lastIndexOf('}') + 1;
-        return JSON.parse(content.slice(jsonStart, jsonEnd));
-    } catch (error) {
-        console.error('JSON parsing error:', error);
-        throw new Error('Invalid response format');
+    elements.containers.historyList.innerHTML = AppState.history.map(item => `
+        <div class="history-item" data-id="${item.id}">
+            <img src="${sanitizeHTML(item.imageUrl)}" alt="${sanitizeHTML(item.commonName)}" loading="lazy">
+            <div class="history-item-info">
+                <h4>${sanitizeHTML(item.commonName)}</h4>
+                <p>${sanitizeHTML(item.scientificName)}</p>
+                <small class="history-date">${formatDate(item.timestamp)}</small>
+            </div>
+            <i class="fas fa-chevron-right"></i>
+        </div>
+    `).join('');
+
+    // Add click event listeners
+    elements.containers.historyList.querySelectorAll('.history-item').forEach(item => {
+        item.addEventListener('click', () => {
+            loadHistoryItem(Number(item.dataset.id));
+            AppState.setState({ isFromHistory: true });
+        });
+    });
+}
+
+function loadHistoryItem(id) {
+    const item = AppState.history.find(i => i.id === id);
+    if (item) {
+        AppState.setState({ currentPlantData: item });
+        if (elements.containers.preview) elements.containers.preview.src = item.imageUrl;
+        if (elements.containers.resultImage) elements.containers.resultImage.src = item.imageUrl;
+        navigateToScreen('results');
+        displayResults(item);
+    }
+}
+
+function saveToHistory(plantData) {
+    const historyItem = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        imageUrl: elements.containers.preview.src,
+        ...plantData
+    };
+
+    AppState.history.unshift(historyItem);
+    if (AppState.history.length > CONFIG.MAX_HISTORY_ITEMS) {
+        AppState.history.pop();
+    }
+
+    localStorage.setItem(CONFIG.HISTORY_KEY, JSON.stringify(AppState.history));
+    renderHistoryList();
+}
+
+function clearHistory() {
+    if (confirm('Are you sure you want to clear your search history?')) {
+        AppState.history = [];
+        localStorage.removeItem(CONFIG.HISTORY_KEY);
+        renderHistoryList();
+        showToast('History cleared');
     }
 }
 
 // Results Display
 function displayResults(data) {
+    if (!elements.text.plantCommonName || !elements.text.plantScientificName || !elements.containers.plantDetails) {
+        return;
+    }
+
     elements.text.plantCommonName.textContent = data.commonName;
     elements.text.plantScientificName.textContent = data.scientificName;
-    
+
     elements.containers.plantDetails.innerHTML = `
         <div class="detail-section">
             <h3><i class="fas fa-info-circle"></i> About</h3>
-            <p>${data.description}</p>
+            <p>${sanitizeHTML(data.description)}</p>
         </div>
 
         <div class="detail-section">
@@ -327,7 +559,7 @@ function displayResults(data) {
                 ${Object.entries(data.characteristics).map(([key, value]) => `
                     <div class="characteristic-item">
                         <i class="fas ${getCharacteristicIcon(key)}"></i>
-                        <span>${value}</span>
+                        <span>${sanitizeHTML(value)}</span>
                     </div>
                 `).join('')}
             </div>
@@ -335,11 +567,11 @@ function displayResults(data) {
 
         <div class="detail-section">
             <h3><i class="fas fa-seedling"></i> Growing Information</h3>
-            <div class="characteristic-list">
+            <div class="growing-info">
                 ${Object.entries(data.growingInfo).map(([key, value]) => `
-                    <div class="characteristic-item">
+                    <div class="info-item">
                         <i class="fas ${getGrowingIcon(key)}"></i>
-                        <span>${value}</span>
+                        <span>${sanitizeHTML(value)}</span>
                     </div>
                 `).join('')}
             </div>
@@ -349,15 +581,21 @@ function displayResults(data) {
             <h3><i class="fas fa-lightbulb"></i> Quick Facts</h3>
             <ul class="facts-list">
                 ${data.quickFacts.map(fact => `
-                    <li>${fact}</li>
+                    <li>${sanitizeHTML(fact)}</li>
                 `).join('')}
             </ul>
         </div>
     `;
 
-    elements.containers.results.classList.remove('hidden');
+    if (elements.containers.results) {
+        elements.containers.results.classList.remove('hidden');
+    }
+    if (elements.containers.loading) {
+        elements.containers.loading.classList.add('hidden');
+    }
 }
 
+// Utility Functions
 function getCharacteristicIcon(type) {
     const icons = {
         type: 'fa-pagelines',
@@ -377,197 +615,92 @@ function getGrowingIcon(type) {
     return icons[type] || 'fa-info-circle';
 }
 
-// History Management
-function loadSearchHistory() {
+function formatDate(dateString) {
     try {
-        const saved = localStorage.getItem(CONFIG.HISTORY_KEY);
-        searchHistory = saved ? JSON.parse(saved) : [];
-        renderHistoryList();
+        const date = new Date(dateString);
+        const now = new Date();
+        
+        if (isNaN(date.getTime())) {
+            throw new Error('Invalid date');
+        }
+
+        const diffTime = now - date;
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffMinutes < 1) return 'Just now';
+        if (diffMinutes < 60) return `${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'} ago`;
+        if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+        if (diffDays === 1) return 'Yesterday';
+        if (diffDays < 7) return `${diffDays} days ago`;
+        
+        return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+        });
     } catch (error) {
-        console.error('History loading error:', error);
-        searchHistory = [];
+        console.error('Date formatting error:', error);
+        return 'Date unavailable';
     }
 }
 
-function saveToHistory(plantData) {
-    const historyItem = {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        imageUrl: elements.containers.preview.src,
-        ...plantData
-    };
-
-    searchHistory.unshift(historyItem);
-    if (searchHistory.length > CONFIG.MAX_HISTORY_ITEMS) {
-        searchHistory.pop();
-    }
-
-    localStorage.setItem(CONFIG.HISTORY_KEY, JSON.stringify(searchHistory));
-    renderHistoryList();
-}
-
-// Continue with the rest of the code...
-
-// History Display and Management
-function renderHistoryList() {
-    if (!searchHistory.length) {
-        elements.containers.historyList.innerHTML = `
-            <div class="empty-history">
-                <i class="fas fa-history"></i>
-                <p>No plants identified yet</p>
-                <small>Your identified plants will appear here</small>
-            </div>
-        `;
-        return;
-    }
-
-    elements.containers.historyList.innerHTML = searchHistory.map(item => `
-        <div class="history-item" onclick="loadHistoryItem(${item.id})">
-            <img src="${item.imageUrl}" alt="${item.commonName}">
-            <div class="history-item-info">
-                <h4>${item.commonName}</h4>
-                <p>${item.scientificName}</p>
-                <small>${formatDate(item.timestamp)}</small>
-            </div>
-            <i class="fas fa-chevron-right"></i>
-        </div>
-    `).join('');
-}
-
-function clearHistory() {
-    if (confirm('Are you sure you want to clear your search history?')) {
-        searchHistory = [];
-        localStorage.removeItem(CONFIG.HISTORY_KEY);
-        renderHistoryList();
-        showToast('History cleared');
-    }
-}
-
-// Navigation Functions
-function navigateToScreen(showScreen, ...hideScreens) {
-    showScreen.classList.remove('hidden');
-    hideScreens.forEach(screen => screen.classList.add('hidden'));
-}
-
-function showHistory() {
-    navigateToScreen(elements.screens.history, elements.screens.main);
-}
-
-function hideHistory() {
-    navigateToScreen(elements.screens.main, elements.screens.history);
-}
-
-function navigateToMain() {
-    stopCamera();
-    navigateToScreen(
-        elements.screens.main, 
-        elements.screens.preview, 
-        elements.screens.results, 
-        elements.screens.history,
-        elements.screens.camera
-    );
-    resetState();
-}
-
-function navigateToPreview() {
-    navigateToScreen(
-        elements.screens.preview, 
-        elements.screens.main, 
-        elements.screens.results,
-        elements.screens.camera
-    );
-}
-
-function navigateToResults() {
-    navigateToScreen(
-        elements.screens.results, 
-        elements.screens.main, 
-        elements.screens.preview,
-        elements.screens.camera
-    );
-}
-
-// UI Feedback
-function showLoading(show) {
-    elements.containers.loading.style.display = show ? 'flex' : 'none';
-    elements.containers.results.classList.toggle('hidden', show);
-}
-
-let toastTimeout;
-function showToast(message, duration = 3000) {
-    clearTimeout(toastTimeout);
-    
-    const toast = elements.toast;
-    document.getElementById('toastMessage').textContent = message;
-    toast.classList.remove('hidden');
-    
-    toastTimeout = setTimeout(() => {
-        toast.classList.add('hidden');
-    }, duration);
-}
-
-// Utility Functions
-function getBase64FromImage(imgElement) {
+async function getBase64FromImage(imgElement) {
     return new Promise((resolve, reject) => {
         try {
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             
-            // Set canvas size to match image
-            canvas.width = imgElement.naturalWidth;
-            canvas.height = imgElement.naturalHeight;
-            
-            // Draw image onto canvas
-            context.drawImage(imgElement, 0, 0);
-            
-            // Get base64 data
-            resolve(canvas.toDataURL('image/jpeg', 0.8));
+            if (!imgElement.complete) {
+                imgElement.onload = () => processImage();
+                imgElement.onerror = () => reject(new Error('Image loading failed'));
+            } else {
+                processImage();
+            }
+
+            function processImage() {
+                canvas.width = imgElement.naturalWidth;
+                canvas.height = imgElement.naturalHeight;
+                context.drawImage(imgElement, 0, 0);
+                resolve(canvas.toDataURL('image/jpeg', 0.8));
+            }
         } catch (error) {
             reject(error);
         }
     });
 }
 
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) {
-        return 'Yesterday';
-    } else if (diffDays < 1) {
-        return 'Today';
-    } else if (diffDays < 7) {
-        return `${diffDays} days ago`;
-    } else {
-        return date.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric',
-            year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-        });
-    }
+// Security Functions
+function sanitizeHTML(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
 }
 
-function resetState() {
-    elements.inputs.imageInput.value = '';
-    elements.containers.preview.src = '';
-    elements.containers.resultImage.src = '';
-    elements.containers.results.classList.add('hidden');
-    currentPlantData = null;
+function sanitizeJSON(jsonString) {
+    try {
+        const jsonStart = jsonString.indexOf('{');
+        const jsonEnd = jsonString.lastIndexOf('}') + 1;
+        return jsonString.slice(jsonStart, jsonEnd);
+    } catch (error) {
+        console.error('JSON sanitization error:', error);
+        return '{}';
+    }
 }
 
 // Share Functionality
 async function shareResults() {
-    if (!currentPlantData) return;
+    if (!AppState.currentPlantData) return;
 
     const shareText = `
 🌿 Plant identified using PlantSmart AI
 
-${currentPlantData.commonName}
-Scientific Name: ${currentPlantData.scientificName}
+${AppState.currentPlantData.commonName}
+Scientific Name: ${AppState.currentPlantData.scientificName}
 
-${currentPlantData.description}
+${AppState.currentPlantData.description}
 
 #PlantSmartAI #Plants`;
 
@@ -587,17 +720,82 @@ ${currentPlantData.description}
     }
 }
 
-// History Item Loading
-window.loadHistoryItem = function(id) {
-    const item = searchHistory.find(i => i.id === id);
-    if (item) {
-        currentPlantData = item;
-        elements.containers.preview.src = item.imageUrl;
-        elements.containers.resultImage.src = item.imageUrl;
-        navigateToResults();
-        displayResults(item);
+// Loading State Management
+function showLoading(show) {
+    if (elements.containers.loading) {
+        elements.containers.loading.style.display = show ? 'flex' : 'none';
     }
-};
+    if (elements.containers.results) {
+        elements.containers.results.classList.toggle('hidden', show);
+    }
+}
+
+// Improved Toast Notification System
+let toastTimeout;
+function showToast(message, duration = CONFIG.TOAST_DURATION) {
+    if (!elements.toast || !elements.toastMessage) return;
+
+    // Clear any existing timeout
+    clearTimeout(toastTimeout);
+
+    // Update toast message and show it
+    elements.toastMessage.textContent = message;
+    elements.toast.classList.remove('hidden');
+    
+    // Set up the timeout to hide the toast
+    toastTimeout = setTimeout(() => {
+        elements.toast.classList.add('hidden');
+    }, duration);
+}
+
+// Feature Detection Update
+function updateUIBasedOnFeatures() {
+    if (!FEATURES.camera && elements.camera.openBtn) {
+        elements.camera.openBtn.style.display = 'none';
+    }
+    if (!FEATURES.share && elements.buttons.shareResults) {
+        elements.buttons.shareResults.style.display = 'none';
+    }
+}
+
+// Cleanup Functions
+function cleanup() {
+    stopCamera();
+    
+    if (elements.inputs.imageInput) {
+        elements.inputs.imageInput.value = '';
+    }
+    
+    // Cleanup object URLs
+    [elements.containers.preview, elements.containers.resultImage].forEach(img => {
+        if (img && img.src.startsWith('blob:')) {
+            URL.revokeObjectURL(img.src);
+            img.src = '';
+        }
+    });
+
+    AppState.setState({
+        currentPlantData: null,
+        isLoading: false,
+        isFromHistory: false
+    });
+}
+
+// Event Listeners for Page Visibility and Unload
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        cleanup();
+    }
+});
+
+window.addEventListener('beforeunload', cleanup);
+
+// Prevent zoom on double tap (mobile)
+document.addEventListener('touchstart', (e) => {
+    if (e.touches.length > 1) {
+        e.preventDefault();
+    }
+}, { passive: false });
 
 // Error Handling
 window.addEventListener('error', function(e) {
@@ -606,30 +804,5 @@ window.addEventListener('error', function(e) {
 });
 
 // Network Status Handling
-window.addEventListener('online', function() {
-    showToast('Back online!', 2000);
-});
-
-window.addEventListener('offline', function() {
-    showToast('No internet connection');
-});
-
-// Cleanup on Page Unload
-window.addEventListener('beforeunload', function() {
-    stopCamera();
-    // Cleanup object URLs
-    if (elements.containers.preview.src.startsWith('blob:')) {
-        URL.revokeObjectURL(elements.containers.preview.src);
-    }
-    if (elements.containers.resultImage.src.startsWith('blob:')) {
-        URL.revokeObjectURL(elements.containers.resultImage.src);
-    }
-});
-
-// Prevent zoom on double tap (mobile)
-document.addEventListener('touchstart', function(e) {
-    if (e.touches.length > 1) {
-        e.preventDefault();
-    }
-}, { passive: false });
-
+window.addEventListener('online', () => showToast('Back online!', 2000));
+window.addEventListener('offline', () => showToast('No internet connection'));
