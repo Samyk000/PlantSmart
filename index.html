@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self'; 
+        img-src 'self' blob: data:; 
+        connect-src 'self' https://openrouter.ai;
+        style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com 'unsafe-inline';
+        font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+        script-src 'self' 'unsafe-inline';
+        worker-src 'self'">
+    <title>PlantSmart AI | Instant Plant Identification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container" id="appContainer">
+        <!-- Main Screen -->
+        <div class="screen main-screen" id="mainScreen">
+            <header class="app-header">
+                <div class="logo">
+                    <i class="fas fa-leaf" aria-hidden="true"></i>
+                    <span>PlantSmart</span>
+                </div>
+                <button class="history-btn" id="showHistory" aria-label="View History">
+                    <i class="fas fa-history" aria-hidden="true"></i>
+                </button>
+            </header>
+
+            <div class="camera-section">
+                <div class="camera-prompt">
+                    <h1>Discover Plants Around You</h1>
+                    <p>Instant plant identification using AI</p>
+                </div>
+
+                <div class="camera-buttons">
+                    <button class="camera-btn" id="openCamera" aria-label="Take Photo">
+                        <i class="fas fa-camera" aria-hidden="true"></i>
+                        Take Photo
+                    </button>
+                    <button class="upload-btn" id="uploadBtn" aria-label="Upload Image">
+                        <i class="fas fa-image" aria-hidden="true"></i>
+                        Upload Image
+                    </button>
+                    <input type="file" id="imageInput" accept="image/*" hidden aria-label="Upload Image Input">
+                </div>
+            </div>
+
+            <div class="info-cards">
+                <div class="info-card" role="article">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
+                    <h3>Accurate Results</h3>
+                    <p>Powered by advanced AI technology</p>
+                </div>
+                <div class="info-card" role="article">
+                    <i class="fas fa-leaf" aria-hidden="true"></i>
+                    <h3>Detailed Information</h3>
+                    <p>Get comprehensive plant details</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Screen -->
+        <div class="screen history-screen hidden" id="historyScreen">
+            <header class="app-header">
+                <button class="back-btn" id="closeHistory" aria-label="Back">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </button>
+                <span>Recent Plants</span>
+                <button class="clear-btn" id="clearHistory" aria-label="Clear History">
+                    <i class="fas fa-trash" aria-hidden="true"></i>
+                </button>
+            </header>
+
+            <div class="history-list" id="historyList" role="list"></div>
+        </div>
+
+        <!-- Camera Screen -->
+        <div class="screen camera-screen hidden" id="cameraScreen">
+            <div class="camera-container">
+                <video id="cameraFeed" autoplay playsinline></video>
+                <div class="camera-overlay">
+                    <div class="camera-frame"></div>
+                </div>
+                <div class="camera-controls">
+                    <button class="camera-control-btn" id="closeCamera" aria-label="Close Camera">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                    <button class="capture-btn" id="capturePhoto" aria-label="Take Photo">
+                        <i class="fas fa-camera" aria-hidden="true"></i>
+                    </button>
+                    <button class="camera-control-btn" id="switchCamera" aria-label="Switch Camera">
+                        <i class="fas fa-sync" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Screen -->
+        <div class="screen preview-screen hidden" id="previewScreen">
+            <header class="app-header">
+                <button class="back-btn" id="backFromPreview" aria-label="Back">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </button>
+                <span>Preview Photo</span>
+                <button class="retake-btn" id="retakePhoto" aria-label="Retake Photo">
+                    <i class="fas fa-redo" aria-hidden="true"></i>
+                </button>
+            </header>
+
+            <div class="preview-container">
+                <img id="preview" alt="Plant Preview" loading="lazy">
+                <button class="identify-btn" id="identifyBtn" aria-label="Identify Plant">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    Identify Plant
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div class="screen results-screen hidden" id="resultsScreen">
+            <header class="app-header">
+                <button class="back-btn" id="backFromResults" aria-label="Back">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </button>
+                <span>Plant Details</span>
+                <button class="share-btn" id="shareResults" aria-label="Share Results">
+                    <i class="fas fa-share-alt" aria-hidden="true"></i>
+                </button>
+            </header>
+
+            <!-- Loading State -->
+            <div class="loading-container" id="loadingContainer">
+                <div class="loading-animation">
+                    <div class="loading-icon">
+                        <i class="fas fa-leaf" aria-hidden="true"></i>
+                    </div>
+                    <div class="loading-text">
+                        <h3>Analyzing your plant...</h3>
+                        <p>Using AI to identify species</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Content -->
+            <div class="results-content hidden" id="resultsContent">
+                <div class="plant-header">
+                    <div class="plant-image">
+                        <img id="resultImage" alt="Identified Plant" loading="lazy">
+                    </div>
+                    <div class="plant-main-info">
+                        <h2 id="plantCommonName">Plant Name</h2>
+                        <p id="plantScientificName">Scientific Name</p>
+                        <div class="confidence-badge">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
+                            <span>AI Identified</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="plant-details" id="plantDetails">
+                    <!-- Will be dynamically populated -->
+                </div>
+
+                <div class="action-buttons">
+                    <button class="new-search-btn" id="newSearch" aria-label="Identify Another Plant">
+                        <i class="fas fa-camera" aria-hidden="true"></i>
+                        Identify Another Plant
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div class="toast hidden" id="toast" role="alert" aria-live="polite">
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
+            <span id="toastMessage"></span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
