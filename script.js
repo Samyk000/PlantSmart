@@ -499,12 +499,18 @@ async function optimizeImage(file) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            let { width, height } = calculateDimensions(img.width, img.height, 1200);
+            // Optimize dimensions for API processing
+            let { width, height } = calculateDimensions(img.width, img.height, 800);
             canvas.width = width;
             canvas.height = height;
 
+            // Apply image optimization
+            ctx.imageSmoothingEnabled = true;  
+            ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, width, height);
-            canvas.toBlob(resolve, 'image/jpeg', 0.8);
+
+            // Use lower quality for JPEG compression
+            canvas.toBlob(resolve, 'image/jpeg', 0.6);
         };
 
         img.onerror = () => {
@@ -513,6 +519,44 @@ async function optimizeImage(file) {
         };
 
         img.src = url;
+    });
+}
+
+async function getBase64FromImage(imgElement) {
+    return new Promise((resolve, reject) => {
+        try {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            const processImage = () => {
+                // Resize image if too large
+                let { width, height } = calculateDimensions(
+                    imgElement.naturalWidth,
+                    imgElement.naturalHeight,
+                    800
+                );
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Apply optimization
+                context.imageSmoothingEnabled = true;
+                context.imageSmoothingQuality = 'high';
+                context.drawImage(imgElement, 0, 0, width, height);
+                
+                // Use lower quality for base64
+                resolve(canvas.toDataURL('image/jpeg', 0.6));
+            };
+
+            if (!imgElement.complete) {
+                imgElement.onload = processImage;
+                imgElement.onerror = () => reject(new Error('Image loading failed'));
+            } else {
+                processImage();
+            }
+        } catch (error) {
+            reject(error);
+        }
     });
 }
 
@@ -592,44 +636,27 @@ async function identifyPlant(base64Image) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${CONFIG.API_KEY}`,
+                'Authorization': 'Bearer ' + CONFIG.API_KEY,
                 'HTTP-Referer': window.location.href,
                 'X-Title': 'PlantSmart AI'
             },
             body: JSON.stringify({
-                model: 'google/gemini-pro-vision',
+                model: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+                max_tokens: 500,
+                temperature: 0.7,
                 messages: [{
                     role: 'user',
                     content: [
                         {
                             type: 'text',
-                            text: `Analyze this plant and provide ONLY a JSON response in this exact format:
-                            {
-                                "commonName": "",
-                                "scientificName": "",
-                                "description": "",
-                                "characteristics": {
-                                    "type": "",
-                                    "height": "",
-                                    "spread": "",
-                                    "flowering": ""
-                                },
-                                "growingInfo": {
-                                    "sunlight": "",
-                                    "water": "",
-                                    "soil": ""
-                                },
-                                "quickFacts": ["fact1", "fact2", "fact3", "fact4", "fact5"]
-                            }`
+                            text: 'Identify this plant and provide a concise JSON response with: commonName, scientificName, brief description, basic characteristics (type, height), and care instructions (sunlight, water).'
                         },
                         {
                             type: 'image_url',
                             image_url: { url: base64Image }
                         }
                     ]
-                }],
-                temperature: 0.7,
-                max_tokens: 1000
+                }]
             })
         });
 
@@ -649,11 +676,32 @@ async function identifyPlant(base64Image) {
             throw new Error('Incomplete plant identification data');
         }
 
-        AppState.setState({ currentPlantData: plantData });
-        saveToHistory(plantData);
-        displayResults(plantData);
+        // Ensure consistent data structure
+        const normalizedData = {
+            commonName: plantData.commonName,
+            scientificName: plantData.scientificName,
+            description: plantData.description || 'No description available',
+            characteristics: {
+                type: plantData.characteristics?.type || 'Unknown',
+                height: plantData.characteristics?.height || 'Unknown',
+                spread: plantData.characteristics?.spread || 'Unknown',
+                flowering: plantData.characteristics?.flowering || 'Unknown'
+            },
+            growingInfo: {
+                sunlight: plantData.growingInfo?.sunlight || 'Unknown',
+                water: plantData.growingInfo?.water || 'Unknown',
+                soil: plantData.growingInfo?.soil || 'Unknown'
+            },
+            quickFacts: Array.isArray(plantData.quickFacts) ? 
+                plantData.quickFacts.slice(0, 3) : 
+                ['No additional information available']
+        };
 
-        return plantData;
+        AppState.setState({ currentPlantData: normalizedData });
+        saveToHistory(normalizedData);
+        displayResults(normalizedData);
+
+        return normalizedData;
     } catch (error) {
         console.error('Plant identification failed:', error);
         showToast('Unable to identify plant. Please try again with a clearer image.');
