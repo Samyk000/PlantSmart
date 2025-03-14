@@ -1,6 +1,6 @@
 // Constants and Configuration
 const CONFIG = {
-    API_KEY: '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',
+    API_KEY: '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',
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     ALLOWED_TYPES: ['image/jpeg', 'image/png', 'image/jpg'],
     HISTORY_KEY: 'plantSearchHistory',
