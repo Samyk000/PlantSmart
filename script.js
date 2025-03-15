@@ -1,6 +1,6 @@
 // Constants and Configuration
 const CONFIG = {
-    API_KEY: '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',
+    API_KEY: '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',
     MAX_FILE_SIZE: 5 * 1024 * 1024,
     ALLOWED_TYPES: ['image/jpeg', 'image/png', 'image/jpg'],
     HISTORY_KEY: 'plantSearchHistory',
@@ -641,7 +641,7 @@ async function identifyPlant(base64Image) {
                 'X-Title': 'PlantSmart AI'
             },
             body: JSON.stringify({
-                model: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+                model: 'google/gemma-3-27b-it:free',
                 max_tokens: 500,
                 temperature: 0.7,
                 messages: [{
