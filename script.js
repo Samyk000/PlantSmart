@@ -641,7 +641,7 @@ async function identifyPlant(base64Image) {
                 'X-Title': 'PlantSmart AI'
             },
             body: JSON.stringify({
-                model: 'google/gemma-3-27b-it:free',
+                model: 'google/gemini-2.0-flash-lite-preview-02-05:free',
                 max_tokens: 500,
                 temperature: 0.7,
                 messages: [{
