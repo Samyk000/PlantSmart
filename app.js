@@ -41,6 +41,22 @@ function startAppInit() {
                 this.setupIntersectionObserver();
                 this.setupProgressiveLoading();
                 this.setupLoadingSteps();
+                this.initializeAttempts();
+                this.handleSplashScreen();
+            }
+
+            handleSplashScreen() {
+                const splashScreen = document.getElementById('splashScreen');
+                if (!splashScreen) return;
+        
+                // Show splash screen for minimum 2 seconds
+                setTimeout(() => {
+                    splashScreen.classList.add('hidden');
+                    // Remove from DOM after animation
+                    setTimeout(() => {
+                        splashScreen.remove();
+                    }, 500);
+                }, 2000);
             }
 
             initializeElements() {
@@ -84,8 +100,7 @@ function startAppInit() {
                     inputs: {
                         imageInput: document.getElementById('imageInput'),
                         darkThemeToggle: document.getElementById('darkThemeToggle'),
-                        emailNotificationsToggle: document.getElementById('emailNotificationsToggle'),
-                        developerModeToggle: document.getElementById('developerModeToggle')
+                        emailNotificationsToggle: document.getElementById('emailNotificationsToggle')
                     },
                     historyList: document.getElementById('historyList')
                 };
@@ -118,7 +133,6 @@ function startAppInit() {
                 // Settings Toggles
                 this.elements.inputs.darkThemeToggle?.addEventListener('change', (e) => this.handleThemeToggle(e.target.checked));
                 this.elements.inputs.emailNotificationsToggle?.addEventListener('change', (e) => this.handleNotificationsToggle(e.target.checked));
-                this.elements.inputs.developerModeToggle?.addEventListener('change', (e) => this.handleDeveloperModeToggle(e.target.checked));
 
                 // Modal Close Buttons
                 document.getElementById('closeSettingsModal')?.addEventListener('click', () => this.toggleSettingsModal(false));
@@ -126,6 +140,9 @@ function startAppInit() {
 
                 // Window Events
                 window.addEventListener('beforeunload', () => this.cleanup());
+
+                document.getElementById('viewAllHistory')?.addEventListener('click', 
+                    () => this.toggleHistoryModal(true));
             }
 
             // Settings Management
@@ -144,9 +161,6 @@ function startAppInit() {
                 if (this.elements.inputs.emailNotificationsToggle) {
                     this.elements.inputs.emailNotificationsToggle.checked = this.state.settings.emailNotifications;
                 }
-                if (this.elements.inputs.developerModeToggle) {
-                    this.elements.inputs.developerModeToggle.checked = this.state.settings.developerMode;
-                }
 
                 document.documentElement.setAttribute('data-theme', 
                     this.state.settings.darkTheme ? 'dark' : 'light');
@@ -164,11 +178,6 @@ function startAppInit() {
 
             handleNotificationsToggle(enabled) {
                 this.state.settings.emailNotifications = enabled;
-                this.saveSettings();
-            }
-
-            handleDeveloperModeToggle(enabled) {
-                this.state.settings.developerMode = enabled;
                 this.saveSettings();
             }
             
@@ -226,13 +235,18 @@ function startAppInit() {
 
             stopCamera() {
                 if (this.state.stream) {
-                    this.state.stream.getTracks().forEach(track => track.stop());
+                    this.state.stream.getTracks().forEach(track => {
+                        track.stop();
+                    });
                     this.state.stream = null;
                 }
                 
                 if (this.elements.camera.feed) {
                     this.elements.camera.feed.srcObject = null;
                 }
+
+                // Navigate back to main screen
+                this.navigateToScreen('main');
             }
 
             async switchCamera() {
@@ -272,7 +286,9 @@ function startAppInit() {
                 try {
                     if (!window.utils.validateImage(file)) return;
                     const base64Image = await this.optimizeImage(file);
-                    this.handleCapturedImage(base64Image);
+                    await this.handleCapturedImage(base64Image);
+                    // Start identification immediately after image is handled
+                    await this.startIdentification();
                 } catch (error) {
                     console.error('Image processing error:', error);
                     window.utils.showToast('Error processing image. Please try again.');
@@ -341,14 +357,45 @@ function startAppInit() {
 
             // Plant Identification
             async startIdentification() {
-                if (!await window.utils.shouldAllowIdentification()) {
-                    window.utils.showToast('No remaining attempts. Please upgrade your account.');
-                    return;
-                }
-
                 try {
+                    const subscription = await window.utils.checkUserSubscription();
+                    const attempts = await window.utils.getRemainingAttempts();
+                    
+                    // Allow unlimited attempts for developers and subscribers
+                    if (subscription || attempts === Infinity) {
+                        window.utils.showLoading(true);
+                        await this.identifyPlant(this.state.currentImage);
+                        return;
+                    }
+
+                    // Handle free users
+                    if (attempts <= 0) {
+                        window.utils.showToast('No attempts remaining. Please upgrade to continue.');
+                        const subscriptionModal = document.getElementById('subscriptionModal');
+                        if (subscriptionModal) {
+                            subscriptionModal.classList.remove('hidden');
+                        }
+                        return;
+                    }
+
+                    // Proceed with identification and update attempts
                     window.utils.showLoading(true);
                     await this.identifyPlant(this.state.currentImage);
+                    
+                    // Decrement attempts after successful identification
+                    const newAttempts = attempts - 1;
+                    await window.utils.updateRemainingAttempts(newAttempts);
+                    
+                    // Check if this was the last attempt
+                    if (newAttempts <= 0) {
+                        setTimeout(() => {
+                            window.utils.showToast('You have used all your free attempts. Upgrade to continue!');
+                            const subscriptionModal = document.getElementById('subscriptionModal');
+                            if (subscriptionModal) {
+                                subscriptionModal.classList.remove('hidden');
+                            }
+                        }, 1500);
+                    }
                 } catch (error) {
                     console.error('Identification error:', error);
                     window.utils.showToast('Failed to identify plant. Please try again.');
@@ -453,7 +500,9 @@ function startAppInit() {
             async loadHistory() {
                 try {
                     const user = firebase.auth().currentUser;
+                    
                     if (user) {
+                        // Load from Firestore for logged-in users
                         const snapshot = await firebase.firestore()
                             .collection('users')
                             .doc(user.uid)
@@ -466,12 +515,26 @@ function startAppInit() {
                             id: doc.id,
                             ...doc.data()
                         }));
+
+                        // Load image data from localStorage if available
+                        const localHistory = window.utils.getFromLocalStorage(window.CONFIG.STORAGE_KEYS.HISTORY) || [];
+                        
+                        // Merge Firestore and localStorage data
+                        this.state.history = this.state.history.map(item => {
+                            const localItem = localHistory.find(local => local.id === item.id);
+                            return {
+                                ...item,
+                                imageData: localItem?.imageData || item.imageData
+                            };
+                        });
                     } else {
-                        const savedHistory = window.utils.getFromLocalStorage(window.CONFIG.STORAGE_KEYS.HISTORY);
-                        this.state.history = savedHistory || [];
+                        // For logged-out users, clear history
+                        this.state.history = [];
+                        window.utils.saveToLocalStorage(window.CONFIG.STORAGE_KEYS.HISTORY, []);
                     }
 
                     this.updateHistoryUI();
+                    this.updateMainHistoryGrid();
                 } catch (error) {
                     console.error('Error loading history:', error);
                     window.utils.showToast('Error loading history');
@@ -489,10 +552,10 @@ function startAppInit() {
                 try {
                     const user = firebase.auth().currentUser;
                     if (user) {
-                        // Save to Firestore without image data
+                        // Save to Firestore without image
                         const firestoreItem = {
                             ...historyItem,
-                            imageData: null // Don't store image in Firestore
+                            imageData: null
                         };
                         
                         await firebase.firestore()
@@ -503,10 +566,9 @@ function startAppInit() {
                             .set(firestoreItem);
                     }
 
-                    // Save to local storage with image
+                    // Save complete item with image to localStorage
                     this.state.history.unshift(historyItem);
-                    this.state.history = this.state.history
-                        .slice(0, window.CONFIG.MAX_HISTORY_ITEMS);
+                    this.state.history = this.state.history.slice(0, window.CONFIG.MAX_HISTORY_ITEMS);
                     
                     window.utils.saveToLocalStorage(
                         window.CONFIG.STORAGE_KEYS.HISTORY,
@@ -514,6 +576,7 @@ function startAppInit() {
                     );
 
                     this.updateHistoryUI();
+                    this.updateMainHistoryGrid();
                 } catch (error) {
                     console.error('Error saving to history:', error);
                     window.utils.showToast('Error saving to history');
@@ -523,6 +586,8 @@ function startAppInit() {
             async clearHistory() {
                 try {
                     const user = firebase.auth().currentUser;
+                    
+                    // Clear Firestore history
                     if (user) {
                         const batch = firebase.firestore().batch();
                         const snapshot = await firebase.firestore()
@@ -538,14 +603,55 @@ function startAppInit() {
                         await batch.commit();
                     }
 
+                    // Clear local storage history
                     this.state.history = [];
                     window.utils.saveToLocalStorage(window.CONFIG.STORAGE_KEYS.HISTORY, []);
+                    
+                    // Clear main history grid
+                    const mainHistoryGrid = document.getElementById('mainHistoryGrid');
+                    if (mainHistoryGrid) {
+                        const emptyState = document.getElementById('historyEmptyState');
+                        mainHistoryGrid.innerHTML = '';
+                        if (emptyState) {
+                            mainHistoryGrid.appendChild(emptyState);
+                            emptyState.style.display = 'flex';
+                        }
+                    }
+                    
+                    // Clear history list
+                    const historyList = document.getElementById('historyList');
+                    if (historyList) {
+                        historyList.innerHTML = '';
+                    }
+
+                    // Update UI
                     this.updateHistoryUI();
+                    this.updateMainHistoryGrid();
+                    
                     window.utils.showToast('History cleared successfully');
+                    this.toggleHistoryModal(false);
                 } catch (error) {
                     console.error('Error clearing history:', error);
                     window.utils.showToast('Error clearing history');
                 }
+            }
+
+            showHistoryDetails(historyId) {
+                const historyItem = this.state.history.find(item => item.id === historyId);
+                if (!historyItem) return;
+            
+                // Set current data
+                this.state.currentPlantData = historyItem;
+                this.state.currentImage = historyItem.imageData;
+            
+                // Update UI
+                if (this.elements.preview.image) {
+                    this.elements.preview.image.src = historyItem.imageData;
+                }
+                
+                this.displayResults(historyItem);
+                this.navigateToScreen('preview');
+                this.toggleHistoryModal(false); // Close history modal
             }
 
             updateHistoryUI() {
@@ -573,6 +679,52 @@ function startAppInit() {
                 `;
             }
 
+            async updateMainHistoryGrid() {
+                const grid = document.getElementById('mainHistoryGrid');
+                const emptyState = document.getElementById('historyEmptyState');
+                
+                if (!grid) return;
+            
+                if (!this.state.history.length) {
+                    if (emptyState) {
+                        grid.innerHTML = '';
+                        grid.appendChild(emptyState);
+                        emptyState.style.display = 'flex';
+                    }
+                    return;
+                }
+            
+                if (emptyState) {
+                    emptyState.style.display = 'none';
+                }
+            
+                // Use DocumentFragment for better performance
+                const fragment = document.createDocumentFragment();
+                const recentHistory = this.state.history.slice(0, 6);
+            
+                recentHistory.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item-compact';
+                    historyItem.dataset.id = item.id;
+                    historyItem.innerHTML = `
+                        <img src="${item.imageData}" alt="${item.commonName}" loading="lazy">
+                        <div class="history-item-info">
+                            <h4>${window.utils.sanitizeHTML(item.commonName)}</h4>
+                            <p>${window.utils.formatDate(new Date(item.timestamp))}</p>
+                        </div>
+                    `;
+                    historyItem.addEventListener('click', () => this.showHistoryDetails(item.id));
+                    fragment.appendChild(historyItem);
+                });
+            
+                // Update DOM in a single operation
+                grid.innerHTML = '';
+                grid.appendChild(fragment);
+                if (emptyState) {
+                    grid.appendChild(emptyState);
+                }
+            }
+
             // Modal Management
             toggleHistoryModal(show) {
                 const modal = this.elements.modals.history;
@@ -586,6 +738,13 @@ function startAppInit() {
 
             toggleSettingsModal(show) {
                 const modal = this.elements.modals.settings;
+                if (modal) {
+                    modal.classList.toggle('hidden', !show);
+                }
+            }
+
+            toggleSubscriptionModal(show) {
+                const modal = document.getElementById('subscriptionModal');
                 if (modal) {
                     modal.classList.toggle('hidden', !show);
                 }
@@ -763,6 +922,35 @@ function startAppInit() {
                             step.classList.add('active');
                         }
                     });
+                }
+            }
+
+            async initializeAttempts() {
+                try {
+                    const attempts = await window.utils.getRemainingAttempts();
+                    this.updateAttemptsDisplay(attempts);
+                } catch (error) {
+                    console.error('Error initializing attempts:', error);
+                    this.updateAttemptsDisplay(window.CONFIG.PLANS.FREE.maxAttempts);
+                }
+            }
+
+            updateAttemptsDisplay(attempts) {
+                const attemptsCounter = document.getElementById('attemptsCounter');
+                if (attemptsCounter) {
+                    const isUnlimited = attempts === Infinity;
+                    attemptsCounter.innerHTML = `
+                        <span>
+                            ${isUnlimited ? 'Unlimited Access' : `Free Attempts Left: <strong>${attempts}</strong>`}
+                        </span>
+                        ${(!isUnlimited && attempts <= 2) ? '<span class="upgrade-hint">Upgrade for unlimited!</span>' : ''}
+                    `;
+
+                    // Add click handler for upgrade hint
+                    const upgradeHint = attemptsCounter.querySelector('.upgrade-hint');
+                    if (upgradeHint) {
+                        upgradeHint.onclick = () => this.toggleSubscriptionModal(true);
+                    }
                 }
             }
         }
