@@ -89,60 +89,48 @@ class PlantModel {
     async enhanceWithGemma(tfPredictions, imageUrl) {
         try {
             this.updateLoadingProgress(3, 'Matching plant characteristics...', 85);
-            // Update loading UI with first step
-            this.updateLoadingStep(1, 'Analyzing image features...');
             
             const systemPrompt = `As a botanical expert, analyze this image of a plant. 
-            Consider these potential matches: ${tfPredictions.map(p => 
-                `${p.label} (${Math.round(p.score * 100)}% confidence)`).join(', ')}. 
-            Provide detailed, accurate information in JSON format.`;
+                Consider these potential matches: ${tfPredictions.map(p => 
+                    `${p.label} (${Math.round(p.score * 100)}% confidence)`).join(', ')}. 
+                Provide detailed, accurate information in a valid JSON format.`;
 
-            const detailedPrompt = `Please provide the following information about the plant in the image:
-                - Common name
-                - Scientific name
-                - Brief description
-                - Physical characteristics (type, height, spread, flowering)
-                - Growing requirements (sunlight, water, soil)
-                - 2-3 interesting facts
-                
-                Format the response as valid JSON with these fields:
+            const userPrompt = `Based on the image provided, return a JSON object with this exact structure:
                 {
-                    "commonName": "string",
-                    "scientificName": "string",
-                    "description": "string",
+                    "commonName": "Plant common name",
+                    "scientificName": "Scientific name",
+                    "description": "Brief description",
                     "characteristics": {
-                        "type": "string",
-                        "height": "string",
-                        "spread": "string",
-                        "flowering": "string"
+                        "type": "Plant type",
+                        "height": "Height range",
+                        "spread": "Spread range",
+                        "flowering": "Flowering information"
                     },
                     "growingInfo": {
-                        "sunlight": "string",
-                        "water": "string",
-                        "soil": "string"
+                        "sunlight": "Sunlight needs",
+                        "water": "Water requirements",
+                        "soil": "Soil preferences"
                     },
-                    "quickFacts": ["string", "string", "string"]
+                    "quickFacts": ["Fact 1", "Fact 2", "Fact 3"]
                 }`;
 
             this.updateLoadingProgress(4, 'Gathering detailed information...', 90);
-            // Update loading UI with second step
-            this.updateLoadingStep(2, 'Gathering plant information...');
 
             const response = await fetch(window.CONFIG.API_ENDPOINT, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${window.CONFIG.API_KEY}`,
-                    'HTTP-Referer': window.location.origin
+                    'HTTP-Referer': window.location.origin,
                 },
                 body: JSON.stringify({
                     model: window.CONFIG.API_MODEL,
                     messages: [
                         { role: "system", content: systemPrompt },
-                        {
-                            role: "user",
+                        { 
+                            role: "user", 
                             content: [
-                                { type: "text", text: detailedPrompt },
+                                { type: "text", text: userPrompt },
                                 { type: "image_url", image_url: { url: imageUrl } }
                             ]
                         }
@@ -150,27 +138,21 @@ class PlantModel {
                 })
             });
 
-            this.updateLoadingProgress(4, 'Preparing plant details...', 95);
-            // Update loading UI with final step
-            this.updateLoadingStep(3, 'Preparing results...');
-
             if (!response.ok) {
-                const error = await response.json().catch(() => ({}));
-                throw new Error(error.message || 'API request failed');
+                throw new Error(`API request failed: ${response.statusText}`);
             }
 
             const data = await response.json();
-            if (!data.choices?.[0]?.message?.content) {
-                throw new Error('Invalid API response structure');
+            const content = data.choices?.[0]?.message?.content;
+
+            if (!content) {
+                throw new Error('Empty response from API');
             }
 
-            // Clean and parse the JSON response
-            let content = data.choices[0].message.content;
-            
-            // Extract JSON object from the response
+            // Extract JSON from response
             const jsonMatch = content.match(/\{[\s\S]*\}/);
             if (!jsonMatch) {
-                throw new Error('No valid JSON found in response');
+                throw new Error('No JSON found in response');
             }
 
             try {
@@ -178,47 +160,26 @@ class PlantModel {
                 
                 // Validate required fields
                 const requiredFields = ['commonName', 'scientificName', 'description'];
-                const missingFields = requiredFields.filter(field => !parsedData[field]);
-                
-                if (missingFields.length > 0) {
-                    throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+                for (const field of requiredFields) {
+                    if (!parsedData[field]) {
+                        throw new Error(`Missing required field: ${field}`);
+                    }
                 }
 
                 this.updateLoadingProgress(4, 'Finalizing results...', 100);
                 return parsedData;
             } catch (parseError) {
                 console.error('JSON parsing error:', parseError);
-                
-                // Fallback response if JSON parsing fails
-                return {
-                    commonName: tfPredictions[0].label,
-                    scientificName: "Species unknown",
-                    description: "A plant matching the visual characteristics detected in the image.",
-                    characteristics: {
-                        type: "Plant",
-                        height: "Unknown",
-                        spread: "Unknown",
-                        flowering: "Unknown"
-                    },
-                    growingInfo: {
-                        sunlight: "Variable",
-                        water: "Moderate",
-                        soil: "Well-draining"
-                    },
-                    quickFacts: [
-                        "This plant was identified using AI image recognition",
-                        `Confidence level: ${Math.round(tfPredictions[0].score * 100)}%`
-                    ]
-                };
+                throw new Error('Invalid JSON structure in response');
             }
         } catch (error) {
             console.error('Gemma enhancement error:', error);
             
-            // Return basic identification if API fails
+            // Return a more structured fallback response
             return {
                 commonName: tfPredictions[0].label,
                 scientificName: "Species unknown",
-                description: "Unable to retrieve detailed information at this time.",
+                description: "A plant matching the visual characteristics detected in the image.",
                 characteristics: {
                     type: "Plant",
                     height: "Unknown",
@@ -231,8 +192,9 @@ class PlantModel {
                     soil: "Well-draining"
                 },
                 quickFacts: [
-                    "Basic identification provided due to service limitations",
-                    `Confidence level: ${Math.round(tfPredictions[0].score * 100)}%`
+                    "This plant was identified using AI image recognition",
+                    `Confidence level: ${Math.round(tfPredictions[0].score * 100)}%`,
+                    "Detailed information unavailable at this time"
                 ]
             };
         }
