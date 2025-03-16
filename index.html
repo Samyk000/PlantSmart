@@ -50,7 +50,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" 
-          rel="stylesheet">
+          rel="stylesheet"
+          media="print"
+          onload="this.media='all'">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" 
+              rel="stylesheet">
+    </noscript>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <!-- Styles -->
@@ -66,15 +72,14 @@
                     <span>PlantSmart</span>
                 </div>
                 <div class="header-actions">
+                    <button class="auth-btn" id="authButton" aria-label="Sign In">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <button class="profile-btn hidden" id="showProfile" aria-label="Profile">
+                        <i class="fas fa-user"></i>
+                    </button>
                     <button class="settings-btn" id="showSettings" aria-label="Settings">
-                        <i class="fas fa-cog" aria-hidden="true"></i>
-                    </button>
-                    <button class="profile-btn" id="showProfile" aria-label="Profile">
-                        <i class="fas fa-user" aria-hidden="true"></i>
-                    </button>
-                    <button class="auth-btn" id="authButton">
-                        <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
-                        <span>Sign In</span>
+                        <i class="fas fa-cog"></i>
                     </button>
                 </div>
             </header>
@@ -98,16 +103,21 @@
                     <input type="file" id="imageInput" accept="image/*" hidden aria-label="Upload Image Input">
                 </div>
             </div>
-            <div class="info-cards">
-                <div class="info-card" role="article">
-                    <i class="fas fa-check-circle" aria-hidden="true"></i>
-                    <h3>Accurate Results</h3>
-                    <p>Powered by advanced AI technology</p>
+            <div class="recent-history">
+                <div class="section-header">
+                    <h2>Recent Identifications</h2>
+                    <button class="view-all-btn" id="viewAllHistory">
+                        <span>View All</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
-                <div class="info-card" role="article">
-                    <i class="fas fa-leaf" aria-hidden="true"></i>
-                    <h3>Detailed Information</h3>
-                    <p>Get comprehensive plant details</p>
+                <div class="history-grid" id="mainHistoryGrid">
+                    <!-- Empty state -->
+                    <div class="history-empty-state" id="historyEmptyState">
+                        <i class="fas fa-history"></i>
+                        <h3>No Plants Identified Yet</h3>
+                        <p>Your recent plant identifications will appear here</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -141,24 +151,24 @@
                 </button>
                 <span>Plant Details</span>
                 <div class="header-actions">
-                    <button class="history-btn" id="showHistory" aria-label="View History">
-                        <i class="fas fa-history" aria-hidden="true"></i>
-                    </button>
                     <button class="share-btn" id="shareResults" aria-label="Share Results">
                         <i class="fas fa-share-alt" aria-hidden="true"></i>
                     </button>
                 </div>
             </header>
             <div class="preview-results-container">
+                <!-- New Action Bar -->
+                <div class="action-bar">
+                    <button class="new-search-btn" id="newSearch">
+                        <i class="fas fa-camera"></i>
+                        Identify Another Plant
+                    </button>
+                </div>
                 <!-- Preview Section -->
                 <div class="preview-section">
                     <img id="previewImage" alt="Plant Preview" loading="lazy">
-                    <button class="identify-btn" id="identifyBtn" aria-label="Identify Plant">
-                        <i class="fas fa-search" aria-hidden="true"></i>
-                        Identify Plant
-                    </button>
                 </div>
-                <!-- Results Section -->
+                <!-- Results content remains the same -->
                 <div class="results-content hidden" id="resultsContent">
                     <div class="plant-header">
                         <h2 id="plantCommonName">Plant Name</h2>
@@ -170,13 +180,6 @@
                     </div>
                     <div class="plant-details" id="plantDetails">
                         <!-- Will be dynamically populated -->
-                    </div>
-
-                    <div class="action-buttons">
-                        <button class="new-search-btn" id="newSearch">
-                            <i class="fas fa-camera" aria-hidden="true"></i>
-                            Identify Another Plant
-                        </button>
                     </div>
                 </div>
                 <!-- Loading State -->
@@ -346,16 +349,6 @@
                         </label>
                     </div>
                 </div>
-                <div class="settings-section">
-                    <h3>Developer Options</h3>
-                    <div class="setting-item">
-                        <span>Developer Mode</span>
-                        <label class="switch">
-                            <input type="checkbox" id="developerModeToggle">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -445,6 +438,25 @@
         <!-- Toast Notification -->
         <div class="toast hidden" id="toast" role="alert">
             <span id="toastMessage"></span>
+        </div>
+    </div>
+
+    <!-- Add Splash Screen -->
+    <div id="splashScreen" class="splash-screen">
+        <div class="splash-content">
+            <div class="splash-logo">
+                <div class="logo-leaf">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <h1>PlantSmart AI</h1>
+                <p>Discover the world of plants</p>
+            </div>
+            <div class="splash-loader">
+                <div class="loader-circle"></div>
+                <div class="loader-line-mask">
+                    <div class="loader-line"></div>
+                </div>
+            </div>
         </div>
     </div>
 
