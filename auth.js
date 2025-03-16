@@ -148,34 +148,136 @@ function initializeAuthManager() {
         // User Data Management
         async loadUserData() {
             try {
-                const userDoc = await firebase.firestore()
-                    .collection('users')
-                    .doc(this.currentUser.uid)
-                    .get();
+                if (!this.currentUser) return;
 
-                const subscriptionDoc = await firebase.firestore()
-                    .collection('subscriptions')
-                    .doc(this.currentUser.uid)
-                    .get();
+                // Load user history first
+                await this.loadUserHistory();
 
-                if (userDoc.exists) {
-                    this.userData = userDoc.data();
+                // Handle developer accounts
+                if (window.CONFIG.DEVELOPER_EMAILS.includes(this.currentUser.email)) {
+                    this.userData = {
+                        uid: this.currentUser.uid,
+                        email: this.currentUser.email,
+                        name: this.currentUser.displayName || 'Developer',
+                        isDeveloper: true,
+                        identificationCount: Infinity,
+                        remainingAttempts: Infinity,
+                        settings: window.CONFIG.DEFAULT_SETTINGS
+                    };
+                    
+                    this.subscription = {
+                        plan: 'DEVELOPER',
+                        status: 'active',
+                        unlimited: true
+                    };
+                    
+                    this.updateProfileUI();
+                    return;
+                }
+
+                // Regular user data loading
+                const [userDoc, subscriptionDoc] = await Promise.all([
+                    firebase.firestore()
+                        .collection('users')
+                        .doc(this.currentUser.uid)
+                        .get(),
+                    firebase.firestore()
+                        .collection('subscriptions')
+                        .doc(this.currentUser.uid)
+                        .get()
+                ]);
+
+                // Create user profile if it doesn't exist
+                if (!userDoc.exists) {
+                    const userProfile = {
+                        uid: this.currentUser.uid,
+                        email: this.currentUser.email,
+                        name: this.currentUser.displayName || 'User',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        identificationCount: 0,
+                        lastIdentification: null,
+                        remainingAttempts: window.CONFIG.PLANS.FREE.maxAttempts,
+                        settings: window.CONFIG.DEFAULT_SETTINGS
+                    };
+
+                    await firebase.firestore()
+                        .collection('users')
+                        .doc(this.currentUser.uid)
+                        .set(userProfile);
+
+                    this.userData = userProfile;
                 } else {
-                    await this.createUserProfile();
+                    this.userData = userDoc.data();
                 }
 
                 if (subscriptionDoc.exists) {
                     this.subscription = subscriptionDoc.data();
                 }
 
+                // Initialize attempts for new users
+                if (!this.userData.hasOwnProperty('remainingAttempts')) {
+                    await firebase.firestore()
+                        .collection('users')
+                        .doc(this.currentUser.uid)
+                        .update({
+                            remainingAttempts: window.CONFIG.PLANS.FREE.maxAttempts
+                        });
+                    this.userData.remainingAttempts = window.CONFIG.PLANS.FREE.maxAttempts;
+                }
+
                 this.updateProfileUI();
             } catch (error) {
                 console.error('Error loading user data:', error);
-                this.showToast('Error loading user data');
+                // Provide fallback data for developers even if Firestore fails
+                if (window.CONFIG.DEVELOPER_EMAILS.includes(this.currentUser.email)) {
+                    this.userData = {
+                        uid: this.currentUser.uid,
+                        email: this.currentUser.email,
+                        name: 'Developer',
+                        isDeveloper: true,
+                        identificationCount: Infinity,
+                        remainingAttempts: Infinity
+                    };
+                    this.updateProfileUI();
+                } else {
+                    window.utils.showToast('Error loading user data');
+                }
+            }
+        }
+
+        async loadUserHistory() {
+            if (!this.currentUser) return;
+
+            try {
+                const snapshot = await firebase.firestore()
+                    .collection('users')
+                    .doc(this.currentUser.uid)
+                    .collection('history')
+                    .orderBy('timestamp', 'desc')
+                    .limit(window.CONFIG.MAX_HISTORY_ITEMS)
+                    .get();
+
+                const history = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                // Update app state and localStorage
+                if (window.app) {
+                    window.app.state.history = history;
+                    window.app.updateHistoryUI();
+                    window.app.updateMainHistoryGrid();
+                }
+
+                window.utils.saveToLocalStorage(window.CONFIG.STORAGE_KEYS.HISTORY, history);
+            } catch (error) {
+                console.error('Error loading user history:', error);
             }
         }
 
         async createUserProfile() {
+            if (!this.currentUser) return;
+
             try {
                 const userProfile = {
                     uid: this.currentUser.uid,
@@ -184,11 +286,8 @@ function initializeAuthManager() {
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     identificationCount: 0,
                     lastIdentification: null,
-                    settings: {
-                        darkTheme: false,
-                        emailNotifications: true,
-                        developerMode: false
-                    }
+                    remainingAttempts: window.CONFIG.PLANS.FREE.maxAttempts,
+                    settings: window.CONFIG.DEFAULT_SETTINGS
                 };
 
                 await firebase.firestore()
@@ -199,7 +298,7 @@ function initializeAuthManager() {
                 this.userData = userProfile;
             } catch (error) {
                 console.error('Error creating user profile:', error);
-                this.showToast('Error creating user profile');
+                window.utils.showToast('Error creating user profile');
             }
         }
 
@@ -207,27 +306,36 @@ function initializeAuthManager() {
         updateUIForAuthenticatedUser() {
             const authButton = document.getElementById('authButton');
             const profileBtn = document.getElementById('showProfile');
-            const userName = this.currentUser.displayName || 'User';
+            const settingsBtn = document.getElementById('showSettings');
 
             if (authButton) {
-                authButton.innerHTML = `
-                    <i class="fas fa-user"></i>
-                    <span>${userName}</span>
-                `;
+                authButton.classList.add('hidden');
             }
 
             if (profileBtn) {
                 profileBtn.classList.remove('hidden');
+            }
+
+            if (settingsBtn) {
+                settingsBtn.classList.remove('hidden');
+            }
+
+            // Update header layout
+            const headerActions = document.querySelector('.header-actions');
+            if (headerActions) {
+                headerActions.classList.add('authenticated');
             }
         }
 
         updateUIForUnauthenticatedUser() {
             const authButton = document.getElementById('authButton');
             const profileBtn = document.getElementById('showProfile');
+            const settingsBtn = document.getElementById('showSettings');
 
             if (authButton) {
+                authButton.classList.remove('hidden');
                 authButton.innerHTML = `
-                    <i class="fas fa-sign-in-alt"></i>
+                    <i class="fas fa-user-circle"></i>
                     <span>Sign In</span>
                 `;
             }
@@ -236,8 +344,41 @@ function initializeAuthManager() {
                 profileBtn.classList.add('hidden');
             }
 
+            if (settingsBtn) {
+                settingsBtn.classList.remove('hidden');
+            }
+
+            // Update header layout
+            const headerActions = document.querySelector('.header-actions');
+            if (headerActions) {
+                headerActions.classList.remove('authenticated');
+            }
+
             this.userData = null;
             this.subscription = null;
+
+            // Reset subscription status
+            const subscriptionStatus = document.getElementById('subscriptionStatus');
+            if (subscriptionStatus) {
+                subscriptionStatus.innerHTML = `
+                    <i class="fas fa-leaf"></i>
+                    <span>Free Plan</span>
+                `;
+            }
+
+            // Reset attempts counter
+            const attemptsCounter = document.getElementById('attemptsCounter');
+            if (attemptsCounter) {
+                attemptsCounter.innerHTML = `
+                    <span>Free Attempts Left: <strong>5</strong></span>
+                `;
+            }
+
+            // Reset stats
+            const identificationCount = document.getElementById('identificationCount');
+            const attemptsLeft = document.getElementById('attemptsLeft');
+            if (identificationCount) identificationCount.textContent = '0';
+            if (attemptsLeft) attemptsLeft.textContent = '5';
         }
 
         updateProfileUI() {
@@ -251,8 +392,14 @@ function initializeAuthManager() {
                 attemptsLeft: document.getElementById('attemptsLeft')
             };
 
-            if (elements.name) elements.name.textContent = this.userData.name;
-            if (elements.email) elements.email.textContent = this.userData.email;
+            if (elements.name && this.userData.name) {
+                elements.name.textContent = this.userData.name;
+            }
+
+            if (elements.email && this.userData.email) {
+                elements.email.textContent = this.userData.email;
+            }
+
             if (elements.identificationCount) {
                 elements.identificationCount.textContent = this.userData.identificationCount || 0;
             }
@@ -261,7 +408,12 @@ function initializeAuthManager() {
                 if (this.subscription) {
                     elements.subscriptionStatus.innerHTML = `
                         <i class="fas fa-crown"></i>
-                        <span>${window.CONFIG.PLANS[this.subscription.plan].name}</span>
+                        <span>${window.CONFIG.PLANS[this.subscription.plan]?.name || 'Premium Plan'}</span>
+                    `;
+                } else if (window.CONFIG.DEVELOPER_EMAILS.includes(this.userData.email)) {
+                    elements.subscriptionStatus.innerHTML = `
+                        <i class="fas fa-crown"></i>
+                        <span>Developer Account</span>
                     `;
                 } else {
                     elements.subscriptionStatus.innerHTML = `
@@ -272,10 +424,16 @@ function initializeAuthManager() {
             }
 
             // Update attempts display
-            const attempts = this.subscription ? '∞' : window.utils.getRemainingAttempts();
+            const attempts = window.CONFIG.DEVELOPER_EMAILS.includes(this.userData.email) ? 
+                Infinity : 
+                (this.subscription ? Infinity : this.userData.remainingAttempts);
+
             if (elements.attemptsLeft) {
-                elements.attemptsLeft.textContent = attempts;
+                elements.attemptsLeft.textContent = attempts === Infinity ? '∞' : attempts;
             }
+
+            // Update global attempts counter
+            window.utils.updateAttemptsDisplay(attempts);
         }
 
         // Modal Management
@@ -422,12 +580,50 @@ function initializeAuthManager() {
 
         async signOut() {
             try {
+                // Clear all local data first
+                localStorage.removeItem(window.CONFIG.STORAGE_KEYS.HISTORY);
+                this.clearUserData();
+                
+                // Sign out from Firebase
                 await firebase.auth().signOut();
-                this.showToast('Successfully signed out!');
+                
+                // Reset UI elements
+                this.updateUIForUnauthenticatedUser();
+                
+                // Reset attempts display
+                window.utils.updateAttemptsDisplay(window.CONFIG.PLANS.FREE.maxAttempts);
+                
+                // Clear history displays
+                this.clearHistoryDisplays();
+                
+                window.utils.showToast('Successfully signed out!');
                 this.closeProfileModal();
             } catch (error) {
                 console.error('Sign out error:', error);
-                this.showToast('Error signing out');
+                window.utils.showToast('Error signing out');
+            }
+        }
+
+        clearUserData() {
+            this.userData = null;
+            this.subscription = null;
+            window.app?.state && (window.app.state.history = []);
+        }
+
+        clearHistoryDisplays() {
+            // Clear main history grid
+            const mainGrid = document.getElementById('mainHistoryGrid');
+            const emptyState = document.getElementById('historyEmptyState');
+            if (mainGrid && emptyState) {
+                mainGrid.innerHTML = '';
+                mainGrid.appendChild(emptyState);
+                emptyState.style.display = 'flex';
+            }
+
+            // Clear history list
+            const historyList = document.getElementById('historyList');
+            if (historyList) {
+                historyList.innerHTML = '';
             }
         }
     }
