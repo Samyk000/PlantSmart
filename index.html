@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PlantSmart AI | Instant Plant Identification</title>
+    
+    <!-- Updated Security Headers -->
+    <meta http-equiv="Content-Security-Policy" 
+    content="default-src 'self'; 
+    img-src 'self' blob: data: https://*.googleapis.com https://*.google.com https://storage.googleapis.com;
+    connect-src 'self' https://openrouter.ai https://*.firebaseio.com https://cdn.jsdelivr.net https://*.firebase.com https://firebase.googleapis.com https://*.gstatic.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://*.firebaseapp.com https://storage.googleapis.com https://tfhub.dev https://*.tfhub.dev https://unpkg.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.gstatic.com https://*.googleapis.com https://*.google.com https://*.firebaseio.com https://www.googleapis.com https://apis.google.com https://cdn.firebase.com https://cdn.jsdelivr.net https://unpkg.com https://storage.googleapis.com https://tfhub.dev;
+    font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+    frame-src 'self' https://*.firebaseapp.com https://*.firebase.com https://*.google.com https://securetoken.googleapis.com;
+    worker-src 'self' blob:;
+    object-src 'none';">
+
+    <!-- Add preload for critical resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" as="style" crossorigin>
+    <link rel="preload" href="style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="style.css"></noscript>
+    
+    <!-- Add preconnect for external domains -->
+    <link rel="preconnect" href="https://openrouter.ai">
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <!-- Add skeleton screen styles -->
+    <style>
+        .skeleton {
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.1),
+                rgba(255, 255, 255, 0.2),
+                rgba(255, 255, 255, 0.1)
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+
+    <!-- Fonts and Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" 
+          rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container" id="appContainer">
+        <!-- Main Screen -->
+        <div class="screen main-screen" id="mainScreen">
+            <header class="app-header">
+                <div class="logo">
+                    <i class="fas fa-leaf" aria-hidden="true"></i>
+                    <span>PlantSmart</span>
+                </div>
+                <div class="header-actions">
+                    <button class="settings-btn" id="showSettings" aria-label="Settings">
+                        <i class="fas fa-cog" aria-hidden="true"></i>
+                    </button>
+                    <button class="profile-btn" id="showProfile" aria-label="Profile">
+                        <i class="fas fa-user" aria-hidden="true"></i>
+                    </button>
+                    <button class="auth-btn" id="authButton">
+                        <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
+                        <span>Sign In</span>
+                    </button>
+                </div>
+            </header>
+            <div class="camera-section">
+                <div class="camera-prompt">
+                    <h1>Discover Plants Around You</h1>
+                    <p>Instant plant identification using AI</p>
+                    <div class="attempts-counter" id="attemptsCounter">
+                        <span>Free Attempts Left: <strong>5</strong></span>
+                    </div>
+                </div>
+                <div class="camera-buttons">
+                    <button class="camera-btn" id="openCamera" aria-label="Take Photo">
+                        <i class="fas fa-camera" aria-hidden="true"></i>
+                        Take Photo
+                    </button>
+                    <button class="upload-btn" id="uploadBtn" aria-label="Upload Image">
+                        <i class="fas fa-image" aria-hidden="true"></i>
+                        Upload Image
+                    </button>
+                    <input type="file" id="imageInput" accept="image/*" hidden aria-label="Upload Image Input">
+                </div>
+            </div>
+            <div class="info-cards">
+                <div class="info-card" role="article">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
+                    <h3>Accurate Results</h3>
+                    <p>Powered by advanced AI technology</p>
+                </div>
+                <div class="info-card" role="article">
+                    <i class="fas fa-leaf" aria-hidden="true"></i>
+                    <h3>Detailed Information</h3>
+                    <p>Get comprehensive plant details</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera Screen -->
+        <div class="screen camera-screen hidden" id="cameraScreen">
+            <div class="camera-container">
+                <video id="cameraFeed" autoplay playsinline></video>
+                <div class="camera-overlay">
+                    <div class="camera-frame"></div>
+                </div>
+                <div class="camera-controls">
+                    <button class="camera-control-btn" id="closeCamera" aria-label="Close Camera">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                    <button class="capture-btn" id="capturePhoto" aria-label="Take Photo">
+                        <i class="fas fa-camera" aria-hidden="true"></i>
+                    </button>
+                    <button class="camera-control-btn" id="switchCamera" aria-label="Switch Camera">
+                        <i class="fas fa-sync" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview & Results Screen -->
+        <div class="screen preview-results-screen hidden" id="previewResultsScreen">
+            <header class="app-header">
+                <button class="back-btn" id="backFromResults" aria-label="Back">
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </button>
+                <span>Plant Details</span>
+                <div class="header-actions">
+                    <button class="history-btn" id="showHistory" aria-label="View History">
+                        <i class="fas fa-history" aria-hidden="true"></i>
+                    </button>
+                    <button class="share-btn" id="shareResults" aria-label="Share Results">
+                        <i class="fas fa-share-alt" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </header>
+            <div class="preview-results-container">
+                <!-- Preview Section -->
+                <div class="preview-section">
+                    <img id="previewImage" alt="Plant Preview" loading="lazy">
+                    <button class="identify-btn" id="identifyBtn" aria-label="Identify Plant">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        Identify Plant
+                    </button>
+                </div>
+                <!-- Results Section -->
+                <div class="results-content hidden" id="resultsContent">
+                    <div class="plant-header">
+                        <h2 id="plantCommonName">Plant Name</h2>
+                        <p id="plantScientificName">Scientific Name</p>
+                        <div class="confidence-badge">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
+                            <span>AI Identified</span>
+                        </div>
+                    </div>
+                    <div class="plant-details" id="plantDetails">
+                        <!-- Will be dynamically populated -->
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="new-search-btn" id="newSearch">
+                            <i class="fas fa-camera" aria-hidden="true"></i>
+                            Identify Another Plant
+                        </button>
+                    </div>
+                </div>
+                <!-- Loading State -->
+                <div class="loading-container hidden" id="loadingContainer">
+                    <div class="loading-backdrop"></div>
+                    <div class="loading-animation">
+                        <div class="process-content">
+                            <div class="process-icon">
+                                <i class="fas fa-leaf"></i>
+                            </div>
+                            <div class="process-text">
+                                <h3 id="loadingTitle">Analyzing Image</h3>
+                                <p id="loadingMessage">Processing your plant photo...</p>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-line">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <div class="progress-steps">
+                                    <div class="step active">Analyzing</div>
+                                    <div class="step">Identifying</div>
+                                    <div class="step">Details</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Authentication Modal -->
+        <div class="modal auth-modal hidden" id="authModal">
+            <div class="modal-content">
+                <button class="modal-close" id="closeAuthModal">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="auth-form" id="signInForm">
+                    <h2>Welcome Back</h2>
+                    <p>Sign in to continue using PlantSmart AI</p>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="loginEmail">Email</label>
+                            <input type="email" id="loginEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <input type="password" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="auth-submit-btn">Sign In</button>
+                    </form>
+                    <div class="auth-links">
+                        <button class="text-btn" id="showForgotPassword">Forgot Password?</button>
+                        <button class="text-btn" id="showSignUp">Create Account</button>
+                    </div>
+                </div>
+                <div class="auth-form hidden" id="signUpForm">
+                    <h2>Create Account</h2>
+                    <p>Join PlantSmart AI to unlock all features</p>
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <label for="registerName">Full Name</label>
+                            <input type="text" id="registerName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerEmail">Email</label>
+                            <input type="email" id="registerEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Password</label>
+                            <input type="password" id="registerPassword" required>
+                        </div>
+                        <button type="submit" class="auth-submit-btn">Create Account</button>
+                    </form>
+                    <div class="auth-links">
+                        <button class="text-btn" id="showSignIn">Already have an account?</button>
+                    </div>
+                </div>
+                <div class="auth-form hidden" id="forgotPasswordForm">
+                    <h2>Reset Password</h2>
+                    <p>We'll send you instructions to reset your password</p>
+                    <form id="resetForm">
+                        <div class="form-group">
+                            <label for="resetEmail">Email</label>
+                            <input type="email" id="resetEmail" required>
+                        </div>
+                        <button type="submit" class="auth-submit-btn">Send Reset Link</button>
+                    </form>
+                    <div class="auth-links">
+                        <button class="text-btn" id="backToSignIn">Back to Sign In</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Modal -->
+        <div class="modal profile-modal hidden" id="profileModal">
+            <div class="modal-content">
+                <button class="modal-close" id="closeProfileModal">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h2 id="profileName">User Name</h2>
+                    <p id="profileEmail">user@example.com</p>
+                    <div class="subscription-badge" id="subscriptionStatus">
+                        <i class="fas fa-crown"></i>
+                        <span>Free Plan</span>
+                    </div>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="identificationCount">0</span>
+                        <span class="stat-label">Identifications</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="attemptsLeft">5</span>
+                        <span class="stat-label">Attempts Left</span>
+                    </div>
+                </div>
+                <div class="profile-actions">
+                    <button class="profile-action-btn" id="upgradeAccount">
+                        <i class="fas fa-star"></i>
+                        Upgrade Account
+                    </button>
+                    <button class="profile-action-btn" id="viewHistory">
+                        <i class="fas fa-history"></i>
+                        View History
+                    </button>
+                    <button class="profile-action-btn" id="editProfile">
+                        <i class="fas fa-edit"></i>
+                        Edit Profile
+                    </button>
+                    <button class="profile-action-btn logout-btn" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div class="modal settings-modal hidden" id="settingsModal">
+            <div class="modal-content">
+                <button class="modal-close" id="closeSettingsModal">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h2>Settings</h2>
+                <div class="settings-section">
+                    <h3>Appearance</h3>
+                    <div class="setting-item">
+                        <span>Dark Theme</span>
+                        <label class="switch">
+                            <input type="checkbox" id="darkThemeToggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Notifications</h3>
+                    <div class="setting-item">
+                        <span>Email Notifications</span>
+                        <label class="switch">
+                            <input type="checkbox" id="emailNotificationsToggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Developer Options</h3>
+                    <div class="setting-item">
+                        <span>Developer Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="developerModeToggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Modal -->
+        <div class="modal history-modal hidden" id="historyModal">
+            <div class="modal-content">
+                <button class="modal-close" id="closeHistoryModal">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="history-header">
+                    <h2>Identification History</h2>
+                    <button class="clear-history-btn" id="clearHistoryBtn">
+                        <i class="fas fa-trash"></i>
+                        Clear History
+                    </button>
+                </div>
+                <div class="history-list" id="historyList">
+                    <!-- Will be dynamically populated -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Subscription Modal -->
+        <div class="modal subscription-modal hidden" id="subscriptionModal">
+            <div class="modal-content">
+                <button class="modal-close" id="closeSubscriptionModal">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="subscription-header">
+                    <h2>Upgrade Your Experience</h2>
+                    <p>Choose a plan that works for you</p>
+                </div>
+                <div class="subscription-plans">
+                    <div class="plan-card" data-plan="monthly">
+                        <div class="plan-header">
+                            <h3>Monthly</h3>
+                            <div class="plan-price">
+                                <span class="currency">$</span>
+                                <span class="amount">5</span>
+                                <span class="period">/month</span>
+                            </div>
+                        </div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Unlimited Identifications</li>
+                            <li><i class="fas fa-check"></i> Detailed Plant Information</li>
+                            <li><i class="fas fa-check"></i> History Tracking</li>
+                        </ul>
+                        <button class="subscribe-btn" data-plan="monthly">Choose Monthly</button>
+                    </div>
+                    <div class="plan-card popular" data-plan="quarterly">
+                        <div class="popular-badge">Most Popular</div>
+                        <div class="plan-header">
+                            <h3>Quarterly</h3>
+                            <div class="plan-price">
+                                <span class="currency">$</span>
+                                <span class="amount">12</span>
+                                <span class="period">/3 months</span>
+                            </div>
+                        </div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Everything in Monthly</li>
+                            <li><i class="fas fa-check"></i> Priority Support</li>
+                            <li><i class="fas fa-check"></i> Save $3/month</li>
+                        </ul>
+                        <button class="subscribe-btn" data-plan="quarterly">Choose Quarterly</button>
+                    </div>
+                    <div class="plan-card" data-plan="yearly">
+                        <div class="plan-header">
+                            <h3>Yearly</h3>
+                            <div class="plan-price">
+                                <span class="currency">$</span>
+                                <span class="amount">45</span>
+                                <span class="period">/year</span>
+                            </div>
+                        </div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Everything in Quarterly</li>
+                            <li><i class="fas fa-check"></i> API Access</li>
+                            <li><i class="fas fa-check"></i> Save $15/year</li>
+                        </ul>
+                        <button class="subscribe-btn" data-plan="yearly">Choose Yearly</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div class="toast hidden" id="toast" role="alert">
+            <span id="toastMessage"></span>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+    <!-- Application Scripts -->
+    <script>
+        // Check if all Firebase SDKs are loaded
+        function checkFirebaseLoaded() {
+            return typeof firebase !== 'undefined' &&
+                   typeof firebase.auth !== 'undefined' &&
+                   typeof firebase.firestore !== 'undefined' &&
+                   typeof firebase.storage !== 'undefined';
+        }
+
+        // Lazy load TensorFlow.js
+        function loadTensorFlow() {
+            return new Promise((resolve, reject) => {
+                const script1 = document.createElement('script');
+                script1.src = 'https://unpkg.com/@tensorflow/tfjs';
+                script1.onload = () => {
+                    const script2 = document.createElement('script');
+                    script2.src = 'https://unpkg.com/@tensorflow-models/mobilenet';
+                    script2.onload = resolve;
+                    script2.onerror = reject;
+                    document.body.appendChild(script2);
+                };
+                script1.onerror = reject;
+                document.body.appendChild(script1);
+            });
+        }
+
+        // Modified script loading
+        class ScriptLoader {
+            constructor() {
+                this.loaded = new Set();
+                this.loading = new Map();
+            }
+
+            async load(src) {
+                if (this.loaded.has(src)) return;
+                if (this.loading.has(src)) return this.loading.get(src);
+
+                const promise = new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.async = true;
+                    script.onload = () => {
+                        this.loaded.add(src);
+                        resolve();
+                    };
+                    script.onerror = reject;
+                    document.body.appendChild(script);
+                });
+
+                this.loading.set(src, promise);
+                return promise;
+            }
+        }
+
+        const loader = new ScriptLoader();
+
+        // Load scripts in parallel but maintain execution order
+        async function loadScripts() {
+            try {
+                // Load Firebase SDKs in parallel
+                await Promise.all([
+                    loader.load('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js'),
+                    loader.load('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js'),
+                    loader.load('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js'),
+                    loader.load('https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js')
+                ]);
+
+                // Load application scripts in sequence
+                const appScripts = ['init.js', 'config.js', 'model.js', 'auth.js', 'app.js'];
+                for (const script of appScripts) {
+                    await loader.load(script);
+                }
+
+                // Load TensorFlow lazily when needed
+                window.loadTensorFlow = async () => {
+                    if (!window.tf) {
+                        await Promise.all([
+                            loader.load('https://unpkg.com/@tensorflow/tfjs'),
+                            loader.load('https://unpkg.com/@tensorflow-models/mobilenet')
+                        ]);
+                    }
+                };
+            } catch (error) {
+                console.error('Script loading error:', error);
+            }
+        }
+
+        // Start loading on DOMContentLoaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadScripts);
+        } else {
+            loadScripts();
+        }
+    </script>
+</body>
+</html>
