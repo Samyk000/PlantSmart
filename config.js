@@ -33,8 +33,7 @@
             // Default Settings
             DEFAULT_SETTINGS: {
                 darkTheme: false,
-                emailNotifications: true,
-                developerMode: false
+                emailNotifications: true
             },
 
             // Subscription Plans
@@ -68,7 +67,7 @@
             TOAST_DURATION: 3000,
 
             // Developer Emails
-            DEVELOPER_EMAILS: ['dev@example.com'],
+            DEVELOPER_EMAILS: ['sameer.amor00@gmail.com', 'dev@example.com'],
 
             // Error Messages
             ERRORS: {
@@ -97,6 +96,12 @@
                     PROCESSING_FAILED: 'Failed to process image. Please try another photo.',
                     IDENTIFICATION_FAILED: 'Could not identify any plants in the image. Please try a clearer photo.'
                 }
+            },
+
+            MODEL_URLS: {
+                PRIMARY: 'https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/model/model.json',
+                FALLBACK: 'https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json',
+                CACHE_KEY: 'mobilenet-model-cache'
             }
         };
 
@@ -111,6 +116,16 @@
                 const user = firebase.auth().currentUser;
                 if (!user) return null;
 
+                // Check if user is a developer - make this check first and explicit
+                if (window.CONFIG.DEVELOPER_EMAILS.includes(user.email)) {
+                    return {
+                        plan: 'DEVELOPER',
+                        status: 'active',
+                        unlimited: true,
+                        displayName: 'Developer Access'
+                    };
+                }
+
                 try {
                     const doc = await firebase.firestore().collection('subscriptions')
                         .doc(user.uid).get();
@@ -121,26 +136,239 @@
                 }
             },
 
-            getRemainingAttempts() {
-                const stored = localStorage.getItem(window.CONFIG.STORAGE_KEYS.USER_ATTEMPTS);
-                return stored ? parseInt(stored) : window.CONFIG.PLANS.FREE.maxAttempts;
+            async getRemainingAttempts() {
+                try {
+                    const user = firebase.auth().currentUser;
+                    
+                    // Developer check
+                    if (user && window.CONFIG.DEVELOPER_EMAILS.includes(user.email)) {
+                        return Infinity;
+                    }
+
+                    // First check local attempts
+                    const localAttempts = await this.getLocalAttempts();
+                    
+                    if (!user) {
+                        // For guests, use only local storage
+                        if (localAttempts === null) {
+                            await this.setLocalAttempts(window.CONFIG.PLANS.FREE.maxAttempts);
+                            return window.CONFIG.PLANS.FREE.maxAttempts;
+                        }
+                        return localAttempts;
+                    }
+
+                    // For logged in users
+                    try {
+                        const doc = await firebase.firestore()
+                            .collection('users')
+                            .doc(user.uid)
+                            .get();
+
+                        let attempts;
+                        if (!doc.exists) {
+                            attempts = window.CONFIG.PLANS.FREE.maxAttempts;
+                            await firebase.firestore()
+                                .collection('users')
+                                .doc(user.uid)
+                                .set({
+                                    remainingAttempts: attempts,
+                                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                        } else {
+                            attempts = doc.data().remainingAttempts;
+                        }
+
+                        // Sync with local storage
+                        await this.setLocalAttempts(attempts);
+                        return attempts;
+                    } catch (error) {
+                        console.error('Firestore error:', error);
+                        return localAttempts ?? window.CONFIG.PLANS.FREE.maxAttempts;
+                    }
+                } catch (error) {
+                    console.error('Error getting attempts:', error);
+                    return window.CONFIG.PLANS.FREE.maxAttempts;
+                }
             },
 
-            updateRemainingAttempts(attempts) {
-                localStorage.setItem(window.CONFIG.STORAGE_KEYS.USER_ATTEMPTS, attempts.toString());
-                this.updateAttemptsDisplay(attempts);
+            async updateRemainingAttempts(attempts) {
+                try {
+                    // Save to IndexedDB first
+                    await this.setLocalAttempts(attempts);
+                    
+                    const user = firebase.auth().currentUser;
+                    if (user) {
+                        // Update Firestore for logged in users
+                        await firebase.firestore()
+                            .collection('users')
+                            .doc(user.uid)
+                            .update({
+                                remainingAttempts: attempts,
+                                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                    }
+
+                    // Update UI
+                    await this.updateAttemptsDisplay(attempts);
+
+                    // Show upgrade modal if no attempts left
+                    if (attempts <= 0) {
+                        const subscriptionModal = document.getElementById('subscriptionModal');
+                        if (subscriptionModal) {
+                            subscriptionModal.classList.remove('hidden');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error updating attempts:', error);
+                }
             },
 
-            updateAttemptsDisplay(attempts) {
+            async updateAttemptsDisplay(attempts) {
+                // Ensure we have a numeric value
+                let displayAttempts = attempts;
+                if (displayAttempts instanceof Promise) {
+                    displayAttempts = await displayAttempts;
+                }
+                if (displayAttempts === null || isNaN(displayAttempts)) {
+                    displayAttempts = window.CONFIG.PLANS.FREE.maxAttempts;
+                }
+
                 const attemptsCounter = document.getElementById('attemptsCounter');
                 const attemptsLeft = document.getElementById('attemptsLeft');
                 
+                const isUnlimited = displayAttempts === Infinity || 
+                    (firebase.auth().currentUser && 
+                     window.CONFIG.DEVELOPER_EMAILS.includes(firebase.auth().currentUser.email));
+                
                 if (attemptsCounter) {
-                    attemptsCounter.innerHTML = `<span>Free Attempts Left: <strong>${attempts}</strong></span>`;
+                    if (isUnlimited) {
+                        attemptsCounter.innerHTML = `
+                            <span class="unlimited-badge">
+                                <i class="fas fa-infinity"></i>
+                                Unlimited Access
+                            </span>
+                        `;
+                    } else {
+                        attemptsCounter.innerHTML = `
+                            <span>Free Attempts Left: <strong>${displayAttempts}</strong></span>
+                            ${displayAttempts <= 2 ? '<span class="upgrade-hint">Upgrade for unlimited!</span>' : ''}
+                        `;
+                    }
                 }
+                
                 if (attemptsLeft) {
-                    attemptsLeft.textContent = attempts;
+                    attemptsLeft.textContent = isUnlimited ? '∞' : displayAttempts;
                 }
+
+                // Update local storage
+                await this.setLocalAttempts(displayAttempts);
+            },
+
+            getOrCreateSessionId() {
+                let sessionId = sessionStorage.getItem('guestSessionId');
+                if (!sessionId) {
+                    sessionId = this.generateUniqueId();
+                    sessionStorage.setItem('guestSessionId', sessionId);
+                }
+                return sessionId;
+            },
+
+            async getOrCreatePersistentSessionId() {
+                try {
+                    const db = await this.openIndexedDB();
+                    const tx = db.transaction('session', 'readonly');
+                    const store = tx.objectStore('session');
+                    let sessionId = await store.get('sessionId');
+
+                    if (!sessionId) {
+                        sessionId = this.generateUniqueId();
+                        const writeTx = db.transaction('session', 'readwrite');
+                        const writeStore = writeTx.objectStore('session');
+                        await writeStore.put(sessionId, 'sessionId');
+                    }
+
+                    return sessionId;
+                } catch (error) {
+                    console.error('IndexedDB error:', error);
+                    // Fallback to localStorage if IndexedDB fails
+                    let sessionId = localStorage.getItem('persistentSessionId');
+                    if (!sessionId) {
+                        sessionId = this.generateUniqueId();
+                        localStorage.setItem('persistentSessionId', sessionId);
+                    }
+                    return sessionId;
+                }
+            },
+
+            async openIndexedDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open('PlantSmartAI', 1);
+
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => resolve(request.result);
+
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('session')) {
+                            db.createObjectStore('session');
+                        }
+                        if (!db.objectStoreNames.contains('attempts')) {
+                            db.createObjectStore('attempts');
+                        }
+                    };
+                });
+            },
+
+            async setLocalAttempts(attempts) {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open('PlantSmartAI', 1);
+                    
+                    request.onerror = () => reject(request.error);
+                    
+                    request.onsuccess = (event) => {
+                        const db = event.target.result;
+                        const tx = db.transaction('attempts', 'readwrite');
+                        const store = tx.objectStore('attempts');
+                        
+                        const putRequest = store.put(attempts, 'remainingAttempts');
+                        
+                        putRequest.onsuccess = () => resolve();
+                        putRequest.onerror = () => reject(putRequest.error);
+                    };
+
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('attempts')) {
+                            db.createObjectStore('attempts');
+                        }
+                    };
+                });
+            },
+
+            async getLocalAttempts() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open('PlantSmartAI', 1);
+                    
+                    request.onerror = () => resolve(null);
+                    
+                    request.onsuccess = (event) => {
+                        const db = event.target.result;
+                        const tx = db.transaction('attempts', 'readonly');
+                        const store = tx.objectStore('attempts');
+                        
+                        const getRequest = store.get('remainingAttempts');
+                        
+                        getRequest.onsuccess = () => resolve(getRequest.result);
+                        getRequest.onerror = () => resolve(null);
+                    };
+
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('attempts')) {
+                            db.createObjectStore('attempts');
+                        }
+                    };
+                });
             },
 
             async shouldAllowIdentification() {
@@ -149,6 +377,11 @@
 
                 const remainingAttempts = this.getRemainingAttempts();
                 return remainingAttempts > 0;
+            },
+
+            shouldShowUpgradePrompt() {
+                const attempts = this.getRemainingAttempts();
+                return attempts <= 2 && !this.checkUserSubscription();
             },
 
             formatDate(date) {
