@@ -139,19 +139,34 @@ class PlantModel {
             });
 
             if (!response.ok) {
-                throw new Error(`API request failed: ${response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                console.error('API Response:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    errorData
+                });
+                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
             }
 
             const data = await response.json();
-            const content = data.choices?.[0]?.message?.content;
+            console.log('API Response:', data); // Add this for debugging
+
+            if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
+                console.error('Invalid API response structure:', data);
+                throw new Error('Invalid API response structure');
+            }
+
+            const content = data.choices[0].message.content;
 
             if (!content) {
-                throw new Error('Empty response from API');
+                console.error('Empty content in API response:', data);
+                throw new Error('Empty content in API response');
             }
 
             // Extract JSON from response
             const jsonMatch = content.match(/\{[\s\S]*\}/);
             if (!jsonMatch) {
+                console.error('No JSON found in response:', content);
                 throw new Error('No JSON found in response');
             }
 
@@ -169,11 +184,15 @@ class PlantModel {
                 this.updateLoadingProgress(4, 'Finalizing results...', 100);
                 return parsedData;
             } catch (parseError) {
-                console.error('JSON parsing error:', parseError);
+                console.error('JSON parsing error:', parseError, 'Content:', content);
                 throw new Error('Invalid JSON structure in response');
             }
         } catch (error) {
-            console.error('Gemma enhancement error:', error);
+            console.error('Gemma enhancement error:', {
+                error,
+                predictions: tfPredictions,
+                imageUrl: '(truncated for privacy)'
+            });
             
             // Return a more structured fallback response
             return {
