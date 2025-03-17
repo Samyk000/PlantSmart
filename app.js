@@ -271,7 +271,10 @@ function startAppInit() {
 
                     // Convert to base64 with reduced quality
                     const base64Image = canvas.toDataURL('image/jpeg', 0.8);
-                    this.handleCapturedImage(base64Image);
+                    await this.handleCapturedImage(base64Image);
+                    
+                    // Start identification automatically after capture
+                    await this.startIdentification();
                 } catch (error) {
                     console.error('Photo capture failed:', error);
                     window.utils.showToast('Failed to capture photo. Please try again.');
