@@ -143,6 +143,40 @@ function startAppInit() {
 
                 document.getElementById('viewAllHistory')?.addEventListener('click', 
                     () => this.toggleHistoryModal(true));
+
+                // Add click outside handlers for modals with proper this binding
+                document.addEventListener('click', (e) => {
+                    const settingsModal = document.getElementById('settingsModal');
+                    const profileModal = document.getElementById('profileModal');
+                    
+                    if (settingsModal && !settingsModal.classList.contains('hidden')) {
+                        if (!e.target.closest('.modal-content') && !e.target.closest('.settings-btn')) {
+                            this.toggleSettingsModal(false);
+                        }
+                    }
+                    
+                    if (profileModal && !profileModal.classList.contains('hidden')) {
+                        if (!e.target.closest('.modal-content') && !e.target.closest('.profile-btn')) {
+                            this.toggleProfileModal(false);
+                        }
+                    }
+                });
+
+                // Update clear cache event listener with proper error handling
+                document.getElementById('clearCache')?.addEventListener('click', async () => {
+                    try {
+                        await window.CONFIG.clearAppCache();
+                        window.utils.showToast('Cache cleared successfully');
+                        
+                        // Optionally reload the app after cache clear
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } catch (error) {
+                        console.error('Error clearing cache:', error);
+                        window.utils.showToast('Failed to clear cache');
+                    }
+                });
             }
 
             // Settings Management
@@ -750,6 +784,17 @@ function startAppInit() {
                 const modal = document.getElementById('subscriptionModal');
                 if (modal) {
                     modal.classList.toggle('hidden', !show);
+                }
+            }
+
+            toggleProfileModal(show) {
+                const modal = document.getElementById('profileModal');
+                if (modal) {
+                    modal.classList.toggle('hidden', !show);
+                    if (show) {
+                        // Update profile UI when showing modal
+                        window.authManager?.updateProfileUI();
+                    }
                 }
             }
 
