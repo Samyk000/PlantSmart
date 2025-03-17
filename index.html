@@ -186,22 +186,34 @@
                 <div class="loading-container hidden" id="loadingContainer">
                     <div class="loading-backdrop"></div>
                     <div class="loading-animation">
-                        <div class="process-content">
-                            <div class="process-icon">
-                                <i class="fas fa-leaf"></i>
+                        <div class="plant-animation">
+                            <div class="plant-stem">
+                                <div class="leaf leaf-left"></div>
+                                <div class="leaf leaf-right"></div>
+                                <div class="growth-point"></div>
                             </div>
-                            <div class="process-text">
-                                <h3 id="loadingTitle">Analyzing Image</h3>
-                                <p id="loadingMessage">Processing your plant photo...</p>
-                            </div>
+                            <div class="particles"></div>
+                        </div>
+                        <div class="loading-content">
+                            <h3 id="loadingTitle">Analyzing Image</h3>
+                            <p id="loadingMessage">Processing your plant photo...</p>
                             <div class="progress-track">
-                                <div class="progress-line">
+                                <div class="progress-bar">
                                     <div class="progress-fill"></div>
                                 </div>
-                                <div class="progress-steps">
-                                    <div class="step active">Analyzing</div>
-                                    <div class="step">Identifying</div>
-                                    <div class="step">Details</div>
+                                <div class="step-indicators">
+                                    <div class="step active">
+                                        <i class="fas fa-image"></i>
+                                        <span>Processing</span>
+                                    </div>
+                                    <div class="step">
+                                        <i class="fas fa-magnifying-glass"></i>
+                                        <span>Analyzing</span>
+                                    </div>
+                                    <div class="step">
+                                        <i class="fas fa-leaf"></i>
+                                        <span>Identifying</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -322,31 +334,54 @@
             </div>
         </div>
 
-        <!-- Settings Modal -->
+        <!-- Update Settings Modal -->
         <div class="modal settings-modal hidden" id="settingsModal">
             <div class="modal-content">
                 <button class="modal-close" id="closeSettingsModal">
                     <i class="fas fa-times"></i>
                 </button>
                 <h2>Settings</h2>
+                
+                <!-- App Preferences -->
                 <div class="settings-section">
-                    <h3>Appearance</h3>
+                    <h3><i class="fas fa-palette"></i> Appearance</h3>
                     <div class="setting-item">
-                        <span>Dark Theme</span>
+                        <div class="setting-info">
+                            <span>Dark Theme</span>
+                            <p>Enable dark mode for better night viewing</p>
+                        </div>
                         <label class="switch">
                             <input type="checkbox" id="darkThemeToggle">
                             <span class="slider round"></span>
                         </label>
                     </div>
                 </div>
+
+                <!-- Camera Settings -->
                 <div class="settings-section">
-                    <h3>Notifications</h3>
+                    <h3><i class="fas fa-camera"></i> Camera</h3>
                     <div class="setting-item">
-                        <span>Email Notifications</span>
-                        <label class="switch">
-                            <input type="checkbox" id="emailNotificationsToggle">
-                            <span class="slider round"></span>
-                        </label>
+                        <div class="setting-info">
+                            <span>Flash Mode</span>
+                            <p>Control camera flash behavior</p>
+                        </div>
+                        <select id="flashMode" class="setting-select">
+                            <option value="auto">Auto</option>
+                            <option value="on">Always On</option>
+                            <option value="off">Always Off</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Cache Management -->
+                <div class="settings-section">
+                    <h3><i class="fas fa-database"></i> Storage</h3>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span>Clear Cache</span>
+                            <p>Free up space by clearing cached data</p>
+                        </div>
+                        <button id="clearCache" class="setting-button">Clear</button>
                     </div>
                 </div>
             </div>
@@ -441,7 +476,7 @@
         </div>
     </div>
 
-    <!-- Add Splash Screen -->
+    <!-- Update Splash Screen -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo">
@@ -450,12 +485,6 @@
                 </div>
                 <h1>PlantSmart AI</h1>
                 <p>Discover the world of plants</p>
-            </div>
-            <div class="splash-loader">
-                <div class="loader-circle"></div>
-                <div class="loader-line-mask">
-                    <div class="loader-line"></div>
-                </div>
             </div>
         </div>
     </div>
