@@ -33,7 +33,12 @@
             // Default Settings
             DEFAULT_SETTINGS: {
                 darkTheme: false,
-                emailNotifications: true
+                language: 'en',
+                cameraResolution: 'hd',
+                flashMode: 'auto',
+                imageQuality: 'high',
+                reduceMotion: false,
+                highContrast: false
             },
 
             // Subscription Plans
@@ -102,6 +107,63 @@
                 PRIMARY: 'https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/model/model.json',
                 FALLBACK: 'https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_0.25_224/model.json',
                 CACHE_KEY: 'mobilenet-model-cache'
+            },
+
+            API_SERVICES: {
+                PLANT_ID: {
+                    endpoint: 'https://api.plant.id/v2/identify',
+                    dailyLimit: 100
+                },
+                PLANT_NET: {
+                    endpoint: 'https://my-api.plantnet.org/v2/identify',
+                    dailyLimit: 500
+                },
+                INATURALIST: {
+                    endpoint: 'https://api.inaturalist.org/v1/identifications',
+                    rateLimit: 100
+                }
+            },
+            CACHING: {
+                duration: 7 * 24 * 60 * 60 * 1000, // 7 days
+                maxEntries: 100
+            },
+            IMAGE: {
+                maxWidth: 800,
+                maxHeight: 800,
+                quality: 0.8,
+                format: 'webp'
+            },
+
+            // Add cache management functionality
+            async clearAppCache() {
+                try {
+                    // Clear IndexedDB
+                    const databases = await window.indexedDB.databases();
+                    await Promise.all(databases.map(db => 
+                        new Promise((resolve, reject) => {
+                            const request = window.indexedDB.deleteDatabase(db.name);
+                            request.onsuccess = resolve;
+                            request.onerror = reject;
+                        })
+                    ));
+
+                    // Clear Cache Storage
+                    if ('caches' in window) {
+                        const cacheKeys = await caches.keys();
+                        await Promise.all(cacheKeys.map(key => caches.delete(key)));
+                    }
+
+                    // Clear Local Storage
+                    localStorage.clear();
+
+                    // Clear Session Storage
+                    sessionStorage.clear();
+
+                    return true;
+                } catch (error) {
+                    console.error('Error clearing cache:', error);
+                    throw error;
+                }
             }
         };
 
