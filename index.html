@@ -203,28 +203,12 @@
                 <div class="loading-container hidden" id="loadingContainer">
                     <div class="loading-backdrop"></div>
                     <div class="loading-animation">
-                        <div class="loading-icon">
-                            <i class="fas fa-leaf"></i>
+                        <div class="flower-loader-container">
+                            <span class="flower-loader">Loading…</span>
                         </div>
-                        <h3 id="loadingTitle">Analyzing Image</h3>
-                        <p id="loadingMessage">Processing your plant photo...</p>
-                        <div class="progress-track">
+                        <div class="minimal-progress">
                             <div class="progress-bar">
-                                <div class="progress-fill"></div>
-                            </div>
-                            <div class="step-indicators">
-                                <div class="step active">
-                                    <i class="fas fa-image"></i>
-                                    <span>Processing</span>
-                                </div>
-                                <div class="step">
-                                    <i class="fas fa-magnifying-glass"></i>
-                                    <span>Analyzing</span>
-                                </div>
-                                <div class="step">
-                                    <i class="fas fa-leaf"></i>
-                                    <span>Identifying</span>
-                                </div>
+                                <div class="progress-fill" id="progressFill"></div>
                             </div>
                         </div>
                     </div>
