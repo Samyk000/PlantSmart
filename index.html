@@ -72,6 +72,9 @@
                     <span>PlantSmart</span>
                 </div>
                 <div class="header-actions">
+                    <button class="upgrade-btn" id="upgradeBtn" aria-label="Upgrade">
+                        <i class="fas fa-crown"></i>
+                    </button>
                     <button class="auth-btn" id="authButton" aria-label="Sign In">
                         <i class="fas fa-user"></i>
                     </button>
@@ -88,7 +91,7 @@
                     <h1>Discover Plants Around You</h1>
                     <p>Instant plant identification using AI</p>
                     <div class="attempts-counter" id="attemptsCounter">
-                        <span>Free Attempts Left: <strong>5</strong></span>
+                        <span>Free Attempts: <strong>5</strong></span>
                     </div>
                 </div>
                 <div class="camera-buttons">
@@ -127,17 +130,31 @@
             <div class="camera-container">
                 <video id="cameraFeed" autoplay playsinline></video>
                 <div class="camera-overlay">
-                    <div class="camera-frame"></div>
+                    <div class="camera-frame">
+                        <div class="corner top-left"></div>
+                        <div class="corner top-right"></div>
+                        <div class="corner bottom-left"></div>
+                        <div class="corner bottom-right"></div>
+                    </div>
                 </div>
+                <!-- Top Controls -->
+                <div class="camera-top-controls">
+                    <button class="camera-control-btn flash-btn" id="toggleFlash" aria-label="Toggle Flash">
+                        <i class="fas fa-bolt"></i>
+                    </button>
+                    <button class="camera-control-btn close-btn" id="closeCamera" aria-label="Close Camera">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <!-- Bottom Controls -->
                 <div class="camera-controls">
-                    <button class="camera-control-btn" id="closeCamera" aria-label="Close Camera">
-                        <i class="fas fa-times" aria-hidden="true"></i>
+                    <button class="camera-control-btn" id="switchCamera" aria-label="Switch Camera">
+                        <i class="fas fa-camera-rotate"></i>
                     </button>
                     <button class="capture-btn" id="capturePhoto" aria-label="Take Photo">
-                        <i class="fas fa-camera" aria-hidden="true"></i>
-                    </button>
-                    <button class="camera-control-btn" id="switchCamera" aria-label="Switch Camera">
-                        <i class="fas fa-sync" aria-hidden="true"></i>
+                        <div class="capture-btn-inner">
+                            <div class="capture-btn-circle"></div>
+                        </div>
                     </button>
                 </div>
             </div>
@@ -186,34 +203,27 @@
                 <div class="loading-container hidden" id="loadingContainer">
                     <div class="loading-backdrop"></div>
                     <div class="loading-animation">
-                        <div class="plant-animation">
-                            <div class="plant-stem">
-                                <div class="leaf leaf-left"></div>
-                                <div class="leaf leaf-right"></div>
-                                <div class="growth-point"></div>
-                            </div>
-                            <div class="particles"></div>
+                        <div class="loading-icon">
+                            <i class="fas fa-leaf"></i>
                         </div>
-                        <div class="loading-content">
-                            <h3 id="loadingTitle">Analyzing Image</h3>
-                            <p id="loadingMessage">Processing your plant photo...</p>
-                            <div class="progress-track">
-                                <div class="progress-bar">
-                                    <div class="progress-fill"></div>
+                        <h3 id="loadingTitle">Analyzing Image</h3>
+                        <p id="loadingMessage">Processing your plant photo...</p>
+                        <div class="progress-track">
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                            <div class="step-indicators">
+                                <div class="step active">
+                                    <i class="fas fa-image"></i>
+                                    <span>Processing</span>
                                 </div>
-                                <div class="step-indicators">
-                                    <div class="step active">
-                                        <i class="fas fa-image"></i>
-                                        <span>Processing</span>
-                                    </div>
-                                    <div class="step">
-                                        <i class="fas fa-magnifying-glass"></i>
-                                        <span>Analyzing</span>
-                                    </div>
-                                    <div class="step">
-                                        <i class="fas fa-leaf"></i>
-                                        <span>Identifying</span>
-                                    </div>
+                                <div class="step">
+                                    <i class="fas fa-magnifying-glass"></i>
+                                    <span>Analyzing</span>
+                                </div>
+                                <div class="step">
+                                    <i class="fas fa-leaf"></i>
+                                    <span>Identifying</span>
                                 </div>
                             </div>
                         </div>
@@ -229,7 +239,7 @@
                     <i class="fas fa-times"></i>
                 </button>
                 <div class="auth-form" id="signInForm">
-                    <h2>Welcome Back</h2>
+                    <h2>Welcome</h2>
                     <p>Sign in to continue using PlantSmart AI</p>
                     <form id="loginForm">
                         <div class="form-group">
@@ -354,34 +364,6 @@
                             <input type="checkbox" id="darkThemeToggle">
                             <span class="slider round"></span>
                         </label>
-                    </div>
-                </div>
-
-                <!-- Camera Settings -->
-                <div class="settings-section">
-                    <h3><i class="fas fa-camera"></i> Camera</h3>
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <span>Flash Mode</span>
-                            <p>Control camera flash behavior</p>
-                        </div>
-                        <select id="flashMode" class="setting-select">
-                            <option value="auto">Auto</option>
-                            <option value="on">Always On</option>
-                            <option value="off">Always Off</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Cache Management -->
-                <div class="settings-section">
-                    <h3><i class="fas fa-database"></i> Storage</h3>
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <span>Clear Cache</span>
-                            <p>Free up space by clearing cached data</p>
-                        </div>
-                        <button id="clearCache" class="setting-button">Clear</button>
                     </div>
                 </div>
             </div>
