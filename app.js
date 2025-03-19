@@ -31,7 +31,8 @@ function startAppInit() {
                     currentPlantData: null,
                     currentImage: null,
                     history: [],
-                    settings: window.CONFIG.DEFAULT_SETTINGS
+                    settings: window.CONFIG.DEFAULT_SETTINGS,
+                    flashMode: 'off' // Add flash state
                 };
                 this.initializeElements();
                 this.setupEventListeners();
@@ -71,7 +72,8 @@ function startAppInit() {
                         openBtn: document.getElementById('openCamera'),
                         closeBtn: document.getElementById('closeCamera'),
                         captureBtn: document.getElementById('capturePhoto'),
-                        switchBtn: document.getElementById('switchCamera')
+                        switchBtn: document.getElementById('switchCamera'),
+                        flashBtn: document.getElementById('toggleFlash') // Add flash button
                     },
                     preview: {
                         image: document.getElementById('previewImage'),
@@ -95,7 +97,8 @@ function startAppInit() {
                         shareResults: document.getElementById('shareResults'),
                         clearHistory: document.getElementById('clearHistoryBtn'),
                         backFromResults: document.getElementById('backFromResults'),
-                        showSettings: document.getElementById('showSettings')
+                        showSettings: document.getElementById('showSettings'),
+                        upgrade: document.getElementById('upgradeBtn') // Add upgrade button
                     },
                     inputs: {
                         imageInput: document.getElementById('imageInput'),
@@ -112,6 +115,7 @@ function startAppInit() {
                 this.elements.camera.closeBtn?.addEventListener('click', () => this.stopCamera());
                 this.elements.camera.captureBtn?.addEventListener('click', () => this.capturePhoto());
                 this.elements.camera.switchBtn?.addEventListener('click', () => this.switchCamera());
+                this.elements.camera.flashBtn?.addEventListener('click', () => this.toggleFlash()); // Add flash control listener
 
                 // Image Upload
                 this.elements.buttons.upload?.addEventListener('click', () => this.elements.inputs.imageInput.click());
@@ -177,6 +181,16 @@ function startAppInit() {
                         window.utils.showToast('Failed to clear cache');
                     }
                 });
+
+                // Add upgrade button listener
+                this.elements.buttons.upgrade?.addEventListener('click', () => this.toggleSubscriptionModal(true));
+
+                // Add upgrade hint listener
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('upgrade-hint')) {
+                        this.toggleSubscriptionModal(true);
+                    }
+                });
             }
 
             // Settings Management
@@ -235,6 +249,31 @@ function startAppInit() {
 
             async initCamera() {
                 try {
+                    // First enumerate devices to check capabilities
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                    
+                    // Check if flash/torch is available
+                    let hasFlash = false;
+                    if (videoDevices.length > 0) {
+                        try {
+                            const track = (await navigator.mediaDevices.getUserMedia({
+                                video: { facingMode: this.state.facingMode }
+                            })).getTracks()[0];
+                            
+                            hasFlash = 'torch' in track.getCapabilities();
+                            track.stop(); // Stop temporary track
+                        } catch (err) {
+                            console.log('Flash check failed:', err);
+                        }
+                    }
+
+                    // Update flash button visibility
+                    if (this.elements.camera.flashBtn) {
+                        this.elements.camera.flashBtn.classList.toggle('flash-disabled', !hasFlash);
+                    }
+
+                    // Set up camera stream
                     const constraints = {
                         video: {
                             facingMode: this.state.facingMode,
@@ -243,7 +282,15 @@ function startAppInit() {
                         }
                     };
 
+                    // Add torch if available and enabled
+                    if (hasFlash && this.state.flashMode === 'on') {
+                        constraints.video.advanced = [{ torch: true }];
+                    }
+
+                    // Stop any existing stream
                     this.stopCamera();
+                    
+                    // Get new stream
                     this.state.stream = await navigator.mediaDevices.getUserMedia(constraints);
                     
                     if (this.elements.camera.feed) {
@@ -253,12 +300,10 @@ function startAppInit() {
 
                     this.navigateToScreen('camera');
 
-                    // Check for multiple cameras
-                    const devices = await navigator.mediaDevices.enumerateDevices();
-                    const hasMultipleCameras = devices.filter(device => 
-                        device.kind === 'videoinput').length > 1;
+                    // Update switch camera button visibility
                     if (this.elements.camera.switchBtn) {
-                        this.elements.camera.switchBtn.style.display = hasMultipleCameras ? 'block' : 'none';
+                        this.elements.camera.switchBtn.style.display = 
+                            videoDevices.length > 1 ? 'block' : 'none';
                     }
                 } catch (error) {
                     console.error('Camera initialization failed:', error);
@@ -312,6 +357,31 @@ function startAppInit() {
                 } catch (error) {
                     console.error('Photo capture failed:', error);
                     window.utils.showToast('Failed to capture photo. Please try again.');
+                }
+            }
+
+            async toggleFlash() {
+                if (!this.state.stream) return;
+
+                try {
+                    const track = this.state.stream.getVideoTracks()[0];
+                    if (!track || !('torch' in track.getCapabilities())) {
+                        window.utils.showToast('Flash not available on this device');
+                        return;
+                    }
+
+                    this.state.flashMode = this.state.flashMode === 'on' ? 'off' : 'on';
+                    await track.applyConstraints({
+                        advanced: [{ torch: this.state.flashMode === 'on' }]
+                    });
+
+                    if (this.elements.camera.flashBtn) {
+                        this.elements.camera.flashBtn.classList.toggle('flash-active', 
+                            this.state.flashMode === 'on');
+                    }
+                } catch (error) {
+                    console.error('Flash toggle failed:', error);
+                    window.utils.showToast('Failed to toggle flash');
                 }
             }
 
