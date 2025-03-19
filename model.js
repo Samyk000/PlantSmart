@@ -227,54 +227,18 @@ class PlantModel {
     }
 
     updateLoadingProgress(step, message, progress) {
-        // Safely get elements
-        const elements = {
-            title: document.getElementById('loadingTitle'),
-            message: document.getElementById('loadingMessage'),
-            fill: document.querySelector('.progress-fill'),
-            steps: document.querySelectorAll('.progress-steps .step')
-        };
+        const loadingContainer = document.getElementById('loadingContainer');
+        const progressFill = document.getElementById('progressFill');
 
-        // Ensure container is visible
-        const container = document.getElementById('loadingContainer');
-        if (container) {
-            container.classList.remove('hidden');
-        }
+        if (!loadingContainer || !progressFill) return;
 
-        // Update title with fade effect
-        if (elements.title) {
-            elements.title.style.opacity = '0';
-            setTimeout(() => {
-                elements.title.textContent = this.getStepTitle(step);
-                elements.title.style.opacity = '1';
-            }, 200);
-        }
+        // Show loading container
+        loadingContainer.classList.remove('hidden');
 
-        // Update message with fade effect
-        if (elements.message) {
-            elements.message.style.opacity = '0';
-            setTimeout(() => {
-                elements.message.textContent = message;
-                elements.message.style.opacity = '1';
-            }, 200);
-        }
-
-        // Update progress bar
-        if (elements.fill) {
-            elements.fill.style.width = `${progress}%`;
-        }
-
-        // Update steps
-        if (elements.steps) {
-            elements.steps.forEach((stepEl, index) => {
-                stepEl.classList.remove('active', 'completed');
-                if (index + 1 < step) {
-                    stepEl.classList.add('completed');
-                } else if (index + 1 === step) {
-                    stepEl.classList.add('active');
-                }
-            });
-        }
+        // Update progress bar with smooth animation
+        requestAnimationFrame(() => {
+            progressFill.style.width = `${progress}%`;
+        });
     }
 
     getStepTitle(step) {
@@ -319,6 +283,62 @@ class PlantModel {
         } catch (error) {
             console.warn('Cache saving failed:', error);
         }
+    }
+
+    generateDetailsHTML(data) {
+        return `
+            <div class="detail-section">
+                <h3><i class="fas fa-info-circle"></i> Overview</h3>
+                <div class="quick-info-grid">
+                    <div class="quick-info-item">
+                        <i class="fas fa-leaf"></i>
+                        <div class="quick-info-label">Type</div>
+                        <div class="quick-info-value">${data.characteristics.type}</div>
+                    </div>
+                    <div class="quick-info-item">
+                        <i class="fas fa-arrows-alt-v"></i>
+                        <div class="quick-info-label">Height</div>
+                        <div class="quick-info-value">${data.characteristics.height}</div>
+                    </div>
+                    <div class="quick-info-item">
+                        <i class="fas fa-arrows-alt-h"></i>
+                        <div class="quick-info-label">Spread</div>
+                        <div class="quick-info-value">${data.characteristics.spread}</div>
+                    </div>
+                </div>
+                <p>${this.sanitizeHTML(data.description)}</p>
+            </div>
+
+            <div class="detail-section">
+                <h3><i class="fas fa-sun"></i> Growing Guide</h3>
+                <div class="quick-info-grid">
+                    <div class="quick-info-item">
+                        <i class="fas fa-sun"></i>
+                        <div class="quick-info-label">Sunlight</div>
+                        <div class="quick-info-value">${data.growingInfo.sunlight}</div>
+                    </div>
+                    <div class="quick-info-item">
+                        <i class="fas fa-tint"></i>
+                        <div class="quick-info-label">Water</div>
+                        <div class="quick-info-value">${data.growingInfo.water}</div>
+                    </div>
+                    <div class="quick-info-item">
+                        <i class="fas fa-mountain"></i>
+                        <div class="quick-info-label">Soil</div>
+                        <div class="quick-info-value">${data.growingInfo.soil}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3><i class="fas fa-lightbulb"></i> Quick Facts</h3>
+                <ul class="facts-list">
+                    ${data.quickFacts.map(fact => `
+                        <li>${this.sanitizeHTML(fact)}</li>
+                    `).join('')}
+                </ul>
+            </div>
+        `;
     }
 }
 
