@@ -5,7 +5,7 @@
         // Application Configuration
         window.CONFIG = {
             // API Configuration
-            API_KEY: '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',
+            API_KEY: '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',
             API_ENDPOINT: 'https://openrouter.ai/api/v1/chat/completions',
             API_MODEL: 'google/gemma-3-27b-it:free',
             
