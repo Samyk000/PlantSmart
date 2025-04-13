@@ -7,7 +7,7 @@
             // API Configuration
             API_KEY: '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',
             API_ENDPOINT: 'https://openrouter.ai/api/v1/chat/completions',
-            API_MODEL: 'google/gemma-3-27b-it:free',
+            API_MODEL: 'moonshotai/kimi-vl-a3b-thinking:free',
             
             // TensorFlow Settings
             TENSORFLOW: {
